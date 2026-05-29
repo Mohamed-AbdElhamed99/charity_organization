@@ -1,6 +1,10 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { Search } from '@/components/search';
+import { ThemeSwitch } from './theme-switch';
+import { Separator } from '@radix-ui/react-separator';
+import { ProfileDropdown } from '@/components/profile-dropdown'
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -8,10 +12,15 @@ export function AppSidebarHeader({
     breadcrumbs?: BreadcrumbItemType[];
 }) {
     return (
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4 justify-between">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
-                <Breadcrumbs breadcrumbs={breadcrumbs} />
+                <Separator orientation='vertical' className='h-6' />
+                <Search className='me-auto' />
+            </div>
+            <div className="flex items-center gap-2">
+                <ThemeSwitch />
+                <ProfileDropdown />
             </div>
         </header>
     );
