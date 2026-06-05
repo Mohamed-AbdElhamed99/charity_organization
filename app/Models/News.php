@@ -108,5 +108,41 @@ class News extends Model implements HasMedia
         );
     }
 
-    protected $appends = ['title', 'excerpt'];
+    protected function subtitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->subtitle_ar ?? $this->subtitle_en)
+                : ($this->subtitle_en ?? $this->subtitle_ar),
+        );
+    }
+
+    protected function categoryName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->category?->name_ar ?? $this->category?->name_en)
+                : ($this->category?->name_en ?? $this->category?->name_ar),
+        );
+    }
+
+    protected function metaTitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->meta_title_ar ?? $this->meta_title_en)
+                : ($this->meta_title_en ?? $this->meta_title_ar),
+        );
+    }
+
+    protected function metaDescription(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->meta_description_ar ?? $this->meta_description_en)
+                : ($this->meta_description_en ?? $this->meta_description_ar),
+        );
+    }
+
+    protected $appends = ['title', 'subtitle', 'excerpt', 'body', 'category_name'];
 }

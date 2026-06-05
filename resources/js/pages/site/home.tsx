@@ -1,8 +1,4 @@
-import { useState } from "react";
-import {
-  translations,
-  type Locale,
-} from "@/lib/translations";
+import { usePage } from "@inertiajs/react";
 import { SiteLayout } from "@/layouts/site-layout";
 import { SiteHero } from "@/components/site/site-hero";
 import { MissionSection } from "@/components/site/mission-section";
@@ -12,34 +8,27 @@ import { NewsSection } from "@/components/site/news-section";
 import { ActivitiesSection } from "@/components/site/activities-section";
 import { VolunteersSection } from "@/components/site/volunteers-section";
 import { useLocale } from "@/context/locale-context";
+import type { NewsItem } from "@/components/site/news-card";
 
-export interface HomeProps {
-  /** When wired to Inertia, pass props.locale from Laravel. */
-  initialLocale?: Locale;
-}
+type PageProps = {
+  latestNews: NewsItem[];
+};
 
-/**
- * Home page composition. In production Laravel will hydrate this via Inertia
- * and pass the active locale + translations as page props. The local state
- * below is only here so the preview can toggle AR/EN without a backend.
- */
-export function Home({ initialLocale = "en" }: HomeProps) {
+export default function Home() {
   const { t } = useLocale();
+  const { latestNews } = usePage<PageProps>().props;
 
   return (
-    // <SiteLayout locale={locale} onLocaleChange={setLocale}>
     <>
       <SiteHero t={t} />
       <MissionSection t={t} />
       <MessageSection t={t} />
       <DonationCallout t={t} />
-      <NewsSection t={t} />
+      <NewsSection t={t} news={latestNews ?? []} />
       <ActivitiesSection t={t} />
       <VolunteersSection t={t} />
     </>
-
   );
 }
 
-export default Home;
 Home.layout = (page: React.ReactNode) => <SiteLayout>{page}</SiteLayout>;

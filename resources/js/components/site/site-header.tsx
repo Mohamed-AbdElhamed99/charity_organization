@@ -31,7 +31,7 @@ export function SiteHeader({
 
   const navLinks = [
     { label: t.nav.home, href: "#home" },
-    { label: t.nav.news, href: "#news" },
+    { label: t.nav.news, href: "/news" },
     { label: t.nav.activities, href: "#activities" },
     { label: t.nav.donations, href: "#donations" },
     { label: t.nav.about, href: "#about", hasMenu: true },

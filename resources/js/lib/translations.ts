@@ -54,6 +54,16 @@ export interface SiteTranslations {
     seeMore: string;
     readArticle: string;
   };
+  newsPage: {
+    pageTitle: string;
+    pageIntro: string;
+    searchPlaceholder: string;
+    allCategories: string;
+    noResults: string;
+    categories: string;
+    backToNews: string;
+    publishedOn: string;
+  };
   activities: {
     eyebrow: string;
     title: string;
@@ -132,6 +142,16 @@ export const translations: Record<Locale, SiteTranslations> = {
         "Read the latest from our programs, partner communities, and the teams making it all happen.",
       seeMore: "See More",
       readArticle: "Read article",
+    },
+    newsPage: {
+      pageTitle: "News & Stories",
+      pageIntro: "Explore all our latest updates, stories, and articles from the field.",
+      searchPlaceholder: "Search news…",
+      allCategories: "All Categories",
+      noResults: "No articles found. Try a different search or category.",
+      categories: "Categories",
+      backToNews: "Back to News",
+      publishedOn: "Published on",
     },
     activities: {
       eyebrow: "What We Do",
@@ -218,6 +238,16 @@ export const translations: Record<Locale, SiteTranslations> = {
         "اطّلع على آخر أخبار برامجنا ومجتمعاتنا الشريكة والفِرق التي تُحقّق الأثر.",
       seeMore: "عرض المزيد",
       readArticle: "اقرأ المقال",
+    },
+    newsPage: {
+      pageTitle: "أخبار وقصص",
+      pageIntro: "تصفّح جميع أحدث أخبارنا وقصصنا ومقالاتنا من الميدان.",
+      searchPlaceholder: "ابحث في الأخبار…",
+      allCategories: "كل الفئات",
+      noResults: "لا توجد مقالات. جرّب بحثًا مختلفًا أو فئة أخرى.",
+      categories: "الفئات",
+      backToNews: "العودة إلى الأخبار",
+      publishedOn: "نُشر في",
     },
     activities: {
       eyebrow: "ماذا نفعل",

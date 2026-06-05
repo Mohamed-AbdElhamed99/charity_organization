@@ -37,9 +37,9 @@ class StoreNewsRequest extends FormRequest
             'meta_description_ar' => ['nullable', 'string'],
             'meta_description_en' => ['nullable', 'string'],
             'thumbnail' => ['nullable', 'image', 'max:5120'],
-            'main_media' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm', 'max:51200'],
+            'main_media' => ['nullable', 'file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm'],
             'gallery' => ['nullable', 'array'],
-            'gallery.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm', 'max:51200'],
+            'gallery.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm'],
         ];
     }
 }
