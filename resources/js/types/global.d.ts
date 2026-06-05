@@ -14,6 +14,8 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             [key: string]: unknown;
+            locale: Locale;
+            dir: 'ltr' | 'rtl';
         };
     }
 }

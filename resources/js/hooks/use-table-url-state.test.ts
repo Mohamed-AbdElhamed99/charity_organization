@@ -37,6 +37,22 @@ describe('useTableUrlState', () => {
     })
   })
 
+  it('derives pagination from string search values', async () => {
+    const navigate = vi.fn() as Mock<NavigateFn>
+    const { result } = await renderHook(() =>
+      useTableUrlState({
+        search: { page: '3', pageSize: '25' },
+        navigate,
+        pagination: { defaultPage: 1, defaultPageSize: 10 },
+      })
+    )
+
+    expect(result.current.pagination).toEqual({
+      pageIndex: 2,
+      pageSize: 25,
+    })
+  })
+
   it('uses default page and pageSize when search omits them', async () => {
     const navigate = vi.fn() as Mock<NavigateFn>
     const { result } = await renderHook(() =>

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserStatus;
 use App\Models\Country;
 use App\Models\DonorProfile;
 use App\Models\State;
@@ -34,13 +35,14 @@ class UserSeeder extends Seeder
         $superAdmin = User::firstOrCreate(
             ['email' => 'admin@newegypt.org'],
             [
-                'name'              => 'Super Admin',
+                'name' => 'Super Admin',
                 'email_verified_at' => now(),
-                'phone'             => '+10000000001',
-                'password'          => Hash::make('password'),
-                'address'           => 'New Egypt HQ',
-                'country_id'        => $egypt?->id,
-                'state_id'          => $cairo?->id,
+                'phone' => '+10000000001',
+                'status' => UserStatus::Active,
+                'password' => Hash::make('password'),
+                'address' => 'New Egypt HQ',
+                'country_id' => $egypt?->id,
+                'state_id' => $cairo?->id,
             ]
         );
         $superAdmin->assignRole('super_admin');
@@ -57,9 +59,10 @@ class UserSeeder extends Seeder
                 ['email' => $data['email']],
                 array_merge($data, [
                     'email_verified_at' => now(),
-                    'password'          => Hash::make('password'),
-                    'country_id'        => $egypt?->id,
-                    'state_id'          => $cairo?->id,
+                    'status' => fake()->randomElement(UserStatus::cases()),
+                    'password' => Hash::make('password'),
+                    'country_id' => $egypt?->id,
+                    'state_id' => $cairo?->id,
                 ])
             );
             $user->assignRole(str_contains($data['email'], 'field') ? 'field_worker' : 'staff');
@@ -86,6 +89,14 @@ class UserSeeder extends Seeder
                 ->donor()
                 ->create();
 
+            // Mixed-status users for admin CRUD testing
+            User::factory()
+                ->count(50)
+                ->create()
+                ->each(function (User $user): void {
+                    $user->assignRole(fake()->randomElement(['super_admin', 'staff', 'field_worker', 'donor']));
+                });
+
             // A few anonymous / unverified users
             User::factory()
                 ->count(5)
@@ -93,6 +104,6 @@ class UserSeeder extends Seeder
                 ->create();
         }
 
-        $this->command->info('✅ Users seeded (' . User::count() . ' total).');
+        $this->command->info('✅ Users seeded ('.User::count().' total).');
     }
 }

@@ -55,7 +55,29 @@ declare module 'ziggy-js' {
     ],
     "home": [],
     "dashboard": [],
-    "users.index": [],
+    "admin.users.bulk-destroy": [],
+    "admin.users.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.users.index": [],
+    "admin.users.store": [],
+    "admin.users.update": [
+        {
+            "name": "user",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.users.destroy": [
+        {
+            "name": "user",
+            "required": true,
+            "binding": "id"
+        }
+    ],
     "profile.edit": [],
     "profile.update": [],
     "profile.destroy": [],

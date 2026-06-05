@@ -41,7 +41,7 @@ export function DataTableToolbar<TData>({
             onChange={(event) =>
               table.getColumn(searchKey)?.setFilterValue(event.target.value)
             }
-            className='h-8 w-37.5 lg:w-62.5'
+            className='h-8 w-37.5 lg:w-62.5' autoFocus
           />
         ) : (
           <Input
