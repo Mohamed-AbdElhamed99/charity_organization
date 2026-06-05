@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 import { buildTableQueryParams } from '@/lib/table-query'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
-import { index as usersIndex } from '@/routes/admin/users'
+import { index as newsIndex } from '@/routes/admin/news'
 import {
   Table,
   TableBody,
@@ -25,19 +25,19 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import { roleOptionsFromNames } from './data/data'
-import { type User } from '@/types/models/user'
-import { type Paginated } from '@/types/pagination'
+import type { News, NewsCategory } from '@/types/models/news'
+import type { Paginated } from '@/types/pagination'
+import { categoryOptionsFromList, statusOptions } from './data/data'
 import { DataTableBulkActions } from './data-table-bulk-actions'
-import { usersColumns as columns } from './users-columns'
+import { newsColumns as columns } from './news-columns'
 
-type UsersTableProps = {
-  users: Paginated<User>
-  roles: string[]
+type NewsTableProps = {
+  news: Paginated<News>
+  categories: NewsCategory[]
   search: Record<string, unknown>
 }
 
-export function UsersTable({ users, roles, search }: UsersTableProps) {
+export function NewsTable({ news, categories, search }: NewsTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     query: false,
@@ -54,7 +54,7 @@ export function UsersTable({ users, roles, search }: UsersTableProps) {
             : nextSearch
 
       router.get(
-        usersIndex.url(),
+        newsIndex.url(),
         buildTableQueryParams(search, resolved as Record<string, unknown>),
         {
           preserveScroll: true,
@@ -76,12 +76,12 @@ export function UsersTable({ users, roles, search }: UsersTableProps) {
     columnFilters: [
       { columnId: 'query', searchKey: 'query', type: 'string' },
       { columnId: 'status', searchKey: 'status', type: 'array' },
-      { columnId: 'role', searchKey: 'role', type: 'array' },
+      { columnId: 'category_name', searchKey: 'category', type: 'array' },
     ],
   })
 
   const table = useReactTable({
-    data: users.data,
+    data: news.data,
     columns,
     state: {
       sorting,
@@ -103,14 +103,10 @@ export function UsersTable({ users, roles, search }: UsersTableProps) {
   })
 
   useEffect(() => {
-    ensurePageInRange(users.last_page)
-  }, [users.last_page, ensurePageInRange])
+    ensurePageInRange(news.last_page)
+  }, [news.last_page, ensurePageInRange])
 
-  const roleFilterOptions = roleOptionsFromNames(roles).map((role) => ({
-    label: role.label,
-    value: role.value,
-    icon: role.icon,
-  }))
+  const categoryFilterOptions = categoryOptionsFromList(categories)
 
   return (
     <div
@@ -121,22 +117,18 @@ export function UsersTable({ users, roles, search }: UsersTableProps) {
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder="Filter users..."
+        searchPlaceholder="Filter news..."
         searchKey="query"
         filters={[
           {
             columnId: 'status',
             title: 'Status',
-            options: [
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' },
-              { label: 'Banned', value: 'banned' },
-            ],
+            options: statusOptions,
           },
           {
-            columnId: 'role',
-            title: 'Role',
-            options: roleFilterOptions,
+            columnId: 'category_name',
+            title: 'Category',
+            options: categoryFilterOptions,
           },
         ]}
       />
@@ -210,16 +202,16 @@ export function UsersTable({ users, roles, search }: UsersTableProps) {
         </Table>
       </div>
 
-      {users.from && users.to && (
+      {news.from && news.to && (
         <p className="px-1 text-sm text-muted-foreground">
-          Showing {users.from}–{users.to} of {users.total} users
+          Showing {news.from}–{news.to} of {news.total} news articles
         </p>
       )}
 
       <DataTablePagination
-        pagination={users}
+        pagination={news}
         search={search}
-        indexUrl={usersIndex.url()}
+        indexUrl={newsIndex.url()}
         defaultPerPage={25}
         className="mt-auto"
       />

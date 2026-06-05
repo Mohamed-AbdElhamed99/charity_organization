@@ -7,7 +7,6 @@ import {
 import { router } from '@inertiajs/react'
 import { cn, getPageNumbers } from '@/lib/utils'
 import { buildTableQueryParams } from '@/lib/table-query'
-import { index as usersIndex } from '@/routes/admin/users'
 import type { Paginated } from '@/types/pagination'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +22,7 @@ type SearchRecord = Record<string, unknown>
 type DataTablePaginationProps = {
   pagination: Pick<Paginated<unknown>, 'current_page' | 'last_page' | 'per_page'>
   search: SearchRecord
+  indexUrl: string
   defaultPerPage?: number
   className?: string
 }
@@ -30,6 +30,7 @@ type DataTablePaginationProps = {
 export function DataTablePagination({
   pagination,
   search,
+  indexUrl,
   defaultPerPage = 25,
   className,
 }: DataTablePaginationProps) {
@@ -42,7 +43,7 @@ export function DataTablePagination({
 
   const navigate = (patch: SearchRecord) => {
     router.get(
-      usersIndex.url(),
+      indexUrl,
       buildTableQueryParams(search, patch, {
         page: 1,
         perPage: defaultPerPage,

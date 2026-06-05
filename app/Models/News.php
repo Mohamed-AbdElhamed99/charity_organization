@@ -12,7 +12,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class News extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -20,12 +20,16 @@ class News extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('cover')
+        $this->addMediaCollection('thumbnail')
             ->singleFile()
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
 
+        $this->addMediaCollection('main_media')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm']);
+
         $this->addMediaCollection('gallery')
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm']);
     }
 
     // ─── Casts ───────────────────────────────────────────────────────────────
@@ -34,8 +38,8 @@ class News extends Model implements HasMedia
     {
         return [
             'published_at' => 'date',
-            'is_active'    => 'boolean',
-            'is_private'   => 'boolean',
+            'is_active' => 'boolean',
+            'is_private' => 'boolean',
         ];
     }
 

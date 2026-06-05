@@ -17,6 +17,7 @@ import {
   UserX,
   Users,
   MessagesSquare,
+  Newspaper,
   ShieldCheck,
   AudioWaveform,
   Command,
@@ -77,6 +78,11 @@ export const sidebarData: SidebarData = {
           title: 'Users',
           url: '/admin/users',
           icon: Users,
+        },
+        {
+          title: 'News',
+          url: '/admin/news',
+          icon: Newspaper,
         },
         {
           title: 'Secured by Clerk',

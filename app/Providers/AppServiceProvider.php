@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Contracts\Services\NewsServiceInterface;
 use App\Contracts\Services\UserServiceInterface;
+use App\Services\NewsService;
 use App\Services\UserService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -18,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(UserServiceInterface::class, UserService::class);
+        $this->app->bind(NewsServiceInterface::class, NewsService::class);
     }
 
     /**
