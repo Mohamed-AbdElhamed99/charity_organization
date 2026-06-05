@@ -3,6 +3,7 @@ import { Heart, Menu, X, ChevronDown } from "lucide-react";
 import type { Locale, SiteTranslations } from "../../lib/translations";
 import { SiteButton } from "./site-button";
 import { LangSwitch } from "./lang-switch";
+import { route } from "ziggy-js";
 
 export interface SiteHeaderProps {
   t: SiteTranslations;
@@ -30,7 +31,7 @@ export function SiteHeader({
   }, [transparentOnTop]);
 
   const navLinks = [
-    { label: t.nav.home, href: "#home" },
+    { label: t.nav.home, href: "/" },
     { label: t.nav.news, href: "/news" },
     { label: t.nav.activities, href: "#activities" },
     { label: t.nav.donations, href: "#donations" },
@@ -49,7 +50,7 @@ export function SiteHeader({
     >
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-6 px-6 py-4">
         <a
-          href="#home"
+          href={route('home')}
           className={`flex items-center gap-2 font-display text-lg font-extrabold tracking-tight ${linkColor}`}
         >
           <span className="grid h-9 w-9 place-items-center rounded-full bg-action-red text-white">
