@@ -5,6 +5,8 @@ namespace Tests\Feature\Site;
 use App\Models\News;
 use App\Models\NewsCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -213,5 +215,79 @@ class NewsControllerTest extends TestCase
         ]);
 
         $this->get(route('news.show', $news->slug))->assertNotFound();
+    }
+
+    // ─── Media Fallbacks ──────────────────────────────────────────────────────
+
+    public function test_news_uses_thumbnail_when_present(): void
+    {
+        Storage::fake('s3');
+
+        $news = $this->createPublishedNews();
+        $news->addMedia(UploadedFile::fake()->image('thumbnail.jpg'))
+            ->toMediaCollection('thumbnail');
+        $news->addMedia(UploadedFile::fake()->image('gallery.jpg'))
+            ->toMediaCollection('gallery');
+
+        $thumbnailUrl = $news->getFirstMediaUrl('thumbnail');
+
+        $this->get(route('news.show', $news->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('article.thumbnail', $thumbnailUrl)
+            );
+    }
+
+    public function test_news_uses_first_gallery_image_as_thumbnail_when_thumbnail_missing(): void
+    {
+        Storage::fake('s3');
+
+        $news = $this->createPublishedNews();
+        $news->addMedia(UploadedFile::fake()->image('gallery-1.jpg'))
+            ->toMediaCollection('gallery');
+        $news->addMedia(UploadedFile::fake()->image('gallery-2.jpg'))
+            ->toMediaCollection('gallery');
+
+        $firstGalleryUrl = $news->getMedia('gallery')->first()->getUrl();
+
+        $this->get(route('news.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('news.data', 1)
+                ->where('news.data.0.slug', $news->slug)
+                ->where('news.data.0.thumbnail', $firstGalleryUrl)
+            );
+    }
+
+    public function test_news_thumbnail_is_empty_without_thumbnail_or_gallery_images(): void
+    {
+        Storage::fake('s3');
+
+        $this->createPublishedNews();
+
+        $this->get(route('news.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('news.data', 1)
+                ->where('news.data.0.thumbnail', '')
+            );
+    }
+
+    public function test_news_show_uses_first_gallery_as_main_media_when_main_media_missing(): void
+    {
+        Storage::fake('s3');
+
+        $news = $this->createPublishedNews();
+        $news->addMedia(UploadedFile::fake()->image('gallery.jpg'))
+            ->toMediaCollection('gallery');
+
+        $firstGallery = $news->getMedia('gallery')->first();
+
+        $this->get(route('news.show', $news->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('article.main_media', $firstGallery->getUrl())
+                ->where('article.main_media_type', $firstGallery->mime_type)
+            );
     }
 }

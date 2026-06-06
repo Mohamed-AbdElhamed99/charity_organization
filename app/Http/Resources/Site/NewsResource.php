@@ -12,6 +12,12 @@ class NewsResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $galleryMedia = $this->getMedia('gallery');
+        $firstGalleryItem = $galleryMedia->first();
+        $firstGalleryImage = $galleryMedia->first(
+            fn ($media) => str_starts_with($media->mime_type, 'image/')
+        );
+
         return [
             'id' => $this->id,
             'slug' => $this->slug,
@@ -23,10 +29,10 @@ class NewsResource extends JsonResource
             'meta_description' => $this->meta_description ?: $this->excerpt,
             'category_id' => $this->category_id,
             'category_name' => $this->category_name,
-            'thumbnail' => $this->getFirstMediaUrl('thumbnail'),
-            'main_media' => $this->getFirstMediaUrl('main_media'),
-            'main_media_type' => $this->getFirstMedia('main_media')?->mime_type,
-            'gallery' => $this->getMedia('gallery')->map(fn ($media) => [
+            'thumbnail' => $this->getFirstMediaUrl('thumbnail') ?: ($firstGalleryImage?->getUrl() ?? ''),
+            'main_media' => $this->getFirstMediaUrl('main_media') ?: ($firstGalleryItem?->getUrl() ?? ''),
+            'main_media_type' => $this->getFirstMedia('main_media')?->mime_type ?? $firstGalleryItem?->mime_type,
+            'gallery' => $galleryMedia->map(fn ($media) => [
                 'id' => $media->id,
                 'url' => $media->getUrl(),
                 'mime_type' => $media->mime_type,

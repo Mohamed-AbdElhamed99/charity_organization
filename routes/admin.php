@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::inertia('/', 'dashboard')->name('dashboard');
+        Route::redirect('/', '/admin/dashboard');
+        Route::inertia('dashboard', 'admin/dashboard')->name('dashboard');
         Route::post('users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
         Route::resource('users', UserController::class)->except(['show', 'create', 'edit']);

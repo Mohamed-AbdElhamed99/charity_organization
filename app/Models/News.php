@@ -103,8 +103,8 @@ class News extends Model implements HasMedia
     {
         return Attribute::make(
             get: fn () => app()->getLocale() === 'ar'
-                ? ($this->body_ar ?? $this->body_en)
-                : ($this->body_en ?? $this->body_ar),
+                ? ($this->normalizeBody($this->body_ar) ?? $this->normalizeBody($this->body_en))
+                : ($this->normalizeBody($this->body_en) ?? $this->normalizeBody($this->body_ar)),
         );
     }
 
@@ -145,4 +145,35 @@ class News extends Model implements HasMedia
     }
 
     protected $appends = ['title', 'subtitle', 'excerpt', 'body', 'category_name'];
+
+    /**
+     * Convert a legacy JSON-array body into plain text.
+     * Leaves already-plain-text values untouched.
+     */
+    private function normalizeBody(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        $decoded = json_decode($value, true);
+
+        // Not valid JSON → already plain text, return as-is.
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $value;
+        }
+
+        // JSON array of paragraphs → join with blank lines.
+        if (is_array($decoded)) {
+            return implode("\n\n", array_map('trim', $decoded));
+        }
+
+        // JSON-encoded plain string → return the decoded string.
+        if (is_string($decoded)) {
+            return $decoded;
+        }
+
+        // Anything else (number, bool, null) → fall back to original.
+        return $value;
+    }
 }
