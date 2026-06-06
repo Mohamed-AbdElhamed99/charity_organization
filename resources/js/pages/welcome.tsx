@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { dashboard, login } from '@/routes';
+import { login } from '@/routes';
+import { dashboard } from '@/routes/admin';
 import { register } from '@/routes';
 
 export default function Welcome() {

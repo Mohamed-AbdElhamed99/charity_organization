@@ -62,7 +62,7 @@ return [
 
         'old_news' => [
             'driver' => 'local',
-            'root'   => '/var/www/old-project/public/uploads/news',
+            'root'   => '/data/plesk/vhosts/newegyptgroup.com/api.newegyptgroup.com/images/news',
         ],
 
     ],
