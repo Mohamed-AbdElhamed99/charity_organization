@@ -60,6 +60,11 @@ return [
             'report' => false,
         ],
 
+        'old_news' => [
+            'driver' => 'local',
+            'root'   => '/var/www/old-project/public/uploads/news',
+        ],
+
     ],
 
     /*

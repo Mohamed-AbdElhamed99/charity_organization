@@ -114,6 +114,16 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'old_mysql' => [
+            'driver'   => 'mysql',
+            'host'     => env('OLD_DB_HOST', '127.0.0.1'),
+            'database' => env('OLD_DB_DATABASE'),
+            'username' => env('OLD_DB_USERNAME'),
+            'password' => env('OLD_DB_PASSWORD'),
+            'charset'  => 'utf8mb4',
+            'collation'=> 'utf8mb4_unicode_ci',
+        ],
+
     ],
 
     /*

@@ -18,6 +18,8 @@ interface Article {
   subtitle: string | null;
   excerpt: string | null;
   body: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
   category_id: number | null;
   category_name: string | null;
   thumbnail: string;
@@ -170,12 +172,38 @@ function GallerySlider({ items }: { items: GalleryItem[] }) {
 export default function NewsShow() {
   const { t, locale, dir } = useLocale();
   const { article } = usePage<PageProps>().props;
+  const { url } = usePage();
 
   const BackArrow = dir === "rtl" ? ArrowRight : ArrowLeft;
 
+  const metaTitle = article.meta_title || article.title;
+  const metaDescription = article.meta_description || article.excerpt || "";
+  const metaImage = article.thumbnail || article.main_media || "";
+
   return (
     <>
-      <Head title={article.title} />
+      <Head title={metaTitle}>
+        <meta name="description" content={metaDescription} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        {metaImage && <meta property="og:image" content={metaImage} />}
+        <meta property="og:url" content={url} />
+        {article.published_at && (
+          <meta
+            property="article:published_time"
+            content={article.published_at}
+          />
+        )}
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content={metaImage ? "summary_large_image" : "summary"} />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        {metaImage && <meta name="twitter:image" content={metaImage} />}
+      </Head>
 
       {/* Hero section */}
       <section className="relative bg-ink text-white pt-28 pb-0 md:pt-36">

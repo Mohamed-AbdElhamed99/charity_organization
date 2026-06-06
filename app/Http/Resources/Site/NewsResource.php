@@ -19,6 +19,8 @@ class NewsResource extends JsonResource
             'subtitle' => $this->subtitle,
             'excerpt' => $this->excerpt,
             'body' => $this->body,
+            'meta_title' => $this->meta_title ?: $this->title,
+            'meta_description' => $this->meta_description ?: $this->excerpt,
             'category_id' => $this->category_id,
             'category_name' => $this->category_name,
             'thumbnail' => $this->getFirstMediaUrl('thumbnail'),
