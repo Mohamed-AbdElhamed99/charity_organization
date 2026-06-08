@@ -27,7 +27,7 @@ use Throwable;
  *
  * Design decisions (confirmed with the team):
  *   - IDs are PRESERVED 1:1 for every migrated table (run with --fresh to
- *     truncate targets first; the command inserts explicit ids).
+ *     clear targets first via DELETE; the command inserts explicit ids).
  *   - Legacy data is messy, so un-resolvable foreign keys are written as NULL.
  *     This requires the companion schema migration that relaxes the matching
  *     NOT NULL constraints. Presence is enforced on NEW records by the
@@ -158,17 +158,24 @@ class MigrateLegacyTransactionsCommand extends Command
         return true;
     }
 
+    /**
+     * Clears target tables using DELETE (NOT truncate). TRUNCATE is DDL and
+     * forces an implicit COMMIT in MySQL, which would end our surrounding
+     * transaction and break both rollback-on-error and --dry-run. DELETE is
+     * DML, so it stays inside the transaction. Explicit IDs are inserted, so
+     * we don't need TRUNCATE's auto-increment reset.
+     */
     private function truncateTargets(): void
     {
-        // Children before parents.
+        // Children before parents (FK checks are already off, but keep order tidy).
         foreach (['donations', 'campaign_expenses', 'general_expenses', 'transfers', 'transactions'] as $t) {
-            DB::table($t)->truncate();
+            DB::table($t)->delete();
         }
         // Lookups owned by this import (only safe because we preserve IDs).
         foreach (['accounts', 'items', 'payment_methods', 'currencies'] as $t) {
-            DB::table($t)->truncate();
+            DB::table($t)->delete();
         }
-        $this->line('Truncated target tables.');
+        $this->line('Cleared target tables.');
     }
 
     // ---------------------------------------------------------------------
