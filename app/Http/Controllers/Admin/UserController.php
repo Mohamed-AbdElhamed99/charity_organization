@@ -27,13 +27,9 @@ class UserController extends Controller
     public function index(Request $request): Response
     {
         $filters = $request->only(['query', 'role', 'status', 'page', 'per_page']);
-        $paginator = $this->userService->getPaginatedUsers($filters);
-
-        $users = $paginator->toArray();
-        $users['data'] = UserResource::collection($paginator->items())->resolve();
 
         return Inertia::render('admin/users/users-index', [
-            'users' => $users,
+            'users' => fn () => $this->resolvePaginatedUsers($filters),
             'roles' => Role::query()->orderBy('name')->pluck('name'),
             'search' => $filters,
         ]);
@@ -103,5 +99,19 @@ class UserController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User restored successfully.')]);
 
         return back();
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function resolvePaginatedUsers(array $filters): array
+    {
+        $paginator = $this->userService->getPaginatedUsers($filters);
+
+        $users = $paginator->toArray();
+        $users['data'] = UserResource::collection($paginator->items())->resolve();
+
+        return $users;
     }
 }

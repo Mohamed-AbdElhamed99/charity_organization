@@ -1,0 +1,102 @@
+<?php
+
+namespace Tests\Feature\Admin;
+
+use App\Enums\CampaignStatus;
+use App\Models\Campaign;
+use App\Models\CampaignCategory;
+use App\Models\CampaignExpense;
+use App\Models\User;
+use Database\Seeders\FinancialFoundationSeeder;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class CampaignControllerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function createAuthorizedUser(): User
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->seed(FinancialFoundationSeeder::class);
+
+        $user = User::factory()->create();
+        $user->assignRole('super_admin');
+
+        return $user;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validPayload(CampaignCategory $category, array $overrides = []): array
+    {
+        return array_merge([
+            'title_ar' => 'حملة طبية',
+            'title_en' => 'Medical Campaign',
+            'slug' => 'medical-campaign',
+            'category_id' => $category->id,
+            'excerpt_ar' => 'مقتطف',
+            'excerpt_en' => 'Excerpt',
+            'description_ar' => 'وصف',
+            'description_en' => 'Description',
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => now()->addMonth()->format('Y-m-d'),
+            'budget' => 5000,
+            'donation_target' => 10000,
+            'status' => CampaignStatus::Draft->value,
+            'is_public' => false,
+            'open_donation_form' => false,
+            'is_repeated' => 'never',
+        ], $overrides);
+    }
+
+    public function test_authorized_user_can_view_campaigns_index(): void
+    {
+        $user = $this->createAuthorizedUser();
+        Campaign::factory()->count(2)->create(['created_by' => $user->id]);
+
+        $this->actingAs($user)
+            ->get(route('admin.campaigns.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/campaigns/campaigns-index')
+                ->has('campaigns.data', 2)
+                ->has('categories')
+            );
+    }
+
+    public function test_authorized_user_can_create_campaign(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = CampaignCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.campaigns.store'), $this->validPayload($category))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('campaigns', [
+            'slug' => 'medical-campaign',
+            'title_en' => 'Medical Campaign',
+            'created_by' => $user->id,
+        ]);
+    }
+
+    public function test_campaign_with_expenses_cannot_be_deleted(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $campaign = Campaign::factory()->create(['created_by' => $user->id]);
+        CampaignExpense::factory()->create([
+            'campaign_id' => $campaign->id,
+            'responsible_user_id' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('admin.campaigns.destroy', $campaign))
+            ->assertRedirect();
+
+        $this->assertNotSoftDeleted('campaigns', ['id' => $campaign->id]);
+    }
+}

@@ -10,14 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Campaign extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -38,17 +37,17 @@ class Campaign extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'status'            => CampaignStatus::class,
-            'is_repeated'       => CampaignRecurrence::class,
-            'is_public'         => 'boolean',
+            'status' => CampaignStatus::class,
+            'is_repeated' => CampaignRecurrence::class,
+            'is_public' => 'boolean',
             'open_donation_form' => 'boolean',
-            'start_date'        => 'date',
-            'end_date'          => 'date',
-            'repeat_until'      => 'date',
-            'budget'            => 'decimal:2',
-            'donation_target'   => 'decimal:2',
-            'lat'               => 'decimal:7',
-            'lng'               => 'decimal:7',
+            'start_date' => 'date',
+            'end_date' => 'date',
+            'repeat_until' => 'date',
+            'budget' => 'decimal:2',
+            'donation_target' => 'decimal:2',
+            'lat' => 'decimal:7',
+            'lng' => 'decimal:7',
         ];
     }
 
@@ -134,6 +133,14 @@ class Campaign extends Model implements HasMedia
             ->where('status', CampaignStatus::Active);
     }
 
+    public function scopePublishable($query)
+    {
+        return $query->whereIn('status', [
+            CampaignStatus::Active,
+            CampaignStatus::Completed,
+        ]);
+    }
+
     // ─── Accessors ───────────────────────────────────────────────────────────
 
     /** Locale-aware title */
@@ -153,6 +160,43 @@ class Campaign extends Model implements HasMedia
             get: fn () => app()->getLocale() === 'ar'
                 ? ($this->excerpt_ar ?? $this->excerpt_en)
                 : ($this->excerpt_en ?? $this->excerpt_ar),
+        );
+    }
+
+    /** Locale-aware description */
+    protected function description(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->description_ar ?? $this->description_en)
+                : ($this->description_en ?? $this->description_ar),
+        );
+    }
+
+    protected function categoryName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->category?->name_ar ?? $this->category?->name_en)
+                : ($this->category?->name_en ?? $this->category?->name_ar),
+        );
+    }
+
+    protected function metaTitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->meta_title_ar ?? $this->meta_title_en)
+                : ($this->meta_title_en ?? $this->meta_title_ar),
+        );
+    }
+
+    protected function metaDescription(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => app()->getLocale() === 'ar'
+                ? ($this->meta_description_ar ?? $this->meta_description_en)
+                : ($this->meta_description_en ?? $this->meta_description_ar),
         );
     }
 
@@ -196,5 +240,5 @@ class Campaign extends Model implements HasMedia
         );
     }
 
-    protected $appends = ['title', 'excerpt'];
+    protected $appends = ['title', 'excerpt', 'description', 'category_name'];
 }

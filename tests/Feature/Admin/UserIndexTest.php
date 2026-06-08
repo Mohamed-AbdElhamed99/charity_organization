@@ -48,6 +48,22 @@ class UserIndexTest extends TestCase
             );
     }
 
+    public function test_users_index_filters_by_query(): void
+    {
+        $user = User::factory()->create(['name' => 'Unique Searchable User']);
+        User::factory()->create(['name' => 'Someone Else']);
+
+        $this->actingAs($user)
+            ->get(route('admin.users.index', ['query' => 'Unique Searchable']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/users/users-index')
+                ->where('users.total', 1)
+                ->where('users.data.0.name', 'Unique Searchable User')
+                ->where('search.query', 'Unique Searchable'),
+            );
+    }
+
     public function test_users_index_preserves_filters_in_search_props(): void
     {
         $user = User::factory()->create();

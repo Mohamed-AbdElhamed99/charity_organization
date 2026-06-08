@@ -19,11 +19,11 @@ export function MessageSection({ t, image = DEFAULT_IMAGE }: MessageSectionProps
           <p className="text-body-text text-base md:text-lg leading-relaxed">
             {t.message.body}
           </p>
-          <div>
+          {/* <div>
             <SiteButton href="#about" variant="primary">
               {t.message.readMore}
             </SiteButton>
-          </div>
+          </div> */}
         </div>
         <div className="order-1 lg:order-2">
           <div className="overflow-hidden rounded-2xl shadow-xl">

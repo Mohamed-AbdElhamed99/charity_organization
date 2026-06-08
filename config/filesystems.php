@@ -62,7 +62,12 @@ return [
 
         'old_news' => [
             'driver' => 'local',
-            'root'   => '/data/plesk/vhosts/newegyptgroup.com/api.newegyptgroup.com/images/news',
+            'root' => '/data/plesk/vhosts/newegyptgroup.com/api.newegyptgroup.com/images/news',
+        ],
+
+        'old_activities' => [
+            'driver' => 'local',
+            'root' => '/data/plesk/vhosts/newegyptgroup.com/api.newegyptgroup.com/images/activities/images',
         ],
 
     ],

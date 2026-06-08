@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Heart, Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import type { Locale, SiteTranslations } from "../../lib/translations";
 import { SiteButton } from "./site-button";
 import { LangSwitch } from "./lang-switch";
@@ -33,10 +33,9 @@ export function SiteHeader({
   const navLinks = [
     { label: t.nav.home, href: "/" },
     { label: t.nav.news, href: "/news" },
-    { label: t.nav.activities, href: "#activities" },
+    { label: t.nav.campaigns, href: "/campaigns" },
     { label: t.nav.donations, href: "#donations" },
-    { label: t.nav.about, href: "#about", hasMenu: true },
-    { label: t.nav.contact, href: "#contact" },
+    { label: t.nav.contact, href: "/contact" },
   ];
 
   const headerBg = scrolled
@@ -53,10 +52,12 @@ export function SiteHeader({
           href={route('home')}
           className={`flex items-center gap-2 font-display text-lg font-extrabold tracking-tight ${linkColor}`}
         >
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-action-red text-white">
-            <Heart className="h-4 w-4" fill="currentColor" />
-          </span>
-          <span>New Egypt Group</span>
+          <img
+            src="/images/new-egypt-logo.png"
+            alt={t.brandName}
+            className="h-9 w-9 object-contain"
+          />
+          <span>{t.brandName}</span>
         </a>
 
         <nav className="hidden lg:flex items-center gap-1">
@@ -67,7 +68,7 @@ export function SiteHeader({
               className={`inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition-colors ${linkColor} hover:bg-white/10 ${scrolled ? "hover:bg-ink/5" : ""}`}
             >
               {link.label}
-              {link.hasMenu ? <ChevronDown className="h-3.5 w-3.5" /> : null}
+              {/* {link.hasMenu ? <ChevronDown className="h-3.5 w-3.5" /> : null} */}
             </a>
           ))}
         </nav>

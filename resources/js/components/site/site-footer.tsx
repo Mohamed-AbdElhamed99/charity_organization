@@ -25,7 +25,7 @@ export function SiteFooter({ t, onSubscribe }: SiteFooterProps) {
             <span className="grid h-9 w-9 place-items-center rounded-full bg-action-red text-white">
               <Heart className="h-4 w-4" fill="currentColor" />
             </span>
-            New Egypt Group
+            {t.brandName}
           </div>
           <p className="mt-4 max-w-sm text-sm leading-relaxed">{t.footer.blurb}</p>
           <div className="mt-6 flex items-center gap-3">

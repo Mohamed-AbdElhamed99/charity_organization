@@ -1,7 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './theme.css';
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;700&display=swap');
 
 /* Laravel Blade source scanning — required, do not remove */
 @source '../views';

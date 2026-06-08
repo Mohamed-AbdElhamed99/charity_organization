@@ -2,19 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Currency extends Model
 {
+    use HasFactory;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
     {
         return [
             'is_default' => 'boolean',
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 

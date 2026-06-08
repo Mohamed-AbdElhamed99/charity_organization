@@ -1,3 +1,15 @@
 export type * from './auth';
 export type * from './navigation';
 export type * from './ui';
+export type * from './translatable';
+export type * from './models/news-category';
+export type * from './models/campaign-category';
+export type * from './models/role';
+export type * from './models/campaign';
+export type * from './models/transaction';
+export type * from './models/transfer';
+export type * from './models/campaign-expense';
+export type * from './models/faq';
+export type * from './models/legal-document';
+export type * from './models/contact-message';
+export type * from './enums';

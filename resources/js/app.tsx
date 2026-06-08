@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -7,10 +7,19 @@ import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import SiteLayout from './layouts/site-layout';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+function resolveAppName(): string {
+    return (
+        (router.page?.props?.name as string | undefined) ??
+        import.meta.env.VITE_APP_NAME ??
+        'New Egypt Group'
+    );
+}
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => {
+        const appName = resolveAppName();
+        return title ? `${title} - ${appName}` : appName;
+    },
     layout: (name) => {
         switch (true) {
             case name === 'welcome':

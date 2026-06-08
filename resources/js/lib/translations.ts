@@ -10,10 +10,11 @@ export interface NavItem {
 }
 
 export interface SiteTranslations {
+  brandName: string;
   nav: {
     home: string;
     news: string;
-    activities: string;
+    campaigns: string;
     donations: string;
     about: string;
     contact: string;
@@ -64,11 +65,40 @@ export interface SiteTranslations {
     backToNews: string;
     publishedOn: string;
   };
-  activities: {
+  campaigns: {
     eyebrow: string;
     title: string;
     intro: string;
     seeMore: string;
+    readCampaign: string;
+  };
+  campaignsPage: {
+    pageTitle: string;
+    pageIntro: string;
+    searchPlaceholder: string;
+    allCategories: string;
+    noResults: string;
+    categories: string;
+    backToCampaigns: string;
+    startsOn: string;
+    endsOn: string;
+  };
+  faqsPage: {
+    eyebrow: string;
+    pageTitle: string;
+    pageIntro: string;
+    noResults: string;
+  };
+  contactPage: {
+    eyebrow: string;
+    pageTitle: string;
+    pageIntro: string;
+    fullname: string;
+    email: string;
+    phone: string;
+    subject: string;
+    message: string;
+    submit: string;
   };
   volunteers: {
     eyebrow: string;
@@ -96,10 +126,11 @@ export interface SiteTranslations {
 
 export const translations: Record<Locale, SiteTranslations> = {
   en: {
+    brandName: "New Egypt Group",
     nav: {
       home: "Home",
       news: "News",
-      activities: "Activities",
+      campaigns: "Campaigns",
       donations: "Donations",
       about: "About",
       contact: "Contact",
@@ -117,7 +148,7 @@ export const translations: Record<Locale, SiteTranslations> = {
     mission: {
       eyebrow: "Who We Are",
       title: "Our mission is to build a stronger Egypt, one community at a time",
-      body: "From classrooms in Upper Egypt to clinics in rural villages, our teams partner with local leaders to deliver real, measurable change — every donation funds programs that lift entire families out of hardship.",
+      body: "At New Egypt Group Inc, our mission is to fight poverty and digital illiteracy worldwide by promoting digital literacy as a constitutional duty. We aim to make a significant impact on climate change and biodiversity by generating innovative ideas, empowering local leaders, and influencing policies. Through media production and community connections, we raise awareness and facilitate collaboration between the USA and Egypt. Our mission extends globally as we strive to create a positive difference.",
       readMore: "Read More",
       statNumber: "673M",
       statCaption: "people worldwide face hunger today — UN",
@@ -125,7 +156,7 @@ export const translations: Record<Locale, SiteTranslations> = {
     message: {
       eyebrow: "Our Message",
       title: "Compassion in action — every single day",
-      body: "We believe dignity is a right, not a privilege. Through transparent giving, on-the-ground volunteers, and long-term programs, we turn generosity into lasting impact for the children, families, and elders who need it most.",
+      body: "New Egypt Group is a non-profit organization that builds bridges between the Egyptian community in America and their beloved country, Egypt. It carries out many activities including education initiatives for children as well empowerment of women so they can build futures generations upon generation sweepingly exploited within this beautiful land! The group is an active, supporting some villages in Upper Egypt and the Delta region. A visit to a village by Al-Kisa Bank led them start their series of support for villages unable to face life’s difficulties during 2014; starting with Qena Governorate was where it all started!",
       readMore: "Read More",
     },
     donationCallout: {
@@ -153,12 +184,41 @@ export const translations: Record<Locale, SiteTranslations> = {
       backToNews: "Back to News",
       publishedOn: "Published on",
     },
-    activities: {
+    campaigns: {
       eyebrow: "What We Do",
-      title: "Our Activities",
+      title: "Our Campaigns",
       intro:
-        "From food drives to scholarship programs, our work spans the issues that matter most to Egyptian families.",
+        "From food drives to scholarship programs, our campaigns address the issues that matter most to Egyptian families.",
       seeMore: "See More",
+      readCampaign: "View campaign",
+    },
+    campaignsPage: {
+      pageTitle: "Our Campaigns",
+      pageIntro: "Explore all our active and completed campaigns making a difference across Egypt.",
+      searchPlaceholder: "Search campaigns…",
+      allCategories: "All Categories",
+      noResults: "No campaigns found. Try a different search or category.",
+      categories: "Categories",
+      backToCampaigns: "Back to Campaigns",
+      startsOn: "Starts on",
+      endsOn: "Ends on",
+    },
+    faqsPage: {
+      eyebrow: "Help Center",
+      pageTitle: "Frequently Asked Questions",
+      pageIntro: "Find answers to common questions about our programs, donations, and how to get involved.",
+      noResults: "No FAQs are available at the moment.",
+    },
+    contactPage: {
+      eyebrow: "Get in Touch",
+      pageTitle: "Contact Us",
+      pageIntro: "Send us a message and our team will get back to you as soon as possible.",
+      fullname: "Full name",
+      email: "Email address",
+      phone: "Phone (optional)",
+      subject: "Subject",
+      message: "Message",
+      submit: "Send Message",
     },
     volunteers: {
       eyebrow: "The People",
@@ -172,11 +232,12 @@ export const translations: Record<Locale, SiteTranslations> = {
         "New Egypt Group is a non-profit organization dedicated to lifting communities across Egypt through education, healthcare, and food security.",
       pagesTitle: "Pages",
       pages: [
-        { label: "About us", href: "#about" },
-        { label: "Services", href: "#services" },
-        { label: "Team", href: "#team" },
-        { label: "Bylaws", href: "#bylaws" },
-        { label: "Join Us", href: "#join" },
+        { label: "News", href: "/news" },
+        { label: "Campaigns", href: "/campaigns" },
+        { label: "Terms & Conditions", href: "/terms" },
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "FAQs", href: "/faqs" },
+        { label: "Contact Us", href: "/contact" },
       ],
       newsletterTitle: "Stay in the loop",
       newsletterSubtitle: "Get monthly stories and updates from our programs.",
@@ -184,19 +245,20 @@ export const translations: Record<Locale, SiteTranslations> = {
       subscribe: "Subscribe",
       copyright: "© 2026 New Egypt Group. All rights reserved.",
       bottomLinks: [
-        { label: "Privacy", href: "#privacy" },
-        { label: "Terms", href: "#terms" },
-        { label: "FAQs", href: "#faqs" },
-        { label: "Contact", href: "#contact" },
+        { label: "Privacy", href: "/privacy" },
+        { label: "Terms", href: "/terms" },
+        { label: "FAQs", href: "/faqs" },
+        { label: "Contact", href: "/contact" },
       ],
     },
     langSwitch: { en: "EN", ar: "AR", label: "Language" },
   },
   ar: {
+    brandName: "مجموعة نيوإيجيبت",
     nav: {
       home: "الرئيسية",
       news: "الأخبار",
-      activities: "الأنشطة",
+      campaigns: "الأنشطة",
       donations: "التبرعات",
       about: "من نحن",
       contact: "تواصل معنا",
@@ -204,7 +266,7 @@ export const translations: Record<Locale, SiteTranslations> = {
       menu: "افتح القائمة",
     },
     hero: {
-      eyebrow: "مجموعة مصر الجديدة",
+      eyebrow: "مجموعة نيوإيجيبت",
       title: "مدّ يد العون للأطفال",
       subtitle:
         "ندعم المجتمعات في جميع أنحاء مصر من خلال التعليم والرعاية الصحية وتوزيع الغذاء والتنمية المجتمعية المستدامة.",
@@ -214,7 +276,7 @@ export const translations: Record<Locale, SiteTranslations> = {
     mission: {
       eyebrow: "من نحن",
       title: "رسالتنا أن نبني مصر أقوى، مجتمعًا تلو الآخر",
-      body: "من فصول الصعيد إلى عيادات القرى، تعمل فرقنا جنبًا إلى جنب مع القيادات المحلية لإحداث تغيير ملموس — كل تبرع يموّل برامج تُخرج عائلات بأكملها من قلب المعاناة.",
+      body: "تتمثل مهمتنا في مجموعة نيوإيجيبت في مكافحة الفقر والأمية الرقمية في جميع أنحاء العالم من خلال تعزيز محو الأمية الرقمية كواجب دستوري. نهدف إلى إحداث تأثير كبير على تغير المناخ والتنوع البيولوجي من خلال توليد أفكار مبتكرة وتمكين القادة المحليين والتأثير على السياسات. من خلال الإنتاج الإعلامي والتواصل المجتمعي ، نقوم برفع مستوى الوعي وتسهيل التعاون بين الولايات المتحدة الأمريكية ومصر. مهمتنا تمتد على الصعيد العالمي ونحن نسعى جاهدين لخلق فرق إيجابي.",
       readMore: "اقرأ المزيد",
       statNumber: "٦٧٣ مليون",
       statCaption: "شخص حول العالم يعاني الجوع اليوم — الأمم المتحدة",
@@ -222,7 +284,7 @@ export const translations: Record<Locale, SiteTranslations> = {
     message: {
       eyebrow: "رسالتنا",
       title: "رحمة تتحوّل إلى فعل، كل يوم",
-      body: "نؤمن بأن الكرامة حقٌ لا امتياز. من خلال شفافية العطاء، ومتطوعين على الأرض، وبرامج طويلة الأمد، نحوّل كرم المانحين إلى أثر دائم في حياة الأطفال والعائلات والمسنين.",
+      body: "مجموعة نيوإيجيبت هي منظمة غيرهادفة للربح تعمل على بناء الجسور بين الجالية المصرية في الولايات المتحده  ودولتهم الحبيبة مصر. وتقوم بالعديد من الأنشطة بما في ذلك المبادرات التعليمية للأطفال وكذلك تمكين المرأة حتى تتمكن من بناء أجيال مستقبلية قادرة على بناء مستقبل مشرق . المجموعة نشطة ، وتدعم بعض القرى في صعيد مصر ومنطقة الدلتا. و قد أدت زيارة قام بها بنك الكساء إلى إحدى القرى إلى بدء سلسلة دعمهم للقرى غير القادرة على مواجهة صعوبات الحياة خلال عام 2014 ؛ بدءا من محافظة قنا حيث كانت البدايه!",
       readMore: "اقرأ المزيد",
     },
     donationCallout: {
@@ -249,12 +311,41 @@ export const translations: Record<Locale, SiteTranslations> = {
       backToNews: "العودة إلى الأخبار",
       publishedOn: "نُشر في",
     },
-    activities: {
+    campaigns: {
       eyebrow: "ماذا نفعل",
-      title: "أنشطتنا",
+      title: "حملاتنا",
       intro:
-        "من قوافل الإغاثة إلى المنح الدراسية، يمتدّ عملنا ليطال أهم القضايا للأسرة المصرية.",
+        "من قوافل الإغاثة إلى المنح الدراسية، تمتدّ حملاتنا لمعالجة أهم القضايا للأسرة المصرية.",
       seeMore: "عرض المزيد",
+      readCampaign: "عرض الحملة",
+    },
+    campaignsPage: {
+      pageTitle: "حملاتنا",
+      pageIntro: "استكشف جميع حملاتنا النشطة والمكتملة التي تصنع فرقًا في أنحاء مصر.",
+      searchPlaceholder: "ابحث في الأنشطة…",
+      allCategories: "كل الفئات",
+      noResults: "لا توجد حملات. جرّب بحثًا مختلفًا أو فئة أخرى.",
+      categories: "الفئات",
+      backToCampaigns: "العودة إلى الأنشطة",
+      startsOn: "تبدأ في",
+      endsOn: "تنتهي في",
+    },
+    faqsPage: {
+      eyebrow: "مركز المساعدة",
+      pageTitle: "الأسئلة الشائعة",
+      pageIntro: "اعثر على إجابات للأسئلة الشائعة حول برامجنا والتبرعات وكيفية المشاركة.",
+      noResults: "لا توجد أسئلة شائعة متاحة حاليًا.",
+    },
+    contactPage: {
+      eyebrow: "تواصل معنا",
+      pageTitle: "اتصل بنا",
+      pageIntro: "أرسل لنا رسالة وسيتواصل معك فريقنا في أقرب وقت ممكن.",
+      fullname: "الاسم الكامل",
+      email: "البريد الإلكتروني",
+      phone: "الهاتف (اختياري)",
+      subject: "الموضوع",
+      message: "الرسالة",
+      submit: "إرسال الرسالة",
     },
     volunteers: {
       eyebrow: "الفريق",
@@ -265,25 +356,26 @@ export const translations: Record<Locale, SiteTranslations> = {
     },
     footer: {
       blurb:
-        "مجموعة مصر الجديدة منظمة غير ربحية تكرّس عملها لرفع المجتمعات في مصر عبر التعليم والصحة والأمن الغذائي.",
+        "مجموعة نيوإيجيبت منظمة غير ربحية تكرّس عملها لرفع المجتمعات في مصر عبر التعليم والصحة والأمن الغذائي.",
       pagesTitle: "الصفحات",
       pages: [
-        { label: "من نحن", href: "#about" },
-        { label: "الخدمات", href: "#services" },
-        { label: "الفريق", href: "#team" },
-        { label: "اللوائح", href: "#bylaws" },
-        { label: "انضمّ إلينا", href: "#join" },
+        { label: "الأخبار", href: "/news" },
+        { label: "الأنشطة", href: "/campaigns" },
+        { label: "الشروط والأحكام", href: "/terms" },
+        { label: "سياسة الخصوصية", href: "/privacy" },
+        { label: "الأسئلة الشائعة", href: "/faqs" },
+        { label: "تواصل معنا", href: "/contact" },
       ],
       newsletterTitle: "ابقَ على تواصل",
       newsletterSubtitle: "قصص وتحديثات شهرية من برامجنا.",
       emailPlaceholder: "بريدك الإلكتروني",
       subscribe: "اشترك",
-      copyright: "© ٢٠٢٦ مجموعة مصر الجديدة. جميع الحقوق محفوظة.",
+      copyright: "© ٢٠٢٦ مجموعة نيوإيجيبت. جميع الحقوق محفوظة.",
       bottomLinks: [
-        { label: "الخصوصية", href: "#privacy" },
-        { label: "الشروط", href: "#terms" },
-        { label: "الأسئلة الشائعة", href: "#faqs" },
-        { label: "تواصل", href: "#contact" },
+        { label: "الخصوصية", href: "/privacy" },
+        { label: "الشروط", href: "/terms" },
+        { label: "الأسئلة الشائعة", href: "/faqs" },
+        { label: "تواصل", href: "/contact" },
       ],
     },
     langSwitch: { en: "EN", ar: "ع", label: "اللغة" },

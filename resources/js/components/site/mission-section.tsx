@@ -35,11 +35,11 @@ export function MissionSection({ t, image = DEFAULT_IMAGE }: MissionSectionProps
           <p className="text-body-text text-base md:text-lg leading-relaxed">
             {t.mission.body}
           </p>
-          <div>
+          {/* <div>
             <SiteButton href="#about" variant="primary">
               {t.mission.readMore}
             </SiteButton>
-          </div>
+          </div> */}
         </div>
       </div>
     </section>

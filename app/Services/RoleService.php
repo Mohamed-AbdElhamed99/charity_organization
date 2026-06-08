@@ -1,0 +1,147 @@
+<?php
+
+namespace App\Services;
+
+use App\Contracts\Services\RoleServiceInterface;
+use App\DTOs\CreateRoleDTO;
+use App\DTOs\UpdateRoleDTO;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+
+class RoleService implements RoleServiceInterface
+{
+    /**
+     * @var array<int, string>
+     */
+    private const SYSTEM_ROLES = [
+        'super_admin',
+        'staff',
+        'field_worker',
+        'donor',
+    ];
+
+    /**
+     * @var array<int, string>
+     */
+    private const PROTECTED_FROM_EDIT = [
+        'super_admin',
+    ];
+
+    /**
+     * @var array<int, string>
+     */
+    private const PERMISSION_VERBS = [
+        'view',
+        'create',
+        'edit',
+        'delete',
+        'manage',
+        'publish',
+        'conduct',
+        'review',
+        'approve',
+    ];
+
+    public function getPaginatedRoles(array $filters): LengthAwarePaginator
+    {
+        $query = $filters['query'] ?? null;
+
+        return Role::query()
+            ->where('guard_name', 'web')
+            ->with('permissions')
+            ->withCount('users')
+            ->when($query, function ($builder) use ($query) {
+                $builder->where('name', 'like', "%{$query}%");
+            })
+            ->orderBy('name')
+            ->paginate($filters['per_page'] ?? 20)
+            ->withQueryString();
+    }
+
+    public function getGroupedPermissions(): array
+    {
+        $permissions = Permission::query()
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->pluck('name');
+
+        $grouped = [];
+
+        foreach ($permissions as $permission) {
+            $module = $this->resolvePermissionModule($permission);
+            $grouped[$module][] = $permission;
+        }
+
+        ksort($grouped);
+
+        return $grouped;
+    }
+
+    public function getAllPermissionNames(): array
+    {
+        return Permission::query()
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+    }
+
+    public function createRole(CreateRoleDTO $dto): Role
+    {
+        $role = Role::create([
+            'name' => $dto->name,
+            'guard_name' => 'web',
+        ]);
+
+        $role->syncPermissions($dto->permissions);
+
+        return $role->load('permissions');
+    }
+
+    public function updateRole(Role $role, UpdateRoleDTO $dto): Role
+    {
+        if ($this->isProtectedFromEdit($role)) {
+            throw new AuthorizationException(__('This system role cannot be modified.'));
+        }
+
+        $role->update(['name' => $dto->name]);
+        $role->syncPermissions($dto->permissions);
+
+        return $role->load('permissions');
+    }
+
+    public function deleteRole(Role $role): void
+    {
+        if ($this->isSystemRole($role)) {
+            throw new AuthorizationException(__('This system role cannot be deleted.'));
+        }
+
+        $role->delete();
+    }
+
+    public function isSystemRole(Role $role): bool
+    {
+        return in_array($role->name, self::SYSTEM_ROLES, true);
+    }
+
+    public function isProtectedFromEdit(Role $role): bool
+    {
+        return in_array($role->name, self::PROTECTED_FROM_EDIT, true);
+    }
+
+    private function resolvePermissionModule(string $permission): string
+    {
+        foreach (self::PERMISSION_VERBS as $verb) {
+            $prefix = $verb.'_';
+
+            if (str_starts_with($permission, $prefix)) {
+                return Str::headline(substr($permission, strlen($prefix)));
+            }
+        }
+
+        return Str::headline($permission);
+    }
+}

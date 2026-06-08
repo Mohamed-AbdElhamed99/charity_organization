@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from 'react'
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { type Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useDebounce } from '@/hooks/use-debounce'
 import { DataTableFacetedFilter } from './faceted-filter'
 import { DataTableViewOptions } from './view-options'
 
@@ -26,31 +28,42 @@ export function DataTableToolbar<TData>({
   searchKey,
   filters = [],
 }: DataTableToolbarProps<TData>) {
+  const initialSearchValue = searchKey
+    ? ((table.getColumn(searchKey)?.getFilterValue() as string) ?? '')
+    : (table.getState().globalFilter ?? '')
+
+  const [localSearch, setLocalSearch] = useState(initialSearchValue)
+  const debouncedSearch = useDebounce(localSearch, 350)
+  const isFirstRender = useRef(true)
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+
+    if (searchKey) {
+      table.getColumn(searchKey)?.setFilterValue(debouncedSearch)
+    } else {
+      table.setGlobalFilter(debouncedSearch)
+    }
+  }, [debouncedSearch, searchKey, table])
+
   const isFiltered =
-    table.getState().columnFilters.length > 0 || table.getState().globalFilter
+    table.getState().columnFilters.length > 0 ||
+    table.getState().globalFilter ||
+    localSearch !== ''
 
   return (
     <div className='flex items-center justify-between'>
       <div className='flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2'>
-        {searchKey ? (
-          <Input
-            placeholder={searchPlaceholder}
-            value={
-              (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
-            }
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
-            className='h-8 w-37.5 lg:w-62.5' autoFocus
-          />
-        ) : (
-          <Input
-            placeholder={searchPlaceholder}
-            value={table.getState().globalFilter ?? ''}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-            className='h-8 w-37.5 lg:w-62.5'
-          />
-        )}
+        <Input
+          placeholder={searchPlaceholder}
+          value={localSearch}
+          onChange={(event) => setLocalSearch(event.target.value)}
+          className='h-8 w-37.5 lg:w-62.5'
+          autoFocus={Boolean(searchKey)}
+        />
         <div className='flex gap-x-2'>
           {filters.map((filter) => {
             const column = table.getColumn(filter.columnId)
@@ -69,6 +82,7 @@ export function DataTableToolbar<TData>({
           <Button
             variant='ghost'
             onClick={() => {
+              setLocalSearch('')
               table.resetColumnFilters()
               table.setGlobalFilter('')
             }}
@@ -79,7 +93,7 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+      {/* <DataTableViewOptions table={table} /> */}
     </div>
   )
 }

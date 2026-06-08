@@ -44,9 +44,9 @@ export function SiteHero({ t, backgroundImage = DEFAULT_BG }: SiteHeroProps) {
             >
               {t.hero.donateCta}
             </SiteButton>
-            <SiteButton href="#mission" variant="outline">
+            {/* <SiteButton href="#mission" variant="outline">
               {t.hero.learnMore}
-            </SiteButton>
+            </SiteButton> */}
           </div>
         </div>
       </div>

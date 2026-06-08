@@ -14,12 +14,13 @@ export interface NewsItem {
 export interface NewsCardProps {
   item: NewsItem;
   readLabel: string;
+  hrefBase?: string;
 }
 
-export function NewsCard({ item, readLabel }: NewsCardProps) {
+export function NewsCard({ item, readLabel, hrefBase = "/news" }: NewsCardProps) {
   return (
     <Link
-      href={`/news/${item.slug}`}
+      href={`${hrefBase}/${item.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
     >
       <div className="aspect-[16/10] overflow-hidden bg-surface-soft">

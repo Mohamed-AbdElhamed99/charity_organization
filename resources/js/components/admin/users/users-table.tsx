@@ -57,8 +57,10 @@ export function UsersTable({ users, roles, search }: UsersTableProps) {
         usersIndex.url(),
         buildTableQueryParams(search, resolved as Record<string, unknown>),
         {
+          preserveState: true,
           preserveScroll: true,
-          replace,
+          replace: replace ?? true,
+          only: ['users', 'search'],
         }
       )
     },

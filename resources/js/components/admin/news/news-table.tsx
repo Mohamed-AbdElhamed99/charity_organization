@@ -57,8 +57,10 @@ export function NewsTable({ news, categories, search }: NewsTableProps) {
         newsIndex.url(),
         buildTableQueryParams(search, resolved as Record<string, unknown>),
         {
+          preserveState: true,
           preserveScroll: true,
-          replace,
+          replace: replace ?? true,
+          only: ['news', 'search'],
         }
       )
     },
@@ -156,9 +158,9 @@ export function NewsTable({ news, categories, search }: NewsTableProps) {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}

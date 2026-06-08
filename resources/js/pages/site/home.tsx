@@ -5,18 +5,19 @@ import { MissionSection } from "@/components/site/mission-section";
 import { MessageSection } from "@/components/site/message-section";
 import { DonationCallout } from "@/components/site/donation-callout";
 import { NewsSection } from "@/components/site/news-section";
-import { ActivitiesSection } from "@/components/site/activities-section";
+import { CampaignsSection } from "@/components/site/campaigns-section";
 import { VolunteersSection } from "@/components/site/volunteers-section";
 import { useLocale } from "@/context/locale-context";
 import type { NewsItem } from "@/components/site/news-card";
 
 type PageProps = {
   latestNews: NewsItem[];
+  latestCampaigns: NewsItem[];
 };
 
 export default function Home() {
   const { t } = useLocale();
-  const { latestNews } = usePage<PageProps>().props;
+  const { latestNews, latestCampaigns } = usePage<PageProps>().props;
 
   return (
     <>
@@ -25,8 +26,8 @@ export default function Home() {
       <MessageSection t={t} />
       <DonationCallout t={t} />
       <NewsSection t={t} news={latestNews ?? []} />
-      <ActivitiesSection t={t} />
-      <VolunteersSection t={t} />
+      <CampaignsSection t={t} campaigns={latestCampaigns ?? []} />
+      {/* <VolunteersSection t={t} /> */}
     </>
   );
 }
