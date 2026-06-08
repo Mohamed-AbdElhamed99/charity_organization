@@ -9,6 +9,7 @@ use App\Models\CampaignCategory;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Str;
 
 class CampaignController extends Controller
 {
@@ -52,8 +53,23 @@ class CampaignController extends Controller
 
         $campaign->load(['category', 'media']);
 
+        $campaignData = (new CampaignResource($campaign))->resolve();
+
+        // Prefer the cover; only use main_media as image if it's actually an image (not a video)
+        $image = $campaignData['thumbnail']
+            ?: (str_starts_with((string) $campaignData['main_media_type'], 'image/') ? $campaignData['main_media'] : '');
+
         return Inertia::render('site/campaigns/campaigns-show', [
-            'campaign' => (new CampaignResource($campaign))->resolve(),
+            'campaign' => $campaignData,
+        ])->withViewData([
+            'meta' => [
+                'type'        => 'article',
+                'title'       => $campaignData['meta_title'],
+                'description' => Str::limit(strip_tags((string) $campaignData['meta_description']), 160),
+                'image'       => $image ?: url('/images/new-egypt-logo.png'),
+                'url'         => route('campaigns.show', $campaign),
+                'published'   => $campaignData['published_at'],
+            ],
         ]);
     }
 }
