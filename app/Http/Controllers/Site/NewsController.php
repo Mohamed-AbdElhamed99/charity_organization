@@ -9,6 +9,7 @@ use App\Models\NewsCategory;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Str;
 
 class NewsController extends Controller
 {
@@ -52,8 +53,23 @@ class NewsController extends Controller
 
         $news->load(['category', 'media']);
 
+        $article = (new NewsResource($news))->resolve();
+
+        // Prefer the thumbnail; only use main_media as image if it's actually an image (not a video)
+        $image = $article['thumbnail']
+            ?: (str_starts_with((string) $article['main_media_type'], 'image/') ? $article['main_media'] : '');
+
         return Inertia::render('site/news/news-show', [
-            'article' => (new NewsResource($news))->resolve(),
+            'article' => $article,
+        ])->withViewData([
+            'meta' => [
+                'type'        => 'article',
+                'title'       => $article['meta_title'],
+                'description' => Str::limit(strip_tags((string) $article['meta_description']), 160),
+                'image'       => $image ?: url('/images/new-egypt-logo.png'),
+                'url'         => route('news.show', $news),
+                'published'   => $article['published_at'],
+            ],
         ]);
     }
 }

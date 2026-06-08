@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark']) dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])
+    dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
 <head>
     <meta charset="utf-8">
@@ -44,7 +45,31 @@
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
     <x-inertia::head>
-        <title>{{ __('site.brand_name') }}</title>
+        @isset($meta)
+            <title>{{ $meta['title'] }} — {{ __('site.brand_name') }}</title>
+            <meta name="description" content="{{ $meta['description'] }}">
+
+            <meta property="og:type" content="{{ $meta['type'] }}">
+            <meta property="og:site_name" content="{{ __('site.brand_name') }}">
+            <meta property="og:title" content="{{ $meta['title'] }}">
+            <meta property="og:description" content="{{ $meta['description'] }}">
+            @if ($meta['image'])
+                <meta property="og:image" content="{{ $meta['image'] }}">
+            @endif
+            <meta property="og:url" content="{{ $meta['url'] }}">
+            @if ($meta['published'])
+                <meta property="article:published_time" content="{{ $meta['published'] }}">
+            @endif
+
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:title" content="{{ $meta['title'] }}">
+            <meta name="twitter:description" content="{{ $meta['description'] }}">
+            @if ($meta['image'])
+                <meta name="twitter:image" content="{{ $meta['image'] }}">
+            @endif
+        @else
+            <title>{{ __('site.brand_name') }}</title>
+        @endisset
     </x-inertia::head>
 </head>
 
