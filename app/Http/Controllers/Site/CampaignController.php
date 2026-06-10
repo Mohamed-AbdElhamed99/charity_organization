@@ -30,7 +30,7 @@ class CampaignController extends Controller
             ->when($filters['category'] ?? null, function ($query, $value) {
                 $query->where('category_id', $value);
             })
-            ->latest('start_date')
+            ->latest()
             ->paginate(9)
             ->withQueryString();
 
