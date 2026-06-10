@@ -16,6 +16,7 @@ use Throwable;
  *   Source (legacy)                 -> Target (new)
  *   --------------------------------------------------------------
  *   transactions_accounts           -> accounts
+ *   accounts (bank accounts)        -> accounts            (id-offset to avoid clash)
  *   currencies                      -> currencies
  *   payment_methods                 -> payment_methods
  *   items                           -> items
@@ -24,6 +25,8 @@ use Throwable;
  *     + transaction_expenses        ->   campaign_expenses
  *     + transaction_general_expenses->   general_expenses
  *     + transaction_users           ->   donations (member payment)
+ *   bank_transactions               -> transactions (type=bank_transfer)
+ *                                       linked rows reconcile, not duplicate
  *
  * Design decisions (confirmed with the team):
  *   - IDs are PRESERVED 1:1 for every migrated table (run with --fresh to
@@ -56,6 +59,7 @@ class MigrateLegacyTransactionsCommand extends Command
         {--connection=legacy : DB connection name for the OLD database}
         {--chunk=500 : Rows processed per chunk}
         {--fresh : Truncate target tables before importing}
+        {--include-reconciled-bank : Also import bank rows already linked to a ledger transaction (default: skip to avoid double-counting)}
         {--dry-run : Run everything inside a transaction and roll back at the end}';
 
     protected $description = 'Migrate the legacy transactions ledger and its related tables into the new optimized schema.';
@@ -78,6 +82,9 @@ class MigrateLegacyTransactionsCommand extends Command
     /** Legacy general_expenses (id => name) name lookup. */
     private array $generalExpenseNames = [];
 
+    /** Legacy bank `accounts`.id => new accounts.id (offset to avoid collision). */
+    private array $bankAccountMap = [];
+
     private array $stats = [];
 
     public function handle(): int
@@ -92,7 +99,8 @@ class MigrateLegacyTransactionsCommand extends Command
         $this->stats = [
             'accounts' => 0, 'currencies' => 0, 'payment_methods' => 0, 'items' => 0,
             'transactions' => 0, 'donations' => 0, 'campaign_expenses' => 0,
-            'general_expenses' => 0, 'skipped' => 0,
+            'general_expenses' => 0, 'bank_accounts' => 0, 'bank_transactions' => 0,
+            'bank_reconciled' => 0, 'skipped' => 0,
         ];
 
         $this->info("Migrating from connection [{$this->legacy}]"
@@ -110,11 +118,13 @@ class MigrateLegacyTransactionsCommand extends Command
             $this->migratePaymentMethods();
             $this->migrateItems();
             $this->migrateAccounts();
+            $this->migrateBankAccounts();
 
             $this->buildLookups();
             $this->loadDetailIndexes();
 
             $this->migrateLedger();
+            $this->migrateBankTransactions();
 
             DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
@@ -289,9 +299,45 @@ class MigrateLegacyTransactionsCommand extends Command
         }
     }
 
-    // ---------------------------------------------------------------------
-    // In-memory lookups
-    // ---------------------------------------------------------------------
+    /**
+     * The legacy `accounts` table (bank accounts referenced by bank_transactions)
+     * is a DIFFERENT table from `transactions_accounts`, with its own id space.
+     * Migrate it into the new `accounts` table using an offset so its ids cannot
+     * collide with the operational accounts already migrated above. The offset is
+     * computed dynamically as the current max accounts.id, so it is deterministic
+     * across --fresh runs.
+     */
+    private function migrateBankAccounts(): void
+    {
+        if (! Schema::connection($this->legacy)->hasTable('accounts')) {
+            return;
+        }
+
+        $offset = (int) (DB::table('accounts')->max('id') ?? 0);
+        $now = now();
+
+        foreach (DB::connection($this->legacy)->table('accounts')->get() as $a) {
+            $newId = $offset + (int) $a->id;
+            $this->bankAccountMap[(int) $a->id] = $newId;
+
+            DB::table('accounts')->insert([
+                'id' => $newId,
+                'name' => $a->name,
+                'account_number' => $a->number,
+                'bank_name' => null,
+                'bank_branch' => null,
+                'currency_id' => $this->defaultCurrencyId,
+                'type' => 'bank',
+                'opening_balance' => $this->num($a->balance ?? 0),
+                'is_active' => 1,
+                'notes' => 'Imported from legacy bank accounts (legacy id ' . $a->id . ').',
+                'created_at' => $a->created_at ?? $now,
+                'updated_at' => $a->updated_at ?? $now,
+                'deleted_at' => null,
+            ]);
+            $this->stats['bank_accounts']++;
+        }
+    }
 
     private function buildLookups(): void
     {
@@ -370,7 +416,7 @@ class MigrateLegacyTransactionsCommand extends Command
 
     private function migrateTransaction($t, ?int $accId, float $balance): float
     {
-        $type = $this->classify($t->id);
+        $type = $this->classify($t);
         $direction = ((int) $t->type === 1) ? 'in' : 'out';
 
         $gross = $this->num($t->gross ?? $t->amount);
@@ -412,18 +458,132 @@ class MigrateLegacyTransactionsCommand extends Command
         return $balance;
     }
 
+    // ---------------------------------------------------------------------
+    // Bank statement ledger -> transactions (type = bank_transfer)
+    // ---------------------------------------------------------------------
+
     /**
-     * Determine the new transaction_type from which legacy detail table the
-     * row appears in. Precedence handles the rare row present in more than one.
+     * Migrate legacy `bank_transactions`.
+     *
+     *  - Rows already linked to a ledger transaction (transaction_id NOT NULL)
+     *    are the bank-statement mirror of money we already migrated. By default
+     *    they are NOT re-inserted (that would double-count); instead the linked
+     *    transaction is marked reconciled. Pass --include-reconciled-bank to
+     *    import them anyway.
+     *  - Bank-only rows (transaction_id NULL) become new `bank_transfer`
+     *    transactions. Their ids are offset (bank ids share the 1.. space with
+     *    ledger ids), with the legacy id preserved in reference_number / notes.
+     *  - running_balance is taken from the bank's own `balance` column rather
+     *    than recomputed; these rows live on their own (bank) accounts.
      */
-    private function classify(int $txId): string
+    private function migrateBankTransactions(): void
     {
-        if (isset($this->expenses[$txId]))         return 'campaign_expense';
-        if (isset($this->generalExpenses[$txId]))  return 'general_expense';
-        if (isset($this->deposits[$txId]))         return 'donation';
-        if (isset($this->txUsers[$txId]))          return 'donation'; // member payment
-        // Fallback by direction: income -> donation, outflow -> adjustment.
-        return 'adjustment';
+        if (! Schema::connection($this->legacy)->hasTable('bank_transactions')) {
+            return;
+        }
+
+        $includeLinked = (bool) $this->option('include-reconciled-bank');
+        $idOffset = (int) (DB::table('transactions')->max('id') ?? 0);
+
+        DB::connection($this->legacy)->table('bank_transactions')
+            ->orderBy('id')
+            ->chunk((int) $this->option('chunk'), function ($rows) use ($includeLinked, $idOffset) {
+                foreach ($rows as $b) {
+                    // Skip rows the org flagged to ignore.
+                    if (! empty($b->is_ignore)) {
+                        $this->stats['skipped']++;
+                        continue;
+                    }
+
+                    // Linked to an existing ledger transaction -> reconcile, don't duplicate.
+                    if (! empty($b->transaction_id)) {
+                        DB::table('transactions')
+                            ->where('id', $b->transaction_id)
+                            ->update([
+                                'is_reconciled' => ! empty($b->completed) ? 1 : 0,
+                                'reference_number' => DB::raw(
+                                    'COALESCE(reference_number, ' .
+                                    DB::getPdo()->quote((string) ($b->invoice_number ?: $b->check_slip ?: ('BANK#' . $b->id))) .
+                                    ')'
+                                ),
+                            ]);
+                        $this->stats['bank_reconciled']++;
+
+                        if (! $includeLinked) {
+                            continue;
+                        }
+                    }
+
+                    $this->insertBankTransaction($b, $idOffset);
+                }
+            });
+    }
+
+    private function insertBankTransaction($b, int $idOffset): void
+    {
+        // Direction: prefer the type flag; fall back to the sign of the amount.
+        $direction = $b->type === null
+            ? (((float) $b->amount) >= 0 ? 'in' : 'out')
+            : (((int) $b->type === 1) ? 'in' : 'out');
+
+        $amount = abs($this->num($b->amount));
+        $accountId = $b->account_id !== null
+            ? ($this->bankAccountMap[(int) $b->account_id] ?? null)
+            : null;
+
+        $reference = $b->invoice_number ?: $b->check_slip ?: ('BANK#' . $b->id);
+
+        DB::table('transactions')->insert([
+            'id' => $idOffset + (int) $b->id,
+            'account_id' => $accountId,
+            'transaction_type' => 'bank_transfer',
+            'direction' => $direction,
+            'currency_id' => $this->defaultCurrencyId,
+            'gross_amount' => $amount,
+            'fee_amount' => 0,
+            'net_amount' => $amount,
+            'running_balance' => $this->num($b->balance ?? 0),
+            'transaction_date' => $b->date,
+            'reference_number' => $this->truncate($reference, 255),
+            'description' => $this->truncate((string) ($b->description ?: 'Legacy bank transaction'), 255),
+            'notes' => $this->bankNotes($b),
+            'payment_method_id' => null,
+            'created_by' => null,
+            'is_reconciled' => ! empty($b->completed) ? 1 : 0,
+            'created_at' => $b->created_at ?? now(),
+            'updated_at' => $b->updated_at ?? now(),
+            'deleted_at' => null,
+        ]);
+        $this->stats['bank_transactions']++;
+    }
+
+    private function bankNotes($b): ?string
+    {
+        $parts = ['Legacy bank_transaction #' . $b->id];
+        if (! empty($b->details)) $parts[] = (string) $b->details;
+        if (! empty($b->note))    $parts[] = (string) $b->note;
+        if (! empty($b->invoice)) $parts[] = 'Invoice: ' . $b->invoice;
+        return implode("\n", $parts);
+    }
+    /*
+     *
+     * The authoritative signal is the legacy `transactions.type` column
+     * (1 = deposit / income, 0 = expense / outflow). The detail tables are only
+     * used to REFINE an expense into itemized (campaign) vs general — they are
+     * sparse in production, so they must never be the sole basis for the type.
+     */
+    private function classify($t): string
+    {
+        if ((int) $t->type === 1) {
+            return 'donation'; // any deposit/income row
+        }
+
+        // Expense (type = 0): refine the subtype from the detail tables.
+        if (isset($this->expenses[$t->id])) {
+            return 'campaign_expense';     // has itemized line-items
+        }
+        // General-expense pivot, OR no detail rows at all (un-itemized expense).
+        return 'general_expense';
     }
 
     private function insertDonation($t): void
@@ -479,25 +639,39 @@ class MigrateLegacyTransactionsCommand extends Command
 
     private function insertGeneralExpenses($t): void
     {
-        foreach ($this->generalExpenses[$t->id] ?? [] as $g) {
-            $name = $this->generalExpenseNames[$g->general_expense_id] ?? 'Legacy general expense';
+        $rows = $this->generalExpenses[$t->id] ?? [];
 
-            DB::table('general_expenses')->insert([
-                'transaction_id' => $t->id,
-                'category_id' => null,
-                'name' => $this->truncate($name, 255),
-                'amount' => $this->num($t->amount),
-                'expense_date' => $t->date,
-                'vendor_name' => null,
-                'is_recurring' => 0,
-                'created_by' => $this->validUser($t->user_id),
-                'notes' => $this->buildNotes($t),
-                'created_at' => $g->created_at ?? now(),
-                'updated_at' => $g->updated_at ?? now(),
-                'deleted_at' => $g->deleted_at ?? null,
-            ]);
-            $this->stats['general_expenses']++;
+        // Un-itemized expense (no legacy pivot rows): synthesize one detail row
+        // from the parent so the transaction is never left without a detail.
+        if (empty($rows)) {
+            $name = trim((string) ($t->note ?? '')) ?: ('Legacy expense #' . $t->id);
+            $this->writeGeneralExpense($t, $name, null);
+            return;
         }
+
+        foreach ($rows as $g) {
+            $name = $this->generalExpenseNames[$g->general_expense_id] ?? 'Legacy general expense';
+            $this->writeGeneralExpense($t, $name, $g);
+        }
+    }
+
+    private function writeGeneralExpense($t, string $name, $g): void
+    {
+        DB::table('general_expenses')->insert([
+            'transaction_id' => $t->id,
+            'category_id' => null,
+            'name' => $this->truncate($name, 255),
+            'amount' => $this->num($t->amount),
+            'expense_date' => $t->date,
+            'vendor_name' => null,
+            'is_recurring' => 0,
+            'created_by' => $this->validUser($t->user_id),
+            'notes' => $this->buildNotes($t),
+            'created_at' => $g->created_at ?? $t->created_at ?? now(),
+            'updated_at' => $g->updated_at ?? $t->updated_at ?? now(),
+            'deleted_at' => $g->deleted_at ?? null,
+        ]);
+        $this->stats['general_expenses']++;
     }
 
     // ---------------------------------------------------------------------
