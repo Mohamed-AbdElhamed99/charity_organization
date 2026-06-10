@@ -22,31 +22,17 @@ class HomeController extends Controller
             ->limit(4)
             ->get();
 
-        $upcoming = Campaign::query()
+        $campaigns = Campaign::query()
             ->public()
             ->active()
-            ->whereDate('start_date', '>=', now()->toDateString())
             ->with(['category', 'media'])
-            ->orderBy('start_date')
+            ->latest()
             ->limit(4)
             ->get();
-
-        if ($upcoming->count() < 4) {
-            $upcoming = $upcoming->merge(
-                Campaign::query()
-                    ->public()
-                    ->active()
-                    ->whereNotIn('id', $upcoming->pluck('id'))
-                    ->with(['category', 'media'])
-                    ->orderBy('start_date')
-                    ->limit(4 - $upcoming->count())
-                    ->get()
-            );
-        }
-
+            
         return Inertia::render('site/home', [
             'latestNews' => NewsResource::collection($latestNews)->resolve(),
-            'latestCampaigns' => CampaignResource::collection($upcoming)->resolve(),
+            'latestCampaigns' => CampaignResource::collection($campaigns)->resolve(),
         ]);
     }
 }
