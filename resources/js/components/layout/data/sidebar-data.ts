@@ -7,19 +7,28 @@ import {
   Mail,
   Megaphone,
   Newspaper,
+  CreditCard,
+  HeartHandshake,
+  Layers,
   Receipt,
   Scale,
   Send,
   Shield,
   Tags,
+  UserRound,
   Users,
   Wallet,
 } from 'lucide-react'
 import { index as accountsIndex } from '@/routes/admin/accounts'
+import { index as beneficiariesIndex } from '@/routes/admin/beneficiaries'
+import { index as donorProfilesIndex } from '@/routes/admin/donor-profiles'
 import { index as campaignExpensesIndex } from '@/routes/admin/campaign-expenses'
 import { index as campaignsIndex } from '@/routes/admin/campaigns'
 import { index as contactMessagesIndex } from '@/routes/admin/contact-messages'
 import { index as faqsIndex } from '@/routes/admin/faqs'
+import { index as generalExpenseCategoriesIndex } from '@/routes/admin/general-expense-categories'
+import { index as generalExpensesIndex } from '@/routes/admin/general-expenses'
+import { index as paymentMethodsIndex } from '@/routes/admin/payment-methods'
 import { index as transactionsIndex } from '@/routes/admin/transactions'
 import { index as transfersIndex } from '@/routes/admin/transfers'
 import { edit as legalPrivacyEdit } from '@/routes/admin/legal/privacy'
@@ -96,12 +105,42 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
+      title: 'Beneficiaries',
+      items: [
+        {
+          title: 'Beneficiaries',
+          url: beneficiariesIndex.url(),
+          icon: UserRound,
+        },
+        {
+          title: 'Donor Profiles',
+          url: donorProfilesIndex.url(),
+          icon: HeartHandshake,
+        },
+      ],
+    },
+    {
       title: 'Finance',
       items: [
         {
           title: 'Bank Accounts',
           url: accountsIndex.url(),
           icon: Wallet,
+        },
+        {
+          title: 'Payment Methods',
+          url: paymentMethodsIndex.url(),
+          icon: CreditCard,
+        },
+        {
+          title: 'Expense Categories',
+          url: generalExpenseCategoriesIndex.url(),
+          icon: Layers,
+        },
+        {
+          title: 'General Expenses',
+          url: generalExpensesIndex.url(),
+          icon: Receipt,
         },
         {
           title: 'Campaigns',

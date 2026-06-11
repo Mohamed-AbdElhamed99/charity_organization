@@ -3,27 +3,39 @@
 namespace App\Providers;
 
 use App\Contracts\Services\AccountServiceInterface;
+use App\Contracts\Services\AssessmentServiceInterface;
+use App\Contracts\Services\BeneficiaryServiceInterface;
 use App\Contracts\Services\CampaignCategoryServiceInterface;
 use App\Contracts\Services\CampaignExpenseServiceInterface;
 use App\Contracts\Services\CampaignServiceInterface;
 use App\Contracts\Services\ContactMessageServiceInterface;
+use App\Contracts\Services\DonorProfileServiceInterface;
 use App\Contracts\Services\FaqServiceInterface;
+use App\Contracts\Services\GeneralExpenseCategoryServiceInterface;
+use App\Contracts\Services\GeneralExpenseServiceInterface;
 use App\Contracts\Services\LegalDocumentServiceInterface;
 use App\Contracts\Services\NewsCategoryServiceInterface;
 use App\Contracts\Services\NewsServiceInterface;
+use App\Contracts\Services\PaymentMethodServiceInterface;
 use App\Contracts\Services\RoleServiceInterface;
 use App\Contracts\Services\TransactionServiceInterface;
 use App\Contracts\Services\TransferServiceInterface;
 use App\Contracts\Services\UserServiceInterface;
 use App\Services\AccountService;
+use App\Services\AssessmentService;
+use App\Services\BeneficiaryService;
 use App\Services\CampaignCategoryService;
 use App\Services\CampaignExpenseService;
 use App\Services\CampaignService;
 use App\Services\ContactMessageService;
+use App\Services\DonorProfileService;
 use App\Services\FaqService;
+use App\Services\GeneralExpenseCategoryService;
+use App\Services\GeneralExpenseService;
 use App\Services\LegalDocumentService;
 use App\Services\NewsCategoryService;
 use App\Services\NewsService;
+use App\Services\PaymentMethodService;
 use App\Services\RoleService;
 use App\Services\TransactionService;
 use App\Services\TransferService;
@@ -42,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AccountServiceInterface::class, AccountService::class);
+        $this->app->bind(BeneficiaryServiceInterface::class, BeneficiaryService::class);
+        $this->app->bind(AssessmentServiceInterface::class, AssessmentService::class);
         $this->app->bind(UserServiceInterface::class, UserService::class);
         $this->app->bind(NewsServiceInterface::class, NewsService::class);
         $this->app->bind(NewsCategoryServiceInterface::class, NewsCategoryService::class);
@@ -54,6 +68,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FaqServiceInterface::class, FaqService::class);
         $this->app->bind(LegalDocumentServiceInterface::class, LegalDocumentService::class);
         $this->app->bind(ContactMessageServiceInterface::class, ContactMessageService::class);
+        $this->app->bind(PaymentMethodServiceInterface::class, PaymentMethodService::class);
+        $this->app->bind(GeneralExpenseCategoryServiceInterface::class, GeneralExpenseCategoryService::class);
+        $this->app->bind(GeneralExpenseServiceInterface::class, GeneralExpenseService::class);
+        $this->app->bind(DonorProfileServiceInterface::class, DonorProfileService::class);
     }
 
     /**

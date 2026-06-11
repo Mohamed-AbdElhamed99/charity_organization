@@ -1,8 +1,9 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-import { router } from '@inertiajs/react'
+import { Link, router } from '@inertiajs/react'
 import { route } from 'ziggy-js'
 import { type Row } from '@tanstack/react-table'
-import { RotateCcw, Trash2, UserPen } from 'lucide-react'
+import { Eye, RotateCcw, Trash2, UserPen } from 'lucide-react'
+import { show as usersShow } from '@/routes/admin/users'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -44,8 +45,17 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem asChild>
+          <Link href={usersShow.url(user.id)}>
+            View
+            <DropdownMenuShortcut>
+              <Eye size={16} />
+            </DropdownMenuShortcut>
+          </Link>
+        </DropdownMenuItem>
         {!isDeleted && (
           <>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
                 setCurrentRow(user)

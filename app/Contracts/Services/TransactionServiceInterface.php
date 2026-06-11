@@ -35,5 +35,10 @@ interface TransactionServiceInterface
      */
     public function createForTransfer(array $data): Transaction;
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function createForGeneralExpense(array $data): Transaction;
+
     public function reverseTransaction(Transaction $transaction, int $userId): Transaction;
 }

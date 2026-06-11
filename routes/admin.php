@@ -1,14 +1,20 @@
 <?php
 
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\BeneficiaryAssessmentController;
+use App\Http\Controllers\Admin\BeneficiaryController;
 use App\Http\Controllers\Admin\CampaignCategoryController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignExpenseController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\DonorProfileController;
 use App\Http\Controllers\Admin\FaqController;
+use App\Http\Controllers\Admin\GeneralExpenseCategoryController;
+use App\Http\Controllers\Admin\GeneralExpenseController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\NewsCategoryController;
 use App\Http\Controllers\Admin\NewsController;
+use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\TransferController;
@@ -23,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::inertia('dashboard', 'admin/dashboard')->name('dashboard');
         Route::post('users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
         Route::resource('users', UserController::class)->except(['show', 'create', 'edit']);
         Route::post('news/bulk-destroy', [NewsController::class, 'bulkDestroy'])->name('news.bulk-destroy');
         Route::post('news/{id}/restore', [NewsController::class, 'restore'])->name('news.restore');
@@ -47,6 +54,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('transactions/{transaction}/reverse', [TransactionController::class, 'reverse'])->name('transactions.reverse');
         Route::get('transfers', [TransferController::class, 'index'])->name('transfers.index');
         Route::post('transfers', [TransferController::class, 'store'])->name('transfers.store');
+        Route::post('payment-methods/bulk-destroy', [PaymentMethodController::class, 'bulkDestroy'])->name('payment-methods.bulk-destroy');
+        Route::post('payment-methods/{id}/restore', [PaymentMethodController::class, 'restore'])->name('payment-methods.restore');
+        Route::resource('payment-methods', PaymentMethodController::class)->except(['show', 'create', 'edit']);
+        Route::post('general-expense-categories/bulk-destroy', [GeneralExpenseCategoryController::class, 'bulkDestroy'])->name('general-expense-categories.bulk-destroy');
+        Route::post('general-expense-categories/{id}/restore', [GeneralExpenseCategoryController::class, 'restore'])->name('general-expense-categories.restore');
+        Route::resource('general-expense-categories', GeneralExpenseCategoryController::class)->except(['show', 'create', 'edit']);
+        Route::get('general-expenses', [GeneralExpenseController::class, 'index'])->name('general-expenses.index');
+        Route::post('general-expenses', [GeneralExpenseController::class, 'store'])->name('general-expenses.store');
+        Route::patch('general-expenses/{generalExpense}', [GeneralExpenseController::class, 'update'])->name('general-expenses.update');
+        Route::delete('general-expenses/{generalExpense}', [GeneralExpenseController::class, 'destroy'])->name('general-expenses.destroy');
+        Route::post('donor-profiles/{id}/restore', [DonorProfileController::class, 'restore'])->name('donor-profiles.restore');
+        Route::resource('donor-profiles', DonorProfileController::class)->except(['create', 'edit']);
         Route::post('accounts/bulk-destroy', [AccountController::class, 'bulkDestroy'])->name('accounts.bulk-destroy');
         Route::post('accounts/{id}/restore', [AccountController::class, 'restore'])->name('accounts.restore');
         Route::resource('accounts', AccountController::class)->except(['show', 'create', 'edit']);
@@ -62,6 +81,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('contact-messages/{contactMessage}', [ContactMessageController::class, 'show'])->name('contact-messages.show');
         Route::get('contact-messages', [ContactMessageController::class, 'index'])->name('contact-messages.index');
         Route::delete('contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
+        Route::patch('beneficiaries/{beneficiary}/status', [BeneficiaryController::class, 'updateStatus'])->name('beneficiaries.status');
+        Route::resource('beneficiaries', BeneficiaryController::class);
+        Route::resource('beneficiaries.assessments', BeneficiaryAssessmentController::class)->only(['store', 'update']);
     });
 });
 

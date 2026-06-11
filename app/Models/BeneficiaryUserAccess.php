@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BeneficiaryUserAccess extends Model
 {
+    use HasFactory;
+
     protected $guarded = ['id'];
 
     protected $table = 'beneficiary_user_access';
@@ -15,8 +18,8 @@ class BeneficiaryUserAccess extends Model
     protected function casts(): array
     {
         return [
-            'allowed_fields'     => 'array',
-            'granted_at'         => 'datetime',
+            'allowed_fields' => 'array',
+            'granted_at' => 'datetime',
             'expires_in_seconds' => 'integer',
         ];
     }
@@ -45,9 +48,9 @@ class BeneficiaryUserAccess extends Model
     {
         return $query->where(function ($q) {
             $q->whereNull('expires_in_seconds')
-              ->orWhereRaw(
-                  'TIMESTAMPADD(SECOND, expires_in_seconds, granted_at) > NOW()'
-              );
+                ->orWhereRaw(
+                    'TIMESTAMPADD(SECOND, expires_in_seconds, granted_at) > NOW()'
+                );
         });
     }
 
@@ -87,12 +90,12 @@ class BeneficiaryUserAccess extends Model
 
                 $seconds = $this->expires_in_seconds;
 
-                return match(true) {
-                    $seconds >= 2_592_000 => round($seconds / 2_592_000) . ' month(s)',
-                    $seconds >= 604_800  => round($seconds / 604_800) . ' week(s)',
-                    $seconds >= 86_400   => round($seconds / 86_400) . ' day(s)',
-                    $seconds >= 3_600    => round($seconds / 3_600) . ' hour(s)',
-                    default              => $seconds . ' second(s)',
+                return match (true) {
+                    $seconds >= 2_592_000 => round($seconds / 2_592_000).' month(s)',
+                    $seconds >= 604_800 => round($seconds / 604_800).' week(s)',
+                    $seconds >= 86_400 => round($seconds / 86_400).' day(s)',
+                    $seconds >= 3_600 => round($seconds / 3_600).' hour(s)',
+                    default => $seconds.' second(s)',
                 };
             },
         );

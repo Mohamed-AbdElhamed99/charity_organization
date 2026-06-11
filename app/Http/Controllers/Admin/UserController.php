@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\Users\RestoreUserRequest;
 use App\Http\Requests\Admin\Users\StoreUserRequest;
 use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Http\Resources\Admin\User\UserResource;
+use App\Http\Resources\Admin\User\UserShowResource;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,17 @@ class UserController extends Controller
             'users' => fn () => $this->resolvePaginatedUsers($filters),
             'roles' => Role::query()->orderBy('name')->pluck('name'),
             'search' => $filters,
+        ]);
+    }
+
+    public function show(User $user): Response
+    {
+        abort_unless(request()->user()?->can('manage_users'), 403);
+
+        $user->load(['roles', 'permissions', 'country', 'state', 'media']);
+
+        return Inertia::render('admin/users/users-show', [
+            'user' => (new UserShowResource($user))->resolve(),
         ]);
     }
 

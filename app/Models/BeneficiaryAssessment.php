@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AssessmentStatus;
+use App\Enums\BeneficiaryStatus;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class BeneficiaryAssessment extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -31,14 +32,14 @@ class BeneficiaryAssessment extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'status'                  => AssessmentStatus::class,
-            'assessment_date'         => 'date',
-            'reviewed_at'             => 'datetime',
-            'housing_details'         => 'array',
-            'economic_details'        => 'array',
-            'health_details'          => 'array',
-            'family_details'          => 'array',
-            'recommended_aid_amount'  => 'decimal:2',
+            'status' => AssessmentStatus::class,
+            'assessment_date' => 'date',
+            'reviewed_at' => 'datetime',
+            'housing_details' => 'array',
+            'economic_details' => 'array',
+            'health_details' => 'array',
+            'family_details' => 'array',
+            'recommended_aid_amount' => 'decimal:2',
         ];
     }
 
@@ -102,7 +103,7 @@ class BeneficiaryAssessment extends Model implements HasMedia
     {
         \DB::transaction(function () use ($reviewer) {
             $this->update([
-                'status'      => AssessmentStatus::Approved,
+                'status' => AssessmentStatus::Approved,
                 'reviewed_by' => $reviewer->id,
                 'reviewed_at' => now(),
             ]);
@@ -119,10 +120,10 @@ class BeneficiaryAssessment extends Model implements HasMedia
     public function reject(User $reviewer, string $reason): void
     {
         $this->update([
-            'status'           => AssessmentStatus::Rejected,
+            'status' => AssessmentStatus::Rejected,
             'rejection_reason' => $reason,
-            'reviewed_by'      => $reviewer->id,
-            'reviewed_at'      => now(),
+            'reviewed_by' => $reviewer->id,
+            'reviewed_at' => now(),
         ]);
     }
 }

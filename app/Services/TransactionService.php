@@ -9,6 +9,7 @@ use App\Enums\TransactionDirection;
 use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\CampaignExpense;
+use App\Models\GeneralExpense;
 use App\Models\Transaction;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -152,6 +153,50 @@ class TransactionService implements TransactionServiceInterface
             ]);
 
             return $transaction->fresh(['account', 'currency', 'campaignExpense']);
+        });
+    }
+
+    public function createForGeneralExpense(array $data): Transaction
+    {
+        return DB::transaction(function () use ($data) {
+            $account = Account::query()
+                ->lockForUpdate()
+                ->findOrFail($data['account_id']);
+
+            $amount = round((float) $data['amount'], 2);
+            $userId = Auth::id();
+
+            $transaction = Transaction::create([
+                'account_id' => $account->id,
+                'transaction_type' => TransactionType::GeneralExpense,
+                'direction' => TransactionDirection::Out,
+                'currency_id' => $account->currency_id,
+                'gross_amount' => $amount,
+                'fee_amount' => 0,
+                'net_amount' => $amount,
+                'transaction_date' => $data['expense_date'],
+                'reference_number' => $data['reference_number'] ?? null,
+                'description' => $data['description'] ?? $data['name'],
+                'notes' => $data['transaction_notes'] ?? null,
+                'payment_method_id' => $data['payment_method_id'] ?? null,
+                'created_by' => $userId,
+            ]);
+
+            $this->applyRunningBalance($account, $transaction);
+
+            GeneralExpense::create([
+                'transaction_id' => $transaction->id,
+                'category_id' => $data['category_id'] ?? null,
+                'name' => $data['name'],
+                'amount' => $amount,
+                'expense_date' => $data['expense_date'],
+                'vendor_name' => $data['vendor_name'] ?? null,
+                'is_recurring' => $data['is_recurring'] ?? false,
+                'created_by' => $userId,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            return $transaction->fresh(['account', 'currency', 'paymentMethod', 'generalExpense']);
         });
     }
 
