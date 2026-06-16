@@ -53,7 +53,7 @@ class DonationWebhookService
     {
         /** @var PaymentIntent $paymentIntent */
         $paymentIntent = $event->data->object;
-
+        
         $donation = Donation::query()
             ->where('stripe_payment_intent_id', $paymentIntent->id)
             ->first();

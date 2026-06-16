@@ -6,6 +6,7 @@ use App\Contracts\PaymentGateway;
 use App\Services\DonationWebhookService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use UnexpectedValueException;
 
 class StripeWebhookController extends Controller
@@ -27,6 +28,7 @@ class StripeWebhookController extends Controller
         }
 
         try {
+            Log::info("Event : " , [$event]);
             $this->webhookService->handle($event);
         } catch (\Throwable) {
             return response('Processing failed', 500);
