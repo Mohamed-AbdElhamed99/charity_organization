@@ -70,9 +70,10 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
     return () => window.clearInterval(interval);
   }, [paymentIntentId, status]);
 
-  const isConfirming = status === "pending" || status === "requires_action" || status === "unknown";
+  // const isConfirming = status === "pending" || status === "requires_action" || status === "unknown";
   const isSuccess = status === "succeeded";
   const isFailed = status === "failed";
+  const isConfirming = !isSuccess && !isFailed;
 
   return (
     <>
@@ -80,7 +81,7 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
 
       <section className="bg-surface-soft pb-20 pt-32">
         <div className="mx-auto max-w-xl px-6 text-center">
-          {q && (
+          {isConfirming && (
             <>
               <Spinner className="mx-auto mb-4 size-8 text-action-red" />
               <h1 className="font-display text-3xl font-bold text-ink">
