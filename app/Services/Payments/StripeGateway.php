@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Contracts\PaymentGateway;
 use App\DTOs\PaymentIntentData;
+use Illuminate\Support\Facades\Log;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
@@ -84,6 +85,9 @@ class StripeGateway implements PaymentGateway
                 config('services.stripe.webhook_secret'),
             );
         } catch (UnexpectedValueException|SignatureVerificationException $e) {
+            Log::info("error msg " . $e->getMessage());
+            Log::info("payload" , [$payload]);
+            Log::info("sigHeader",  [$sigHeader]);
             throw new UnexpectedValueException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
