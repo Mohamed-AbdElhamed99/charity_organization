@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Site;
 
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -41,6 +42,12 @@ class CampaignResource extends JsonResource
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),
             'published_at' => $this->start_date?->format('Y-m-d'),
+            'goal_amount_cents' => $this->donation_target
+                ? Money::decimalToCents($this->donation_target)
+                : null,
+            'collected_amount_cents' => (int) ($this->collected_amount ?? 0),
+            'open_donation_form' => (bool) $this->open_donation_form,
+            'status' => $this->status?->value,
         ];
     }
 }

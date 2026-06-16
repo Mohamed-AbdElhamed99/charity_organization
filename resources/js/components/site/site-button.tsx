@@ -10,6 +10,7 @@ export interface SiteButtonProps {
   type?: "button" | "submit";
   onClick?: MouseEventHandler<HTMLButtonElement | HTMLAnchorElement>;
   className?: string;
+  disabled?: boolean;
   ariaLabel?: string;
 }
 
@@ -33,6 +34,7 @@ export function SiteButton({
   onClick,
   className = "",
   ariaLabel,
+  disabled = false,
 }: SiteButtonProps) {
   const cls = `${base} ${variants[variant]} ${className}`;
   const content = (
@@ -62,6 +64,7 @@ export function SiteButton({
       type={type}
       className={`group ${cls}`}
       aria-label={ariaLabel}
+      disabled={disabled}
       onClick={onClick as MouseEventHandler<HTMLButtonElement>}
     >
       {content}

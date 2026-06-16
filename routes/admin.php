@@ -1,12 +1,18 @@
 <?php
 
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\AidItemController;
 use App\Http\Controllers\Admin\BeneficiaryAssessmentController;
 use App\Http\Controllers\Admin\BeneficiaryController;
+use App\Http\Controllers\Admin\BeneficiarySupportController;
+use App\Http\Controllers\Admin\BeneficiarySupportReportController;
+use App\Http\Controllers\Admin\CampaignBeneficiaryReportController;
 use App\Http\Controllers\Admin\CampaignCategoryController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignExpenseController;
+use App\Http\Controllers\Admin\CampaignSupportReconciliationController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\DonationController;
 use App\Http\Controllers\Admin\DonorProfileController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\GeneralExpenseCategoryController;
@@ -43,9 +49,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
         Route::resource('campaigns', CampaignController::class)->except(['create', 'edit']);
         Route::get('campaigns/{campaign}/expenses', [CampaignExpenseController::class, 'campaignIndex'])->name('campaigns.expenses.index');
+        Route::get('campaigns/{campaign}/beneficiary-report', [CampaignBeneficiaryReportController::class, 'show'])->name('campaigns.beneficiary-report');
+        Route::get('campaigns/{campaign}/beneficiary-supports/create', [BeneficiarySupportController::class, 'createFromCampaign'])->name('campaigns.beneficiary-supports.create');
+        Route::get('campaigns/{campaign}/support-reconciliation', [CampaignSupportReconciliationController::class, 'show'])->name('campaigns.support-reconciliation');
         Route::get('campaign-expenses', [CampaignExpenseController::class, 'index'])->name('campaign-expenses.index');
         Route::post('campaign-expenses', [CampaignExpenseController::class, 'store'])->name('campaign-expenses.store');
         Route::patch('campaign-expenses/{expense}', [CampaignExpenseController::class, 'update'])->name('campaign-expenses.update');
+        Route::get('aid-items', [AidItemController::class, 'index'])->name('aid-items.index');
+        Route::post('aid-items', [AidItemController::class, 'store'])->name('aid-items.store');
+        Route::patch('aid-items/{aidItem}', [AidItemController::class, 'update'])->name('aid-items.update');
+        Route::post('beneficiary-supports', [BeneficiarySupportController::class, 'store'])->name('beneficiary-supports.store');
+        Route::get('donations', [DonationController::class, 'index'])->name('donations.index');
+        Route::get('donations/export', [DonationController::class, 'export'])->name('donations.export');
         Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
         Route::get('transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
         Route::post('transactions', [TransactionController::class, 'store'])->name('transactions.store');
@@ -82,6 +97,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('contact-messages', [ContactMessageController::class, 'index'])->name('contact-messages.index');
         Route::delete('contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
         Route::patch('beneficiaries/{beneficiary}/status', [BeneficiaryController::class, 'updateStatus'])->name('beneficiaries.status');
+        Route::get('beneficiaries/{beneficiary}/beneficiary-supports/create', [BeneficiarySupportController::class, 'createFromBeneficiary'])->name('beneficiaries.beneficiary-supports.create');
+        Route::get('beneficiaries/{beneficiary}/support-report', [BeneficiarySupportReportController::class, 'show'])->name('beneficiaries.support-report');
         Route::resource('beneficiaries', BeneficiaryController::class);
         Route::resource('beneficiaries.assessments', BeneficiaryAssessmentController::class)->only(['store', 'update']);
     });

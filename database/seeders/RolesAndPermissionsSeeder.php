@@ -40,6 +40,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Beneficiary access grants
         'manage_beneficiary_access',
+        'manage_beneficiary_support',
+        'view_beneficiary_reports',
+        'export_beneficiary_reports',
 
         // Financial
         'view_accounts',
@@ -52,6 +55,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'delete_transactions',
         'view_donations',
         'create_donations',
+        'export_donations',
         'view_expenses',
         'create_expenses',
         'edit_expenses',
@@ -95,10 +99,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_campaigns', 'create_campaigns', 'edit_campaigns', 'manage_campaign_categories',
             'view_beneficiaries', 'create_beneficiaries', 'edit_beneficiaries',
             'view_beneficiary_details',
+            'manage_beneficiary_support', 'view_beneficiary_reports', 'export_beneficiary_reports',
             'conduct_assessments',
             'view_accounts', 'create_accounts', 'edit_accounts',
             'view_transactions', 'create_transactions',
-            'view_donations', 'create_donations',
+            'view_donations', 'create_donations', 'export_donations',
             'view_expenses', 'create_expenses', 'edit_expenses', 'delete_expenses',
             'manage_payment_methods', 'manage_general_expense_categories',
             'view_donor_profiles', 'create_donor_profiles', 'edit_donor_profiles', 'delete_donor_profiles',
@@ -112,6 +117,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'field_worker' => [
             'view_beneficiaries', 'create_beneficiaries',
             'view_beneficiary_details',
+            'view_beneficiary_reports',
             'conduct_assessments',
             'view_campaigns',
         ],

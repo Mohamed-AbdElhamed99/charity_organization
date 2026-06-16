@@ -17,8 +17,10 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "league/flysystem-aws-s3-v3": "3.0",
+        "openspout/openspout": "^5.7",
         "spatie/laravel-medialibrary": "^11.23",
         "spatie/laravel-permission": "^7.4",
+        "stripe/stripe-php": "^20.2",
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {

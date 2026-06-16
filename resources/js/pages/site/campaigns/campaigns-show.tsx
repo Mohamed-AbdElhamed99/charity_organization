@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
+import { route } from "ziggy-js";
 import { ArrowLeft, ArrowRight, Calendar, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { SiteLayout } from "@/layouts/site-layout";
 import { useLocale } from "@/context/locale-context";
@@ -250,6 +251,15 @@ export default function CampaignsShow() {
 
       <article className="bg-white py-12 md:py-16">
         <div className="mx-auto max-w-[720px] px-6">
+          <div className="mb-10">
+            <Link
+              href={route("campaigns.donate", campaign.slug)}
+              className="inline-flex items-center justify-center rounded-lg bg-action-red px-6 py-3 text-sm font-semibold text-white transition hover:bg-action-red/90"
+            >
+              {locale === "ar" ? "تبرع الآن" : "Donate Now"}
+            </Link>
+          </div>
+
           {campaign.description && (
             <div
               dir={dir}

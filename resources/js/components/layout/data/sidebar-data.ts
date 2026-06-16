@@ -29,6 +29,7 @@ import { index as faqsIndex } from '@/routes/admin/faqs'
 import { index as generalExpenseCategoriesIndex } from '@/routes/admin/general-expense-categories'
 import { index as generalExpensesIndex } from '@/routes/admin/general-expenses'
 import { index as paymentMethodsIndex } from '@/routes/admin/payment-methods'
+import { index as donationsIndex } from '@/routes/admin/donations'
 import { index as transactionsIndex } from '@/routes/admin/transactions'
 import { index as transfersIndex } from '@/routes/admin/transfers'
 import { edit as legalPrivacyEdit } from '@/routes/admin/legal/privacy'
@@ -117,6 +118,11 @@ export const sidebarData: SidebarData = {
           url: donorProfilesIndex.url(),
           icon: HeartHandshake,
         },
+        {
+          title: 'Aid Items',
+          url: '/admin/aid-items',
+          icon: Layers,
+        },
       ],
     },
     {
@@ -151,6 +157,11 @@ export const sidebarData: SidebarData = {
           title: 'Campaign Expenses',
           url: campaignExpensesIndex.url(),
           icon: Receipt,
+        },
+        {
+          title: 'Donations',
+          url: donationsIndex.url(),
+          icon: HeartHandshake,
         },
         {
           title: 'Transactions',

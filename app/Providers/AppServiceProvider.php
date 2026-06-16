@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\PaymentGateway;
 use App\Contracts\Services\AccountServiceInterface;
 use App\Contracts\Services\AssessmentServiceInterface;
 use App\Contracts\Services\BeneficiaryServiceInterface;
@@ -36,6 +37,7 @@ use App\Services\LegalDocumentService;
 use App\Services\NewsCategoryService;
 use App\Services\NewsService;
 use App\Services\PaymentMethodService;
+use App\Services\Payments\StripeGateway;
 use App\Services\RoleService;
 use App\Services\TransactionService;
 use App\Services\TransferService;
@@ -45,6 +47,8 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use InvalidArgumentException;
+use Stripe\StripeClient;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,6 +57,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(StripeClient::class, function () {
+            $secret = (string) config('services.stripe.secret', '');
+
+            if (blank($secret)) {
+                throw new InvalidArgumentException('Stripe secret key is not configured. Set STRIPE_SECRET in your environment.');
+            }
+
+            return new StripeClient($secret);
+        });
+
+        $this->app->bind(PaymentGateway::class, StripeGateway::class);
         $this->app->bind(AccountServiceInterface::class, AccountService::class);
         $this->app->bind(BeneficiaryServiceInterface::class, BeneficiaryService::class);
         $this->app->bind(AssessmentServiceInterface::class, AssessmentService::class);

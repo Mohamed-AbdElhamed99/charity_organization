@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react'
+import { route } from 'ziggy-js'
 import { ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Main } from '@/components/layout/main'
@@ -33,6 +34,21 @@ export default function CampaignsShow() {
             <Link href={campaignsIndex.url()}>
               <ArrowLeft className="me-2 size-4" />
               Back to campaigns
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={route('admin.campaigns.beneficiary-supports.create', campaign.id)}>
+              Record support
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={route('admin.campaigns.beneficiary-report', campaign.id)}>
+              Beneficiary report
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={route('admin.campaigns.support-reconciliation', campaign.id)}>
+              Reconciliation
             </Link>
           </Button>
         </div>

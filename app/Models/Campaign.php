@@ -46,6 +46,7 @@ class Campaign extends Model implements HasMedia
             'repeat_until' => 'date',
             'budget' => 'decimal:2',
             'donation_target' => 'decimal:2',
+            'collected_amount' => 'integer',
             'lat' => 'decimal:7',
             'lng' => 'decimal:7',
         ];
@@ -86,6 +87,20 @@ class Campaign extends Model implements HasMedia
     public function expenses(): HasMany
     {
         return $this->hasMany(CampaignExpense::class);
+    }
+
+    /** Operational support events delivered under this campaign */
+    public function supports(): HasMany
+    {
+        return $this->hasMany(BeneficiarySupport::class);
+    }
+
+    /** Beneficiaries linked through operational support events */
+    public function supportedBeneficiaries(): BelongsToMany
+    {
+        return $this->belongsToMany(Beneficiary::class, 'beneficiary_supports')
+            ->withPivot(['id', 'supported_at', 'status', 'created_by', 'notes'])
+            ->withTimestamps();
     }
 
     /** All donations designated to this campaign */
@@ -226,17 +241,40 @@ class Campaign extends Model implements HasMedia
         );
     }
 
-    /** Progress percentage toward donation target */
+    /** Progress percentage toward donation target (uses collected_amount cents vs target dollars) */
     protected function donationProgress(): Attribute
     {
         return Attribute::make(
             get: function () {
-                if (! $this->donation_target || $this->donation_target == 0) {
+                if (! $this->donation_target || (float) $this->donation_target == 0) {
                     return null;
                 }
 
-                return min(100, round(($this->totalDonated / $this->donation_target) * 100, 2));
+                $targetCents = (int) bcmul((string) $this->donation_target, '100', 0);
+                if ($targetCents <= 0) {
+                    return null;
+                }
+
+                $percent = ($this->collected_amount / $targetCents) * 100;
+
+                return min(100, round($percent, 2));
             },
+        );
+    }
+
+    protected function progressPercent(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->donation_progress,
+        );
+    }
+
+    protected function supportedBeneficiariesCount(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => (int) $this->supports()
+                ->distinct('beneficiary_id')
+                ->count('beneficiary_id'),
         );
     }
 

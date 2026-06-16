@@ -31,11 +31,11 @@ export function SiteHeader({
   }, [transparentOnTop]);
 
   const navLinks = [
-    { label: t.nav.home, href: "/" },
-    { label: t.nav.news, href: "/news" },
-    { label: t.nav.campaigns, href: "/campaigns" },
-    { label: t.nav.donations, href: "#donations" },
-    { label: t.nav.contact, href: "/contact" },
+    { label: t.nav.home, href: route("home") },
+    { label: t.nav.news, href: route("news.index") },
+    { label: t.nav.campaigns, href: route("campaigns.index") },
+    { label: t.nav.donations, href: route("donations.index") },
+    { label: t.nav.contact, href: route("contact") },
   ];
 
   const headerBg = scrolled
@@ -80,7 +80,7 @@ export function SiteHeader({
             onLocaleChange={onLocaleChange}
             tone={scrolled ? "dark" : "light"}
           />
-          <SiteButton href="#donate" variant="primary">
+          <SiteButton href={route("donate.general")} variant="primary">
             {t.nav.donateCta}
           </SiteButton>
         </div>
@@ -116,7 +116,7 @@ export function SiteHeader({
                 onLocaleChange={onLocaleChange}
                 tone="dark"
               />
-              <SiteButton href="#donate" variant="primary">
+              <SiteButton href={route("donate.general")} variant="primary">
                 {t.nav.donateCta}
               </SiteButton>
             </div>

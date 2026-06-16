@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Head, Link, usePage } from '@inertiajs/react'
+import { route } from 'ziggy-js'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Main } from '@/components/layout/main'
@@ -109,6 +110,16 @@ export default function BeneficiariesShow() {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={route('admin.beneficiaries.beneficiary-supports.create', beneficiary.id)}>
+                    Record support
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={route('admin.beneficiaries.support-report', beneficiary.id)}>
+                    Support report
+                  </Link>
+                </Button>
                 {can.update && (
                   <>
                     <Button variant="outline" size="sm" asChild>

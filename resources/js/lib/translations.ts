@@ -83,6 +83,69 @@ export interface SiteTranslations {
     startsOn: string;
     endsOn: string;
   };
+  donationsPage: {
+    eyebrow: string;
+    pageTitle: string;
+    pageIntro: string;
+    breadcrumbHome: string;
+    searchPlaceholder: string;
+    searchButton: string;
+    clearSearch: string;
+    allCategories: string;
+    noResults: string;
+    noResultsSearch: string;
+    resetFilters: string;
+    categories: string;
+    campaignsCount: string;
+    campaignsCountOne: string;
+    donateNow: string;
+    goalReached: string;
+  };
+  donatePage: {
+    eyebrow: string;
+    generalTitle: string;
+    continueToPayment: string;
+    preparingCheckout: string;
+    donateAmount: string;
+    processing: string;
+    backToGift: string;
+    chooseAmount: string;
+    customAmount: string;
+    customAmountPlaceholder: string;
+    coverFeeLabel: string;
+    breakdownGift: string;
+    breakdownFee: string;
+    breakdownTotal: string;
+    breakdownFeeNote: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    country: string;
+    countryPlaceholder: string;
+    anonymousLabel: string;
+    message: string;
+    messagePlaceholder: string;
+    campaignUnavailable: string;
+    goalReachedNotice: string;
+    generalDonateCta: string;
+    minAmountError: string;
+    paymentError: string;
+    confirmTitle: string;
+    confirmBody: string;
+  };
+  thankYouPage: {
+    title: string;
+    confirming: string;
+    confirmingBody: string;
+    successTitle: string;
+    successGeneral: string;
+    successCampaign: string;
+    receiptNote: string;
+    failedTitle: string;
+    failedBody: string;
+    retry: string;
+  };
   faqsPage: {
     eyebrow: string;
     pageTitle: string;
@@ -202,6 +265,72 @@ export const translations: Record<Locale, SiteTranslations> = {
       backToCampaigns: "Back to Campaigns",
       startsOn: "Starts on",
       endsOn: "Ends on",
+    },
+    donationsPage: {
+      eyebrow: "Give Hope",
+      pageTitle: "Donations",
+      pageIntro:
+        "Choose a campaign and make a gift that directly supports families across Egypt.",
+      breadcrumbHome: "Home",
+      searchPlaceholder: "Search campaigns…",
+      searchButton: "Search",
+      clearSearch: "Clear search",
+      allCategories: "All",
+      noResults: "No campaigns in this category.",
+      noResultsSearch: "No results for your search.",
+      resetFilters: "Clear filters",
+      categories: "Categories",
+      campaignsCount: "campaigns",
+      campaignsCountOne: "campaign",
+      donateNow: "Donate Now",
+      goalReached: "Goal reached",
+    },
+    donatePage: {
+      eyebrow: "Donate",
+      generalTitle: "General Donation",
+      continueToPayment: "Continue to payment",
+      preparingCheckout: "Preparing checkout…",
+      donateAmount: "Donate",
+      processing: "Processing…",
+      backToGift: "Edit gift details",
+      chooseAmount: "Choose an amount",
+      customAmount: "Custom amount (USD)",
+      customAmountPlaceholder: "e.g. 75.00",
+      coverFeeLabel:
+        "Cover the processing fee so 100% of my gift reaches the cause.",
+      breakdownGift: "Your gift",
+      breakdownFee: "Processing fee",
+      breakdownTotal: "Total charged",
+      breakdownFeeNote: "in fees will be deducted so the cause receives about",
+      firstName: "First name",
+      lastName: "Last name",
+      email: "Email",
+      phone: "Phone (optional)",
+      country: "Country (optional)",
+      countryPlaceholder: "Select a country",
+      anonymousLabel: "Don't show my name publicly",
+      message: "Message (optional)",
+      messagePlaceholder: "Add a note with your gift",
+      campaignUnavailable: "This campaign is not accepting donations right now.",
+      goalReachedNotice: "This campaign has reached its goal. Thank you for your support!",
+      generalDonateCta: "Make a general donation",
+      minAmountError: "Minimum donation is",
+      paymentError: "Could not start checkout.",
+      confirmTitle: "Confirming your donation…",
+      confirmBody: "Please wait while we verify your payment.",
+    },
+    thankYouPage: {
+      title: "Thank you",
+      confirming: "Confirming your donation…",
+      confirmingBody:
+        "Please wait while we verify your payment. This usually takes a few seconds.",
+      successTitle: "Thank you!",
+      successGeneral: "Your gift will support our general programs.",
+      successCampaign: "It is designated for",
+      receiptNote: "A receipt is on its way to",
+      failedTitle: "Payment could not be completed",
+      failedBody: "Your card was not charged. You can try again from the donate page.",
+      retry: "Try again",
     },
     faqsPage: {
       eyebrow: "Help Center",
@@ -329,6 +458,69 @@ export const translations: Record<Locale, SiteTranslations> = {
       backToCampaigns: "العودة إلى الأنشطة",
       startsOn: "تبدأ في",
       endsOn: "تنتهي في",
+    },
+    donationsPage: {
+      eyebrow: "امنح الأمل",
+      pageTitle: "التبرعات",
+      pageIntro: "اختر حملة وقدّم تبرعًا يدعم العائلات في أنحاء مصر.",
+      breadcrumbHome: "الرئيسية",
+      searchPlaceholder: "ابحث في الحملات…",
+      searchButton: "بحث",
+      clearSearch: "مسح البحث",
+      allCategories: "الكل",
+      noResults: "لا توجد حملات في هذه الفئة.",
+      noResultsSearch: "لا توجد نتائج لبحثك.",
+      resetFilters: "مسح الفلاتر",
+      categories: "الفئات",
+      campaignsCount: "حملات",
+      campaignsCountOne: "حملة",
+      donateNow: "تبرّع الآن",
+      goalReached: "تم بلوغ الهدف",
+    },
+    donatePage: {
+      eyebrow: "تبرّع",
+      generalTitle: "تبرع عام",
+      continueToPayment: "متابعة إلى الدفع",
+      preparingCheckout: "جاري تجهيز الدفع…",
+      donateAmount: "تبرّع",
+      processing: "جاري المعالجة…",
+      backToGift: "تعديل تفاصيل التبرع",
+      chooseAmount: "اختر المبلغ",
+      customAmount: "مبلغ مخصص (دولار)",
+      customAmountPlaceholder: "مثال: 75.00",
+      coverFeeLabel: "تغطية رسوم المعالجة حتى يصل 100% من تبرعي للمستفيدين.",
+      breakdownGift: "تبرعك",
+      breakdownFee: "رسوم المعالجة",
+      breakdownTotal: "إجمالي الخصم",
+      breakdownFeeNote: "ستُخصم رسوم بحوالي",
+      firstName: "الاسم الأول",
+      lastName: "اسم العائلة",
+      email: "البريد الإلكتروني",
+      phone: "الهاتف (اختياري)",
+      country: "الدولة (اختياري)",
+      countryPlaceholder: "اختر الدولة",
+      anonymousLabel: "لا تعرض اسمي علنًا",
+      message: "رسالة (اختياري)",
+      messagePlaceholder: "أضف ملاحظة مع تبرعك",
+      campaignUnavailable: "هذه الحملة لا تقبل التبرعات حالياً.",
+      goalReachedNotice: "بلغت هذه الحملة هدفها. شكرًا لدعمكم!",
+      generalDonateCta: "تبرع عام",
+      minAmountError: "الحد الأدنى للتبرع هو",
+      paymentError: "تعذّر بدء عملية الدفع.",
+      confirmTitle: "جاري تأكيد تبرعك…",
+      confirmBody: "يرجى الانتظار أثناء التحقق من الدفع.",
+    },
+    thankYouPage: {
+      title: "شكرًا لك",
+      confirming: "جاري تأكيد تبرعك…",
+      confirmingBody: "يرجى الانتظار أثناء التحقق من الدفع. يستغرق ذلك عادة بضع ثوانٍ.",
+      successTitle: "شكرًا لك!",
+      successGeneral: "سيُوجَّه تبرعك لدعم برامجنا العامة.",
+      successCampaign: "مُخصَّص لـ",
+      receiptNote: "سيتم إرسال إيصال إلى",
+      failedTitle: "تعذّر إتمام الدفع",
+      failedBody: "لم يتم خصم المبلغ من بطاقتك. يمكنك المحاولة مرة أخرى من صفحة التبرع.",
+      retry: "حاول مرة أخرى",
     },
     faqsPage: {
       eyebrow: "مركز المساعدة",

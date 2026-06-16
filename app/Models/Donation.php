@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\DonationStatus;
 use App\Enums\StripeStatus;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,37 +20,40 @@ class Donation extends Model
     protected function casts(): array
     {
         return [
-            'stripe_status'    => StripeStatus::class,
-            'is_general'       => 'boolean',
+            'status' => DonationStatus::class,
+            'stripe_status' => StripeStatus::class,
+            'is_general' => 'boolean',
             'donor_covers_fee' => 'boolean',
+            'is_anonymous' => 'boolean',
+            'amount' => 'integer',
+            'metadata' => 'array',
+            'receipt_sent_at' => 'datetime',
         ];
     }
 
-    // ─── Relationships ────────────────────────────────────────────────────────
-
-    /** The unified ledger entry for this donation */
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);
     }
 
-    /** The donor user (nullable for anonymous donations) */
     public function donor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'donor_id');
     }
 
-    /** The campaign this donation is designated for (null = general) */
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
     }
 
-    // ─── Scopes ──────────────────────────────────────────────────────────────
-
     public function scopeGeneral($query)
     {
         return $query->where('is_general', true);
+    }
+
+    public function scopeForCampaign($query, int $campaignId)
+    {
+        return $query->where('campaign_id', $campaignId);
     }
 
     public function scopeDesignated($query)
@@ -58,11 +63,13 @@ class Donation extends Model
 
     public function scopeSucceeded($query)
     {
-        return $query->where(function ($q) {
-            // Non-Stripe donations are always considered confirmed
-            $q->whereNull('stripe_status')
-              ->orWhere('stripe_status', StripeStatus::Succeeded);
-        });
+        return $query->where('status', DonationStatus::Succeeded);
+    }
+
+    public function scopeBetweenDates($query, string $from, string $to)
+    {
+        return $query->whereDate('created_at', '>=', $from)
+            ->whereDate('created_at', '<=', $to);
     }
 
     public function scopeByDonor($query, int $donorId)
@@ -70,31 +77,33 @@ class Donation extends Model
         return $query->where('donor_id', $donorId);
     }
 
-    // ─── Accessors ───────────────────────────────────────────────────────────
-
-    /** Shortcut to the transaction's net_amount (what org actually received) */
-    protected function amount(): Attribute
+    protected function grossAmountCents(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->transaction?->net_amount,
+            get: fn () => $this->transaction
+                ? Money::decimalToCents($this->transaction->gross_amount)
+                : null,
         );
     }
 
-    protected function grossAmount(): Attribute
+    protected function feeAmountCents(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->transaction?->gross_amount,
+            get: fn () => $this->transaction
+                ? Money::decimalToCents($this->transaction->fee_amount)
+                : null,
         );
     }
 
-    protected function feeAmount(): Attribute
+    protected function netAmountCents(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->transaction?->fee_amount,
+            get: fn () => $this->transaction
+                ? Money::decimalToCents($this->transaction->net_amount)
+                : null,
         );
     }
 
-    /** Human-readable purpose: campaign title or "General Donation" */
     protected function purposeLabel(): Attribute
     {
         return Attribute::make(
@@ -104,13 +113,23 @@ class Donation extends Model
         );
     }
 
-    /** Donor display name: donor name or "Anonymous" */
-    protected function donorName(): Attribute
+    protected function donorDisplayName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->is_anonymous
+                ? 'Anonymous'
+                : ($this->donor?->donorProfile?->displayName
+                    ?? $this->donor?->name
+                    ?? 'Anonymous'),
+        );
+    }
+
+    protected function donorAdminName(): Attribute
     {
         return Attribute::make(
             get: fn () => $this->donor?->donorProfile?->displayName
                 ?? $this->donor?->name
-                ?? 'Anonymous',
+                ?? 'Unknown',
         );
     }
 }

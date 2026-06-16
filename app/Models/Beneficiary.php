@@ -17,7 +17,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Beneficiary extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -34,7 +34,7 @@ class Beneficiary extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'type'   => BeneficiaryType::class,
+            'type' => BeneficiaryType::class,
             'status' => BeneficiaryStatus::class,
         ];
     }
@@ -91,6 +91,20 @@ class Beneficiary extends Model implements HasMedia
             ->using(CampaignBeneficiary::class);
     }
 
+    /** Operational support events received by this beneficiary */
+    public function supports(): HasMany
+    {
+        return $this->hasMany(BeneficiarySupport::class);
+    }
+
+    /** Campaigns linked through operational support events */
+    public function supportCampaigns(): BelongsToMany
+    {
+        return $this->belongsToMany(Campaign::class, 'beneficiary_supports')
+            ->withPivot(['id', 'supported_at', 'status', 'created_by', 'notes'])
+            ->withTimestamps();
+    }
+
     /** Transfers sent directly to this beneficiary */
     public function transfers(): HasMany
     {
@@ -138,11 +152,11 @@ class Beneficiary extends Model implements HasMedia
     protected function profile(): Attribute
     {
         return Attribute::make(
-            get: fn () => match($this->type) {
-                BeneficiaryType::Individual   => $this->individual,
-                BeneficiaryType::Family       => $this->family,
+            get: fn () => match ($this->type) {
+                BeneficiaryType::Individual => $this->individual,
+                BeneficiaryType::Family => $this->family,
                 BeneficiaryType::Organization => $this->organization,
-                default                       => null,
+                default => null,
             },
         );
     }
@@ -152,14 +166,14 @@ class Beneficiary extends Model implements HasMedia
     {
         return Attribute::make(
             get: function () {
-                return match($this->type) {
-                    BeneficiaryType::Individual   => trim(implode(' ', array_filter([
+                return match ($this->type) {
+                    BeneficiaryType::Individual => trim(implode(' ', array_filter([
                         $this->individual?->first_name,
                         $this->individual?->last_name,
                     ]))),
-                    BeneficiaryType::Family       => $this->family?->household_name,
+                    BeneficiaryType::Family => $this->family?->household_name,
                     BeneficiaryType::Organization => $this->organization?->name,
-                    default                       => $this->code,
+                    default => $this->code,
                 };
             },
         );
