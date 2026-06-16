@@ -17,6 +17,7 @@ use App\Models\Transaction;
 use App\Models\WebhookEvent;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Stripe\Event;
 use Stripe\PaymentIntent;
 use Stripe\StripeObject;
@@ -37,7 +38,8 @@ class DonationWebhookService
                 'payload' => $event->toArray(),
             ],
         );
-
+        Log::info("Webhook Event " , [$webhookEvent]);
+        Log::info("processed_at " , [$webhookEvent->processed_at]);
         if ($webhookEvent->processed_at !== null) {
             return;
         }

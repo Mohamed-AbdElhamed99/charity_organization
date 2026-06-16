@@ -30,7 +30,8 @@ class StripeWebhookController extends Controller
         try {
             Log::info("Event : " , [$event]);
             $this->webhookService->handle($event);
-        } catch (\Throwable) {
+        } catch (\Exception $e) {
+            Log::info("Error : " . $e->getMessage());
             return response('Processing failed', 500);
         }
 
