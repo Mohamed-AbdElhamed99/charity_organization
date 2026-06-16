@@ -30,7 +30,7 @@ class DonationListResource extends JsonResource
                 ],
             'purpose' => $this->purpose_label,
             'amount_cents' => $this->amount,
-            'amount' => Money::formatUsd($this->amount),
+            'amount' => $this->amount !== null ? Money::formatUsd($this->amount) : '—',
             'gross_cents' => $this->gross_amount_cents,
             'fee_cents' => $this->fee_amount_cents,
             'net_cents' => $this->net_amount_cents,

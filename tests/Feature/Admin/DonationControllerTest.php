@@ -73,4 +73,22 @@ class DonationControllerTest extends TestCase
             ->get(route('admin.donations.export', ['status' => 'succeeded', 'format' => 'csv']))
             ->assertOk();
     }
+
+    public function test_index_handles_null_amount_without_crashing(): void
+    {
+        $user = $this->createSuperAdmin();
+        $this->seed(FinancialFoundationSeeder::class);
+
+        Donation::factory()->pending()->create([
+            'amount' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.donations.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('donations.data.0.amount', '—')
+                ->where('donations.data.0.amount_cents', null)
+            );
+    }
 }
