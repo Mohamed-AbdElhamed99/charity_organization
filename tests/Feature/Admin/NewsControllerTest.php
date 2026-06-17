@@ -134,7 +134,43 @@ class NewsControllerTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('admin.news.store'), [])
-            ->assertSessionHasErrors(['title_ar', 'title_en', 'is_active', 'is_private']);
+            ->assertSessionHasErrors(['title_ar', 'title_en', 'is_active', 'is_private', 'body_ar']);
+    }
+
+    public function test_store_empty_paragraph_body_ar_fails_required(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = NewsCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.news.store'), $this->validNewsPayload($category, ['body_ar' => '<p></p>']))
+            ->assertSessionHasErrors(['body_ar']);
+    }
+
+    public function test_store_paragraph_with_br_body_ar_fails_required(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = NewsCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.news.store'), $this->validNewsPayload($category, ['body_ar' => '<p><br></p>']))
+            ->assertSessionHasErrors(['body_ar']);
+    }
+
+    public function test_store_html_body_ar_is_sanitized_before_storage(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = NewsCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.news.store'), $this->validNewsPayload($category, [
+                'body_ar' => '<p>نص</p><script>alert(1)</script>',
+            ]))
+            ->assertSessionDoesntHaveErrors();
+
+        $news = News::query()->where('slug', 'news-title')->first();
+        $this->assertStringNotContainsString('<script>', (string) $news->body_ar);
+        $this->assertStringContainsString('نص', (string) $news->body_ar);
     }
 
     public function test_user_without_permission_cannot_create_news(): void

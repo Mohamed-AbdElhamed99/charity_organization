@@ -29,7 +29,7 @@ export default function LegalDocumentShow() {
             </p>
           )}
           <div
-            className="prose prose-neutral mt-10 max-w-none leading-relaxed text-body-text"
+            className="prose prose-sm md:prose-base lg:prose-lg prose-neutral mt-10 max-w-none prose-headings:font-display prose-headings:text-ink prose-a:text-action-red prose-a:underline leading-relaxed"
             dir={dir}
             dangerouslySetInnerHTML={{ __html: document.body }}
           />

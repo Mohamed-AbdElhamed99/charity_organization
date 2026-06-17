@@ -96,6 +96,30 @@ class LegalDocumentControllerTest extends TestCase
         $this->assertSame('Updated Privacy', $document->title_en);
     }
 
+    public function test_update_empty_paragraph_body_ar_fails_required(): void
+    {
+        $user = $this->createAuthorizedUser();
+
+        $this->actingAs($user)
+            ->patch(route('admin.legal.terms.update'), $this->validPayload(['body_ar' => '<p></p>']))
+            ->assertSessionHasErrors(['body_ar']);
+    }
+
+    public function test_update_html_body_ar_is_sanitized_before_storage(): void
+    {
+        $user = $this->createAuthorizedUser();
+
+        $this->actingAs($user)
+            ->patch(route('admin.legal.terms.update'), $this->validPayload([
+                'body_ar' => '<p>محتوى</p><script>alert(1)</script>',
+            ]))
+            ->assertRedirect();
+
+        $document = LegalDocument::query()->where('type', LegalDocumentType::Terms)->first();
+        $this->assertStringNotContainsString('<script>', (string) $document->body_ar);
+        $this->assertStringContainsString('محتوى', (string) $document->body_ar);
+    }
+
     public function test_user_without_permission_cannot_update_terms(): void
     {
         $user = User::factory()->create();

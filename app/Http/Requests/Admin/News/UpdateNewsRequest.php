@@ -12,6 +12,14 @@ class UpdateNewsRequest extends FormRequest
         return $this->user()?->can('edit_news') ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'body_ar' => $this->normalizeHtmlField($this->input('body_ar')),
+            'body_en' => $this->normalizeHtmlField($this->input('body_en')),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -33,7 +41,7 @@ class UpdateNewsRequest extends FormRequest
             'subtitle_en' => ['nullable', 'string', 'max:255'],
             'excerpt_ar' => ['nullable', 'string'],
             'excerpt_en' => ['nullable', 'string'],
-            'body_ar' => ['nullable', 'string'],
+            'body_ar' => ['required', 'string'],
             'body_en' => ['nullable', 'string'],
             'video_url' => ['nullable', 'url', 'max:255'],
             'published_at' => ['nullable', 'date'],
@@ -50,5 +58,14 @@ class UpdateNewsRequest extends FormRequest
             'removed_gallery_ids' => ['nullable', 'array'],
             'removed_gallery_ids.*' => ['integer', Rule::exists('media', 'id')],
         ];
+    }
+
+    private function normalizeHtmlField(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        return trim(strip_tags($value)) !== '' ? $value : null;
     }
 }

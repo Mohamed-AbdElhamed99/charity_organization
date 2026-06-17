@@ -23,6 +23,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor'
 import { recurrenceOptions, statusOptions } from './data/data'
 import type {
   Campaign,
@@ -232,15 +233,12 @@ export function CampaignsActionSheet({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description_ar">Description (Arabic)</Label>
-              <Textarea
-                id="description_ar"
-                dir="rtl"
-                className="min-h-32"
+              <Label>Description (Arabic)</Label>
+              <RichTextEditor
                 value={form.data.description_ar}
-                onChange={(event) =>
-                  form.setData('description_ar', event.target.value)
-                }
+                onChange={(html) => form.setData('description_ar', html)}
+                dir="rtl"
+                minHeight="8rem"
               />
               <InputError message={form.errors.description_ar} />
             </div>
@@ -275,14 +273,12 @@ export function CampaignsActionSheet({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description_en">Description (English)</Label>
-              <Textarea
-                id="description_en"
-                className="min-h-32"
+              <Label>Description (English)</Label>
+              <RichTextEditor
                 value={form.data.description_en}
-                onChange={(event) =>
-                  form.setData('description_en', event.target.value)
-                }
+                onChange={(html) => form.setData('description_en', html)}
+                dir="ltr"
+                minHeight="8rem"
               />
               <InputError message={form.errors.description_en} />
             </div>

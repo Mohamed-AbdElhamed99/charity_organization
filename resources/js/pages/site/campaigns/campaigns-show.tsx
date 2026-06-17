@@ -263,7 +263,7 @@ export default function CampaignsShow() {
           {campaign.description && (
             <div
               dir={dir}
-              className="prose prose-neutral max-w-none prose-headings:font-display prose-headings:text-ink prose-a:text-action-red prose-a:underline"
+              className="prose prose-sm md:prose-base lg:prose-lg prose-neutral max-w-none prose-headings:font-display prose-headings:text-ink prose-a:text-action-red prose-a:underline"
               dangerouslySetInnerHTML={{ __html: campaign.description }}
             />
           )}

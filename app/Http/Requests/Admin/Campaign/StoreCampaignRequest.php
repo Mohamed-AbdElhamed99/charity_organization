@@ -14,6 +14,14 @@ class StoreCampaignRequest extends FormRequest
         return $this->user()?->can('create_campaigns') ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'description_ar' => $this->normalizeHtmlField($this->input('description_ar')),
+            'description_en' => $this->normalizeHtmlField($this->input('description_en')),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -26,7 +34,7 @@ class StoreCampaignRequest extends FormRequest
             'category_id' => ['nullable', 'integer', Rule::exists('campaign_categories', 'id')],
             'excerpt_ar' => ['nullable', 'string'],
             'excerpt_en' => ['nullable', 'string'],
-            'description_ar' => ['nullable', 'string'],
+            'description_ar' => ['required', 'string'],
             'description_en' => ['nullable', 'string'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
@@ -50,5 +58,14 @@ class StoreCampaignRequest extends FormRequest
             'gallery' => ['nullable', 'array'],
             'gallery.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4'],
         ];
+    }
+
+    private function normalizeHtmlField(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        return trim(strip_tags($value)) !== '' ? $value : null;
     }
 }

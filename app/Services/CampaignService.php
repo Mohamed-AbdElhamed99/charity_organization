@@ -13,6 +13,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class CampaignService implements CampaignServiceInterface
 {
+    public function __construct(private readonly HtmlSanitizer $sanitizer) {}
+
     public function getPaginatedCampaigns(array $filters): LengthAwarePaginator
     {
         $query = $filters['query'] ?? null;
@@ -63,8 +65,8 @@ class CampaignService implements CampaignServiceInterface
             'title_en' => $dto->titleEn,
             'excerpt_ar' => $dto->excerptAr,
             'excerpt_en' => $dto->excerptEn,
-            'description_ar' => $dto->descriptionAr,
-            'description_en' => $dto->descriptionEn,
+            'description_ar' => $this->sanitizer->sanitize($dto->descriptionAr),
+            'description_en' => $this->sanitizer->sanitize($dto->descriptionEn),
             'start_date' => $dto->startDate,
             'end_date' => $dto->endDate,
             'address' => $dto->address,
@@ -100,8 +102,8 @@ class CampaignService implements CampaignServiceInterface
             'title_en' => $dto->titleEn,
             'excerpt_ar' => $dto->excerptAr,
             'excerpt_en' => $dto->excerptEn,
-            'description_ar' => $dto->descriptionAr,
-            'description_en' => $dto->descriptionEn,
+            'description_ar' => $this->sanitizer->sanitize($dto->descriptionAr),
+            'description_en' => $this->sanitizer->sanitize($dto->descriptionEn),
             'start_date' => $dto->startDate,
             'end_date' => $dto->endDate,
             'address' => $dto->address,

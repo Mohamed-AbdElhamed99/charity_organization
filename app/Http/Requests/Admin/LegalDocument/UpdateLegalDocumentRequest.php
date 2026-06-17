@@ -11,6 +11,14 @@ class UpdateLegalDocumentRequest extends FormRequest
         return $this->user()?->can('manage_legal') ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'body_ar' => $this->normalizeHtmlField($this->input('body_ar')),
+            'body_en' => $this->normalizeHtmlField($this->input('body_en')),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -22,5 +30,14 @@ class UpdateLegalDocumentRequest extends FormRequest
             'body_ar' => ['required', 'string'],
             'body_en' => ['nullable', 'string'],
         ];
+    }
+
+    private function normalizeHtmlField(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        return trim(strip_tags($value)) !== '' ? $value : null;
     }
 }

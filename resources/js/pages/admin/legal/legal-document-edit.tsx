@@ -3,11 +3,11 @@ import { Head, useForm, usePage } from '@inertiajs/react'
 import { route } from 'ziggy-js'
 import { LocaleFieldTabs } from '@/components/admin/locale-field-tabs'
 import InputError from '@/components/input-error'
+import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor'
 import { Main } from '@/components/layout/main'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { type LegalDocument, type LegalDocumentType } from '@/types/models/legal-document'
 
 type PageProps = {
@@ -71,16 +71,12 @@ export default function LegalDocumentEdit() {
                 <InputError message={form.errors.title_ar} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="body_ar">Body (Arabic)</Label>
-                <Textarea
-                  id="body_ar"
+                <Label>Body (Arabic)</Label>
+                <RichTextEditor
                   value={form.data.body_ar}
-                  onChange={(event) =>
-                    form.setData('body_ar', event.target.value)
-                  }
-                  className="min-h-64"
+                  onChange={(html) => form.setData('body_ar', html)}
                   dir="rtl"
-                  required
+                  minHeight="16rem"
                 />
                 <InputError message={form.errors.body_ar} />
               </div>
@@ -100,15 +96,12 @@ export default function LegalDocumentEdit() {
                 <InputError message={form.errors.title_en} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="body_en">Body (English)</Label>
-                <Textarea
-                  id="body_en"
+                <Label>Body (English)</Label>
+                <RichTextEditor
                   value={form.data.body_en}
-                  onChange={(event) =>
-                    form.setData('body_en', event.target.value)
-                  }
-                  className="min-h-64"
+                  onChange={(html) => form.setData('body_en', html)}
                   dir="ltr"
+                  minHeight="16rem"
                 />
                 <InputError message={form.errors.body_en} />
               </div>

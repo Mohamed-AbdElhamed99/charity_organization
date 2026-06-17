@@ -13,6 +13,20 @@ class StoreNewsRequest extends FormRequest
     }
 
     /**
+     * Normalise HTML body fields before validation runs.
+     * An editor cleared to a bare empty paragraph produces markup such as
+     * "<p></p>" which carries no visible text. Converting those to null ensures
+     * the `required` rule correctly rejects a genuinely empty submission.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'body_ar' => $this->normalizeHtmlField($this->input('body_ar')),
+            'body_en' => $this->normalizeHtmlField($this->input('body_en')),
+        ]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -26,7 +40,7 @@ class StoreNewsRequest extends FormRequest
             'subtitle_en' => ['nullable', 'string', 'max:255'],
             'excerpt_ar' => ['nullable', 'string'],
             'excerpt_en' => ['nullable', 'string'],
-            'body_ar' => ['nullable', 'string'],
+            'body_ar' => ['required', 'string'],
             'body_en' => ['nullable', 'string'],
             'video_url' => ['nullable', 'url', 'max:255'],
             'published_at' => ['nullable', 'date'],
@@ -41,5 +55,14 @@ class StoreNewsRequest extends FormRequest
             'gallery' => ['nullable', 'array'],
             'gallery.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm'],
         ];
+    }
+
+    private function normalizeHtmlField(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        return trim(strip_tags($value)) !== '' ? $value : null;
     }
 }

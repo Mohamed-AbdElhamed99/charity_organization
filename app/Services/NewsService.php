@@ -13,6 +13,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class NewsService implements NewsServiceInterface
 {
+    public function __construct(private readonly HtmlSanitizer $sanitizer) {}
+
     public function getPaginatedNews(array $filters): LengthAwarePaginator
     {
         $query = $filters['query'] ?? null;
@@ -70,8 +72,8 @@ class NewsService implements NewsServiceInterface
             'subtitle_en' => $dto->subtitleEn,
             'excerpt_ar' => $dto->excerptAr,
             'excerpt_en' => $dto->excerptEn,
-            'body_ar' => $dto->bodyAr,
-            'body_en' => $dto->bodyEn,
+            'body_ar' => $this->sanitizer->sanitize($dto->bodyAr),
+            'body_en' => $this->sanitizer->sanitize($dto->bodyEn),
             'video_url' => $dto->videoUrl,
             'published_at' => $dto->publishedAt,
             'is_active' => $dto->isActive,
@@ -99,8 +101,8 @@ class NewsService implements NewsServiceInterface
             'subtitle_en' => $dto->subtitleEn,
             'excerpt_ar' => $dto->excerptAr,
             'excerpt_en' => $dto->excerptEn,
-            'body_ar' => $dto->bodyAr,
-            'body_en' => $dto->bodyEn,
+            'body_ar' => $this->sanitizer->sanitize($dto->bodyAr),
+            'body_en' => $this->sanitizer->sanitize($dto->bodyEn),
             'video_url' => $dto->videoUrl,
             'published_at' => $dto->publishedAt,
             'is_active' => $dto->isActive,

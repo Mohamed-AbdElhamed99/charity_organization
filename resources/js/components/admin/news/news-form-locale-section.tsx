@@ -1,4 +1,5 @@
 import InputError from '@/components/input-error'
+import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -87,13 +88,12 @@ export function NewsFormLocaleSection({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={`body_${prefix}`}>{labels.body}</Label>
-        <Textarea
-          id={`body_${prefix}`}
+        <Label>{labels.body}</Label>
+        <RichTextEditor
           value={body}
-          onChange={(event) => onBodyChange(event.target.value)}
-          className="min-h-32"
+          onChange={onBodyChange}
           dir={locale === 'ar' ? 'rtl' : 'ltr'}
+          minHeight="8rem"
         />
         <InputError message={errors[`body_${prefix}`]} />
       </div>

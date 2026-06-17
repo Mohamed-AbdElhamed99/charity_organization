@@ -84,6 +84,52 @@ class CampaignControllerTest extends TestCase
         ]);
     }
 
+    public function test_store_validates_required_description_ar(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = CampaignCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.campaigns.store'), $this->validPayload($category, ['description_ar' => null]))
+            ->assertSessionHasErrors(['description_ar']);
+    }
+
+    public function test_store_description_en_is_optional(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = CampaignCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.campaigns.store'), $this->validPayload($category, ['description_en' => null]))
+            ->assertSessionDoesntHaveErrors(['description_en']);
+    }
+
+    public function test_store_empty_paragraph_description_ar_fails_required(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = CampaignCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.campaigns.store'), $this->validPayload($category, ['description_ar' => '<p></p>']))
+            ->assertSessionHasErrors(['description_ar']);
+    }
+
+    public function test_store_html_description_ar_is_sanitized_before_storage(): void
+    {
+        $user = $this->createAuthorizedUser();
+        $category = CampaignCategory::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.campaigns.store'), $this->validPayload($category, [
+                'description_ar' => '<p>وصف</p><script>alert(1)</script>',
+            ]))
+            ->assertSessionDoesntHaveErrors();
+
+        $campaign = Campaign::query()->where('slug', 'medical-campaign')->first();
+        $this->assertStringNotContainsString('<script>', (string) $campaign->description_ar);
+        $this->assertStringContainsString('وصف', (string) $campaign->description_ar);
+    }
+
     public function test_campaign_with_expenses_cannot_be_deleted(): void
     {
         $user = $this->createAuthorizedUser();

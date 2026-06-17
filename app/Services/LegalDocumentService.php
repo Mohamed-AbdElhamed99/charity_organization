@@ -9,6 +9,8 @@ use App\Models\LegalDocument;
 
 class LegalDocumentService implements LegalDocumentServiceInterface
 {
+    public function __construct(private readonly HtmlSanitizer $sanitizer) {}
+
     public function getByType(LegalDocumentType $type): LegalDocument
     {
         return LegalDocument::query()
@@ -21,8 +23,10 @@ class LegalDocumentService implements LegalDocumentServiceInterface
         $document->update([
             'title_ar' => $dto->titleAr,
             'title_en' => $dto->titleEn,
-            'body_ar' => $dto->bodyAr,
-            'body_en' => $dto->bodyEn,
+            // body_ar is NOT NULL in the DB; coalesce to empty string to satisfy
+            // the column constraint if sanitization strips the entire content.
+            'body_ar' => $this->sanitizer->sanitize($dto->bodyAr) ?? '',
+            'body_en' => $this->sanitizer->sanitize($dto->bodyEn),
         ]);
 
         return $document->fresh();
