@@ -3,6 +3,19 @@ import { clsx } from 'clsx';
 import type { ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+/**
+ * Format an integer amount in minor units (piasters/cents) as Egyptian Pounds.
+ * The DB stores floats; the API layer converts to integer cents before sending props.
+ */
+export function formatCurrency(minorUnits: number): string {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(minorUnits / 100);
+}
+
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }

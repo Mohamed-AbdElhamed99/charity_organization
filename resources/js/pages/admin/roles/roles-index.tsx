@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react'
 import { Main } from '@/components/layout/main'
+import { CanAccess } from '@/components/can-access'
 import { RolesDialogs } from '@/components/admin/roles/roles-dialogs'
 import { RolesPrimaryButtons } from '@/components/admin/roles/roles-primary-buttons'
 import { RolesProvider } from '@/components/admin/roles/roles-provider'
@@ -27,24 +28,25 @@ export default function RolesIndex() {
   return (
     <>
       <Head title="Roles" />
-
-      <RolesProvider>
-        <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">Roles</h2>
-              <p className="text-muted-foreground">
-                Manage roles and permission assignments.
-              </p>
+      <CanAccess permission="manage_roles">
+        <RolesProvider>
+          <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Roles</h2>
+                <p className="text-muted-foreground">
+                  Manage roles and permission assignments.
+                </p>
+              </div>
+              <RolesPrimaryButtons />
             </div>
-            <RolesPrimaryButtons />
-          </div>
 
-          <RolesTable roles={roles} search={search} />
-        </Main>
+            <RolesTable roles={roles} search={search} />
+          </Main>
 
-        <RolesDialogs permissionGroups={permissionGroups} />
-      </RolesProvider>
+          <RolesDialogs permissionGroups={permissionGroups} />
+        </RolesProvider>
+      </CanAccess>
     </>
   )
 }

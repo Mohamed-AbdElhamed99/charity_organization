@@ -27,17 +27,48 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { NavCollapsible, NavItem, NavLink, NavGroup as NavGroupProps } from '@/types/nav-types'
+import { usePermission } from '@/hooks/use-permission'
 
 export function NavGroup({ title, items }: NavGroupProps) {
   const { state, isMobile } = useSidebar()
   const { url } = usePage()
+  const { can } = usePermission()
+
+  const visibleItems = items.reduce<NavItem[]>((result, item) => {
+    const hasAccess = !item.permission || can(item.permission)
+    if (!hasAccess) {
+      return result
+    }
+
+    if (!item.items) {
+      result.push(item)
+      return result
+    }
+
+    const visibleSubItems = item.items.filter((subItem) => !subItem.permission || can(subItem.permission))
+
+    if (visibleSubItems.length === 0) {
+      return result
+    }
+
+    result.push({
+      ...item,
+      items: visibleSubItems,
+    })
+
+    return result
+  }, [])
+
+  if (visibleItems.length === 0) {
+    return null
+  }
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => {
-          const key = `${item.title}-${item.url}`
+        {visibleItems.map((item) => {
+          const key = `${item.title}-${item.url ?? 'group'}`
 
           if (!item.items)
             return <SidebarMenuLink key={key} item={item} href={url} />
@@ -106,7 +137,7 @@ function SidebarMenuCollapsible({
         </CollapsibleTrigger>
         <CollapsibleContent className='CollapsibleContent'>
           <SidebarMenuSub>
-            {item.items.map((subItem:any) => (
+            {item.items.map((subItem) => (
               <SidebarMenuSubItem key={subItem.title}>
                 <SidebarMenuSubButton
                   asChild
@@ -153,7 +184,7 @@ function SidebarMenuCollapsedDropdown({
             {item.title} {item.badge ? `(${item.badge})` : ''}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {item.items.map((sub:any) => (
+          {item.items.map((sub) => (
             <DropdownMenuItem key={`${sub.title}-${sub.url}`} asChild>
               <Link
                 href={sub.url}
@@ -177,7 +208,7 @@ function checkIsActive(href: string, item: NavItem, mainNav = false) {
   return (
     href === item.url ||
     href.split('?')[0] === item.url ||
-    !!item?.items?.filter((i:any) => i.url === href).length ||
+    !!item?.items?.filter((navItem) => navItem.url === href).length ||
     (mainNav &&
       href.split('/')[1] !== '' &&
       href.split('/')[1] === item?.url?.split('/')[1])

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignExpenseController;
 use App\Http\Controllers\Admin\CampaignSupportReconciliationController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DonationController;
 use App\Http\Controllers\Admin\DonorProfileController;
 use App\Http\Controllers\Admin\FaqController;
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::redirect('/', '/admin/dashboard');
-        Route::inertia('dashboard', 'admin/dashboard')->name('dashboard');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::post('users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
         Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
