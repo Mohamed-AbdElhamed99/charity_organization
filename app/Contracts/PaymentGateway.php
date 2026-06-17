@@ -13,7 +13,7 @@ interface PaymentGateway
 
     public function createPaymentIntent(int $chargeCents, string $currency, array $metadata): PaymentIntentData;
 
-    public function actualFeeFor(string $chargeId): int;
+    public function actualFeeFor(string $chargeId):  int|null;
 
     public function constructWebhookEvent(string $payload, string $sigHeader): Event;
 }

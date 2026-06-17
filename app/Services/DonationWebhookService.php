@@ -83,7 +83,7 @@ class DonationWebhookService
         }
 
         $grossCents = (int) $paymentIntent->amount_received;
-        $actualFeeCents = $this->gateway->actualFeeFor($chargeId);
+        $actualFeeCents = $this->gateway->actualFeeFor($chargeId) ?? (int) config("services.stripe.fee_percent") / 100  * $grossCents;
         $netCents = $grossCents - $actualFeeCents;
 
         DB::transaction(function () use ($donation, $chargeId, $grossCents, $actualFeeCents, $netCents, $webhookEvent) {
@@ -103,9 +103,7 @@ class DonationWebhookService
                 'net_amount' => Money::centsToDecimal($netCents),
                 'transaction_date' => now()->toDateString(),
                 'reference_number' => $chargeId,
-                'description' => $donation->is_general
-                    ? 'Online general donation'
-                    : 'Online campaign donation',
+                'description' => $donation->is_general? 'Online general donation' : 'Online campaign donation',
                 'payment_method_id' => $paymentMethod?->id,
                 'created_by' => null,
                 'is_reconciled' => false,

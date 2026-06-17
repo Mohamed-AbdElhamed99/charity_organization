@@ -61,8 +61,9 @@ class StripeGateway implements PaymentGateway
         );
     }
 
-    public function actualFeeFor(string $chargeId): int
+    public function actualFeeFor(string $chargeId): int|null
     {
+        sleep(3);
         $charge = $this->client->charges->retrieve($chargeId, [
             'expand' => ['balance_transaction'],
         ]);
@@ -73,7 +74,7 @@ class StripeGateway implements PaymentGateway
             $balanceTransaction = $this->client->balanceTransactions->retrieve($balanceTransaction);
         }
 
-        return (int) $balanceTransaction->fee;
+        return (int) $balanceTransaction?->fee ?? null;
     }
 
     public function constructWebhookEvent(string $payload, string $sigHeader): Event
