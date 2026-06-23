@@ -1,6 +1,7 @@
 import { Heart, ArrowRight } from "lucide-react";
 import type { SiteTranslations } from "../../lib/translations";
 import { SiteButton } from "./site-button";
+import { route } from "ziggy-js";
 
 export interface DonationCalloutProps {
   t: SiteTranslations;
@@ -31,7 +32,7 @@ export function DonationCallout({ t }: DonationCalloutProps) {
             </div>
             <div className="md:justify-self-end">
               <SiteButton
-                href="#donate-form"
+                href={route('donate.general')}
                 variant="primary"
                 icon={<ArrowRight className="h-4 w-4" />}
                 className="bg-white !text-action-red hover:!bg-gold hover:!text-ink shadow-xl"

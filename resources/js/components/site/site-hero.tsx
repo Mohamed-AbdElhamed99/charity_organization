@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import type { SiteTranslations } from "../../lib/translations";
 import { SiteButton } from "./site-button";
+import { route } from "ziggy-js";
 
 export interface SiteHeroProps {
   t: SiteTranslations;
@@ -38,7 +39,7 @@ export function SiteHero({ t, backgroundImage = DEFAULT_BG }: SiteHeroProps) {
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <SiteButton
-              href="#donate"
+              href={route("donate.general")}
               variant="primary"
               icon={<ArrowRight className="h-4 w-4" />}
             >
