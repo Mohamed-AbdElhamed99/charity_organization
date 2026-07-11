@@ -78,7 +78,7 @@ export function NewsFormSettingsSection({
         <InputError message={errors.category_id} />
       </div>
 
-      <div className="grid gap-2">
+      <div className="hidden">
         <Label htmlFor="video_url">Video embed URL</Label>
         <Input
           id="video_url"
