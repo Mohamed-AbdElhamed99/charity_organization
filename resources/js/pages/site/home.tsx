@@ -22,11 +22,11 @@ export default function Home() {
   return (
     <>
       <SiteHero t={t} />
-      <MissionSection t={t} />
-      <MessageSection t={t} />
-      <DonationCallout t={t} />
       <NewsSection t={t} news={latestNews ?? []} />
       <CampaignsSection t={t} campaigns={latestCampaigns ?? []} />
+      <MissionSection t={t} />
+      <DonationCallout t={t} />
+      <MessageSection t={t} />
       {/* <VolunteersSection t={t} /> */}
     </>
   );
