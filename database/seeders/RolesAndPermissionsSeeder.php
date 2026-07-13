@@ -24,6 +24,13 @@ class RolesAndPermissionsSeeder extends Seeder
         'publish_campaigns',
         'manage_campaign_categories',
 
+        // Meetings
+        'view_meetings',
+        'create_meetings',
+        'edit_meetings',
+        'delete_meetings',
+        'approve_meeting_minutes',
+
         // Beneficiaries — base CRUD
         'view_beneficiaries',
         'create_beneficiaries',
@@ -97,6 +104,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         'staff' => [
             'view_campaigns', 'create_campaigns', 'edit_campaigns', 'manage_campaign_categories',
+            'view_meetings', 'create_meetings', 'edit_meetings', 'approve_meeting_minutes',
             'view_beneficiaries', 'create_beneficiaries', 'edit_beneficiaries',
             'view_beneficiary_details',
             'manage_beneficiary_support', 'view_beneficiary_reports', 'export_beneficiary_reports',

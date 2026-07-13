@@ -10,6 +10,7 @@ readonly class CreateCampaignDTO
 {
     /**
      * @param  array<int, UploadedFile>  $gallery
+     * @param  array<int, int>  $meetingIds
      */
     public function __construct(
         public string $slug,
@@ -41,5 +42,6 @@ readonly class CreateCampaignDTO
         public int $createdBy,
         public ?UploadedFile $cover = null,
         public array $gallery = [],
+        public array $meetingIds = [],
     ) {}
 }

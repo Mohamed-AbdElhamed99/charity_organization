@@ -89,8 +89,9 @@ class CampaignService implements CampaignServiceInterface
         ]);
 
         $this->syncMedia($campaign, $dto->cover, $dto->gallery);
+        $campaign->meetings()->sync($dto->meetingIds);
 
-        return $campaign->load(['category', 'media']);
+        return $campaign->load(['category', 'media', 'meetings']);
     }
 
     public function updateCampaign(Campaign $campaign, UpdateCampaignDTO $dto): Campaign
@@ -145,7 +146,9 @@ class CampaignService implements CampaignServiceInterface
             }
         }
 
-        return $campaign->load(['category', 'media']);
+        $campaign->meetings()->sync($dto->meetingIds);
+
+        return $campaign->load(['category', 'media', 'meetings']);
     }
 
     public function deleteCampaign(Campaign $campaign): void

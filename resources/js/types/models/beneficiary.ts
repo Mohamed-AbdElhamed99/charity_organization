@@ -33,6 +33,10 @@ export type BeneficiaryListItem = {
   status: BeneficiaryStatus
   status_label: string
   display_name: string
+  national_id: string | null
+  address: string | null
+  country_name: string | null
+  state_name: string | null
   primary_contact: string | null
   created_at: string | null
   can_view_sensitive: boolean

@@ -48,7 +48,7 @@ export default function CampaignsIndex() {
           />
         </Main>
 
-        <CampaignsDialogs categories={categories} />
+        <CampaignsDialogs />
       </CampaignsProvider>
     </>
   )

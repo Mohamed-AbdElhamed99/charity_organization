@@ -61,6 +61,8 @@ class UpdateCampaignRequest extends FormRequest
             'gallery.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4'],
             'removed_gallery_ids' => ['nullable', 'array'],
             'removed_gallery_ids.*' => ['integer'],
+            'meeting_ids' => ['nullable', 'array'],
+            'meeting_ids.*' => ['integer', 'exists:meetings,id'],
         ];
     }
 

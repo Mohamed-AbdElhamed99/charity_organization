@@ -1,14 +1,15 @@
+import { Link } from '@inertiajs/react'
 import { Megaphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useCampaigns } from './campaigns-provider'
+import { create } from '@/routes/admin/campaigns'
 
 export function CampaignsPrimaryButtons() {
-  const { setOpen } = useCampaigns()
-
   return (
-    <Button className="space-x-1" onClick={() => setOpen('add')}>
-      <span>Add Campaign</span>
-      <Megaphone size={18} />
+    <Button className="space-x-1" asChild>
+      <Link href={create.url()}>
+        <span>Add Campaign</span>
+        <Megaphone size={18} />
+      </Link>
     </Button>
   )
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { type Table } from '@tanstack/react-table'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -32,10 +33,17 @@ export function DataTableBulkActions<TData>({
   entityName,
   children,
 }: DataTableBulkActionsProps<TData>): React.ReactNode | null {
-  const selectedRows = table.getFilteredSelectedRowModel().rows
+  // Prefer selected row model over filtered-selected so the toolbar tracks
+  // checkbox state even when column filters are applied server-side.
+  const selectedRows = table.getSelectedRowModel().rows
   const selectedCount = selectedRows.length
   const toolbarRef = useRef<HTMLDivElement>(null)
   const [announcement, setAnnouncement] = useState('')
+  const [canPortal, setCanPortal] = useState(false)
+
+  useEffect(() => {
+    setCanPortal(true)
+  }, [])
 
   // Announce selection changes to screen readers
   useEffect(() => {
@@ -123,27 +131,28 @@ export function DataTableBulkActions<TData>({
     return null
   }
 
-  return (
+  const toolbar = (
     <>
       {/* Live region for screen reader announcements */}
       <div
-        aria-live='polite'
-        aria-atomic='true'
-        className='sr-only'
-        role='status'
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        role="status"
       >
         {announcement}
       </div>
 
       <div
         ref={toolbarRef}
-        role='toolbar'
+        role="toolbar"
         aria-label={`Bulk actions for ${selectedCount} selected ${entityName}${selectedCount > 1 ? 's' : ''}`}
-        aria-describedby='bulk-actions-description'
+        aria-describedby="bulk-actions-description"
         tabIndex={-1}
         onKeyDown={handleKeyDown}
         className={cn(
-          'fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl',
+          // Portal + high z-index so overflow/ stacking on app shell cannot clip this bar
+          'fixed bottom-6 left-1/2 z-[200] -translate-x-1/2 rounded-xl',
           'transition-all delay-100 duration-300 ease-out hover:scale-105',
           'focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
         )}
@@ -159,15 +168,15 @@ export function DataTableBulkActions<TData>({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant='outline'
-                size='icon'
+                variant="outline"
+                size="icon"
                 onClick={handleClearSelection}
-                className='size-6 rounded-full'
-                aria-label='Clear selection'
-                title='Clear selection (Escape)'
+                className="size-6 rounded-full"
+                aria-label="Clear selection"
+                title="Clear selection (Escape)"
               >
                 <X />
-                <span className='sr-only'>Clear selection</span>
+                <span className="sr-only">Clear selection</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -176,23 +185,23 @@ export function DataTableBulkActions<TData>({
           </Tooltip>
 
           <Separator
-            className='h-5'
-            orientation='vertical'
-            aria-hidden='true'
+            className="h-5"
+            orientation="vertical"
+            aria-hidden="true"
           />
 
           <div
-            className='flex items-center gap-x-1 text-sm'
-            id='bulk-actions-description'
+            className="flex items-center gap-x-1 text-sm"
+            id="bulk-actions-description"
           >
             <Badge
-              variant='default'
-              className='min-w-8 rounded-lg'
+              variant="default"
+              className="min-w-8 rounded-lg"
               aria-label={`${selectedCount} selected`}
             >
               {selectedCount}
             </Badge>{' '}
-            <span className='hidden sm:inline'>
+            <span className="hidden sm:inline">
               {entityName}
               {selectedCount > 1 ? 's' : ''}
             </span>{' '}
@@ -200,9 +209,9 @@ export function DataTableBulkActions<TData>({
           </div>
 
           <Separator
-            className='h-5'
-            orientation='vertical'
-            aria-hidden='true'
+            className="h-5"
+            orientation="vertical"
+            aria-hidden="true"
           />
 
           {children}
@@ -210,4 +219,10 @@ export function DataTableBulkActions<TData>({
       </div>
     </>
   )
+
+  if (!canPortal) {
+    return toolbar
+  }
+
+  return createPortal(toolbar, document.body)
 }

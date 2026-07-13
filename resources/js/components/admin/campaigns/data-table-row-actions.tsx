@@ -1,7 +1,7 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { router } from '@inertiajs/react'
 import { type Row } from '@tanstack/react-table'
-import { Eye, Megaphone, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { show as campaignsShow } from '@/routes/admin/campaigns'
+import { edit, show as campaignsShow } from '@/routes/admin/campaigns'
 import { type Campaign } from '@/types/models/campaign'
 import { useCampaigns } from './campaigns-provider'
 
@@ -28,7 +28,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+          className="data-[state=open]:bg-muted flex h-8 w-8 p-0"
         >
           <DotsHorizontalIcon className="h-4 w-4" />
           <span className="sr-only">Open menu</span>
@@ -44,14 +44,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(campaign)
-            setOpen('edit')
-          }}
+          onClick={() => router.visit(edit.url(campaign.id))}
         >
           Edit
           <DropdownMenuShortcut>
-            <Megaphone size={16} />
+            <Pencil size={16} />
           </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

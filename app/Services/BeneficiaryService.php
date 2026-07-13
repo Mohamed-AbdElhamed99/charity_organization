@@ -19,6 +19,8 @@ class BeneficiaryService implements BeneficiaryServiceInterface
         $query = $filters['query'] ?? null;
         $type = $filters['type'] ?? null;
         $status = $filters['status'] ?? null;
+        $countryId = $filters['country_id'] ?? null;
+        $stateId = $filters['state_id'] ?? null;
         $sort = $filters['sort'] ?? 'created_at';
         $direction = $filters['direction'] ?? 'desc';
 
@@ -34,9 +36,15 @@ class BeneficiaryService implements BeneficiaryServiceInterface
 
         return Beneficiary::query()
             ->with([
-                'individual:id,beneficiary_id,first_name,middle_name,last_name,phone',
-                'family:id,beneficiary_id,household_name,phone',
-                'organization:id,beneficiary_id,name,phone,contact_phone',
+                'individual:id,beneficiary_id,first_name,middle_name,last_name,phone,national_id,address,country_id,state_id',
+                'individual.country:id,name',
+                'individual.state:id,name',
+                'family:id,beneficiary_id,household_name,phone,national_id,address,country_id,state_id',
+                'family.country:id,name',
+                'family.state:id,name',
+                'organization:id,beneficiary_id,name,phone,contact_phone,address,country_id,state_id',
+                'organization.country:id,name',
+                'organization.state:id,name',
             ])
             ->when($query, function ($builder) use ($query) {
                 $builder->where(function ($q) use ($query) {
@@ -44,14 +52,17 @@ class BeneficiaryService implements BeneficiaryServiceInterface
                         ->orWhereHas('individual', function ($individual) use ($query) {
                             $individual->where('first_name', 'like', "%{$query}%")
                                 ->orWhere('last_name', 'like', "%{$query}%")
-                                ->orWhere('national_id', 'like', "%{$query}%");
+                                ->orWhere('national_id', 'like', "%{$query}%")
+                                ->orWhere('address', 'like', "%{$query}%");
                         })
                         ->orWhereHas('family', function ($family) use ($query) {
                             $family->where('household_name', 'like', "%{$query}%")
-                                ->orWhere('national_id', 'like', "%{$query}%");
+                                ->orWhere('national_id', 'like', "%{$query}%")
+                                ->orWhere('address', 'like', "%{$query}%");
                         })
                         ->orWhereHas('organization', function ($organization) use ($query) {
-                            $organization->where('name', 'like', "%{$query}%");
+                            $organization->where('name', 'like', "%{$query}%")
+                                ->orWhere('address', 'like', "%{$query}%");
                         });
                 });
             })
@@ -62,6 +73,24 @@ class BeneficiaryService implements BeneficiaryServiceInterface
             ->when($status, function ($builder) use ($status) {
                 $statuses = is_array($status) ? $status : [$status];
                 $builder->whereIn('status', $statuses);
+            })
+            ->when($countryId, function ($builder) use ($countryId) {
+                $countryIds = is_array($countryId) ? $countryId : [$countryId];
+
+                $builder->where(function ($outer) use ($countryIds) {
+                    $outer->whereHas('individual', fn ($individual) => $individual->whereIn('country_id', $countryIds))
+                        ->orWhereHas('family', fn ($family) => $family->whereIn('country_id', $countryIds))
+                        ->orWhereHas('organization', fn ($organization) => $organization->whereIn('country_id', $countryIds));
+                });
+            })
+            ->when($stateId, function ($builder) use ($stateId) {
+                $stateIds = is_array($stateId) ? $stateId : [$stateId];
+
+                $builder->where(function ($outer) use ($stateIds) {
+                    $outer->whereHas('individual', fn ($individual) => $individual->whereIn('state_id', $stateIds))
+                        ->orWhereHas('family', fn ($family) => $family->whereIn('state_id', $stateIds))
+                        ->orWhereHas('organization', fn ($organization) => $organization->whereIn('state_id', $stateIds));
+                });
             })
             ->orderBy($sort, $direction)
             ->paginate($filters['per_page'] ?? 20)
@@ -135,6 +164,14 @@ class BeneficiaryService implements BeneficiaryServiceInterface
     public function deleteBeneficiary(Beneficiary $beneficiary): void
     {
         $beneficiary->delete();
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function bulkDelete(array $ids): void
+    {
+        Beneficiary::query()->whereIn('id', $ids)->delete();
     }
 
     public function generateCode(): string

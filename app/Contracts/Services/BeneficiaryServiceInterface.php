@@ -19,5 +19,10 @@ interface BeneficiaryServiceInterface
 
     public function deleteBeneficiary(Beneficiary $beneficiary): void;
 
+    /**
+     * @param  list<int>  $ids
+     */
+    public function bulkDelete(array $ids): void;
+
     public function generateCode(): string;
 }

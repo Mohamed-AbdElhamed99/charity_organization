@@ -13,15 +13,25 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { formatAmount, statusTypes } from '@/components/admin/campaigns/data/data'
-import { index as campaignsIndex } from '@/routes/admin/campaigns'
+import { edit, index as campaignsIndex } from '@/routes/admin/campaigns'
 import type { Campaign } from '@/types/models/campaign'
 
 type PageProps = {
   campaign: Campaign
+  reconciliation: {
+    distributed_total: number
+    campaign_expenses_total: number
+    gap: number
+  }
 }
 
+const formatUsdFromCents = (cents: number): string =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+    cents / 100,
+  )
+
 export default function CampaignsShow() {
-  const { campaign } = usePage<PageProps>().props
+  const { campaign, reconciliation } = usePage<PageProps>().props
   const badgeColor = statusTypes.get(campaign.status)
 
   return (
@@ -37,6 +47,9 @@ export default function CampaignsShow() {
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
+            <Link href={edit.url(campaign.id)}>Edit</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
             <Link href={route('admin.campaigns.beneficiary-supports.create', campaign.id)}>
               Record support
             </Link>
@@ -44,11 +57,6 @@ export default function CampaignsShow() {
           <Button variant="outline" size="sm" asChild>
             <Link href={route('admin.campaigns.beneficiary-report', campaign.id)}>
               Beneficiary report
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href={route('admin.campaigns.support-reconciliation', campaign.id)}>
-              Reconciliation
             </Link>
           </Button>
         </div>
@@ -122,6 +130,25 @@ export default function CampaignsShow() {
                 </div>
               </div>
             )}
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Linked meetings</h3>
+              {(campaign.meetings?.length ?? 0) === 0 ? (
+                <p className="text-muted-foreground text-sm">No meetings linked.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {campaign.meetings?.map((meeting) => (
+                    <Link
+                      key={meeting.id}
+                      href={route('admin.meetings.show', meeting.id)}
+                      className="bg-muted hover:bg-muted/80 rounded-md px-2 py-1 text-sm"
+                    >
+                      {meeting.meeting_number} — {meeting.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -179,6 +206,37 @@ export default function CampaignsShow() {
                   <span className="text-muted-foreground">Donations Count</span>
                   <span className="font-medium">
                     {campaign.donations_count ?? 0}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Support reconciliation</CardTitle>
+                <CardDescription>
+                  Distributed support vs campaign expenses
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Distributed total</span>
+                  <span className="font-medium">
+                    {formatUsdFromCents(reconciliation.distributed_total)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Campaign expenses total
+                  </span>
+                  <span className="font-medium">
+                    {formatUsdFromCents(reconciliation.campaign_expenses_total)}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t pt-3">
+                  <span className="text-muted-foreground">Gap</span>
+                  <span className="font-semibold">
+                    {formatUsdFromCents(reconciliation.gap)}
                   </span>
                 </div>
               </CardContent>

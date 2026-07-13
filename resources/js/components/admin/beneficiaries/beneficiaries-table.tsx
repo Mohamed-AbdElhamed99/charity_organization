@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, router } from '@inertiajs/react'
 import {
   flexRender,
@@ -8,6 +8,7 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
+  type RowSelectionState,
   type SortingState,
   type VisibilityState,
 } from '@tanstack/react-table'
@@ -25,15 +26,21 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import type { BeneficiaryListItem, SelectOption } from '@/types/models/beneficiary'
+import type {
+  BeneficiaryListItem,
+  GeoOptions,
+  SelectOption,
+} from '@/types/models/beneficiary'
 import type { Paginated } from '@/types/pagination'
 import { optionsFromServer } from './data/data'
-import { beneficiariesColumns as columns } from './beneficiaries-columns'
+import { createBeneficiariesColumns } from './beneficiaries-columns'
+import { BeneficiariesBulkActions } from './data-table-bulk-actions'
 
 type BeneficiariesTableProps = {
   beneficiaries: Paginated<BeneficiaryListItem>
   typeOptions: SelectOption[]
   statusOptions: SelectOption[]
+  geoOptions: GeoOptions
   search: Record<string, unknown>
 }
 
@@ -41,13 +48,17 @@ export function BeneficiariesTable({
   beneficiaries,
   typeOptions,
   statusOptions,
+  geoOptions,
   search,
 }: BeneficiariesTableProps) {
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     query: false,
+    country_id: false,
+    state_id: false,
   })
   const [sorting, setSorting] = useState<SortingState>([])
-
+ 
   const navigate: NavigateFn = useCallback(
     ({ search: nextSearch, replace }) => {
       const resolved =
@@ -80,21 +91,32 @@ export function BeneficiariesTable({
         { columnId: 'query', searchKey: 'query', type: 'string' },
         { columnId: 'type', searchKey: 'type', type: 'array' },
         { columnId: 'status', searchKey: 'status', type: 'array' },
+        { columnId: 'country_id', searchKey: 'country_id', type: 'array' },
+        { columnId: 'state_id', searchKey: 'state_id', type: 'array' },
       ],
     })
+
+  const columns = useMemo(
+    () => createBeneficiariesColumns(beneficiaries.from),
+    [beneficiaries.from]
+  )
 
   const table = useReactTable({
     data: beneficiaries.data,
     columns,
     state: {
       sorting,
+      rowSelection,
       columnFilters,
       columnVisibility,
     },
+    getRowId: (row) => String(row.id),
     manualFiltering: true,
     manualPagination: true,
     pageCount: beneficiaries.last_page,
+    enableRowSelection: true,
     onColumnFiltersChange,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
@@ -120,16 +142,50 @@ export function BeneficiariesTable({
     })
   )
 
+  const selectedCountryIds = (
+    (table.getColumn('country_id')?.getFilterValue() as string[] | undefined) ??
+    []
+  ).map(Number)
+
+  const countryFilterOptions = geoOptions.countries.map((country) => ({
+    label: country.name,
+    value: String(country.id),
+  }))
+
+  const stateFilterOptions = geoOptions.states
+    .filter(
+      (state) =>
+        selectedCountryIds.length === 0 ||
+        selectedCountryIds.includes(state.country_id)
+    )
+    .map((state) => ({
+      label: state.name,
+      value: String(state.id),
+    }))
+
+  const hiddenColumnIds = new Set(['query', 'country_id', 'state_id'])
+  const visibleColumnCount = columns.filter(
+    (column) => !hiddenColumnIds.has(column.id ?? '')
+  ).length
+
+  const selectedIds = Object.entries(rowSelection)
+    .filter(([, selected]) => selected)
+    .map(([id]) => Number(id))
+
+  const clearSelection = useCallback(() => {
+    setRowSelection({})
+  }, [])
+
   return (
     <div
       className={cn(
-        'max-sm:has-[div[role="toolbar"]]:mb-16',
+        selectedIds.length > 0 && 'mb-20',
         'flex flex-1 flex-col gap-4'
       )}
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder="Search beneficiaries..."
+        searchPlaceholder="Search name, national ID, address..."
         searchKey="query"
         filters={[
           {
@@ -142,6 +198,16 @@ export function BeneficiariesTable({
             title: 'Status',
             options: statusFilterOptions,
           },
+          {
+            columnId: 'country_id',
+            title: 'Country',
+            options: countryFilterOptions,
+          },
+          {
+            columnId: 'state_id',
+            title: 'State',
+            options: stateFilterOptions,
+          },
         ]}
       />
 
@@ -151,7 +217,7 @@ export function BeneficiariesTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="group/row">
                 {headerGroup.headers.map((header) => {
-                  if (header.column.id === 'query') {
+                  if (hiddenColumnIds.has(header.column.id)) {
                     return null
                   }
 
@@ -173,9 +239,13 @@ export function BeneficiariesTable({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="group/row">
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className="group/row"
+                >
                   {row.getVisibleCells().map((cell) => {
-                    if (cell.column.id === 'query') {
+                    if (hiddenColumnIds.has(cell.column.id)) {
                       return null
                     }
 
@@ -193,7 +263,7 @@ export function BeneficiariesTable({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length - 1}
+                  colSpan={visibleColumnCount}
                   className="h-32 text-center"
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -224,6 +294,11 @@ export function BeneficiariesTable({
         indexUrl={beneficiariesIndex.url()}
         defaultPerPage={20}
         className="mt-auto"
+      />
+
+      <BeneficiariesBulkActions
+        selectedIds={selectedIds}
+        onClearSelection={clearSelection}
       />
     </div>
   )

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
 import { type Campaign } from '@/types/models/campaign'
 
-type CampaignsDialogType = 'add' | 'edit' | 'delete'
+type CampaignsDialogType = 'delete'
 
 type CampaignsContextType = {
   open: CampaignsDialogType | null

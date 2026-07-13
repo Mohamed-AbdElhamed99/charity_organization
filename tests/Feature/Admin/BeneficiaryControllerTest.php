@@ -6,6 +6,8 @@ use App\Enums\BeneficiaryStatus;
 use App\Enums\BeneficiaryType;
 use App\Models\Beneficiary;
 use App\Models\BeneficiaryUserAccess;
+use App\Models\Country;
+use App\Models\State;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -265,5 +267,157 @@ class BeneficiaryControllerTest extends TestCase
 
         $this->assertDatabaseCount('beneficiaries', 0);
         $this->assertDatabaseCount('beneficiary_individuals', 0);
+    }
+
+    public function test_authorized_user_can_bulk_delete_beneficiaries(): void
+    {
+        $user = $this->createSuperAdmin();
+        $beneficiaries = Beneficiary::factory()
+            ->count(3)
+            ->individual()
+            ->create(['created_by' => $user->id]);
+
+        $this->actingAs($user)
+            ->post(route('admin.beneficiaries.bulk-destroy'), [
+                'ids' => $beneficiaries->pluck('id')->all(),
+            ])
+            ->assertRedirect();
+
+        foreach ($beneficiaries as $beneficiary) {
+            $this->assertSoftDeleted('beneficiaries', ['id' => $beneficiary->id]);
+        }
+    }
+
+    public function test_user_without_permission_cannot_bulk_delete_beneficiaries(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $user = User::factory()->create();
+        $user->assignRole('donor');
+        $beneficiary = Beneficiary::factory()->individual()->create();
+
+        $this->actingAs($user)
+            ->post(route('admin.beneficiaries.bulk-destroy'), [
+                'ids' => [$beneficiary->id],
+            ])
+            ->assertForbidden();
+
+        $this->assertNull($beneficiary->fresh()->deleted_at);
+    }
+
+    public function test_index_includes_national_id_and_address_for_authorized_user(): void
+    {
+        $user = $this->createSuperAdmin();
+        $beneficiary = Beneficiary::factory()->individual()->create(['created_by' => $user->id]);
+        $beneficiary->individual->update([
+            'national_id' => '29901151234567',
+            'address' => '12 Nile Street',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.beneficiaries.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/beneficiaries/beneficiaries-index')
+                ->where('beneficiaries.data.0.national_id', '29901151234567')
+                ->where('beneficiaries.data.0.address', '12 Nile Street')
+                ->has('geoOptions.countries')
+                ->has('geoOptions.states')
+            );
+    }
+
+    public function test_index_masks_national_id_and_address_without_sensitive_access(): void
+    {
+        $admin = $this->createSuperAdmin();
+        $staff = $this->createStaffWithoutGrant();
+        $beneficiary = Beneficiary::factory()->individual()->create(['created_by' => $admin->id]);
+        $beneficiary->individual->update([
+            'national_id' => '29901151234567',
+            'address' => '12 Nile Street',
+        ]);
+
+        $this->actingAs($staff)
+            ->get(route('admin.beneficiaries.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('beneficiaries.data.0.national_id', '••••••')
+                ->where('beneficiaries.data.0.address', '••••••')
+            );
+    }
+
+    public function test_index_can_filter_by_country_and_state(): void
+    {
+        $user = $this->createSuperAdmin();
+
+        $egypt = Country::query()->create([
+            'name' => 'Egypt',
+            'iso2' => 'EG',
+            'is_active' => true,
+        ]);
+        $cairo = State::query()->create([
+            'name' => 'Cairo',
+            'country_id' => $egypt->id,
+        ]);
+        $giza = State::query()->create([
+            'name' => 'Giza',
+            'country_id' => $egypt->id,
+        ]);
+
+        $usa = Country::query()->create([
+            'name' => 'United States',
+            'iso2' => 'US',
+            'is_active' => true,
+        ]);
+        $california = State::query()->create([
+            'name' => 'California',
+            'country_id' => $usa->id,
+        ]);
+
+        $matched = Beneficiary::factory()->individual()->create(['created_by' => $user->id]);
+        $matched->individual->update([
+            'country_id' => $egypt->id,
+            'state_id' => $cairo->id,
+        ]);
+
+        $otherState = Beneficiary::factory()->individual()->create(['created_by' => $user->id]);
+        $otherState->individual->update([
+            'country_id' => $egypt->id,
+            'state_id' => $giza->id,
+        ]);
+
+        $otherCountry = Beneficiary::factory()->individual()->create(['created_by' => $user->id]);
+        $otherCountry->individual->update([
+            'country_id' => $usa->id,
+            'state_id' => $california->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.beneficiaries.index', [
+                'country_id' => [$egypt->id],
+                'state_id' => [$cairo->id],
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('beneficiaries.data', 1)
+                ->where('beneficiaries.data.0.id', $matched->id)
+            );
+    }
+
+    public function test_index_query_searches_profile_address(): void
+    {
+        $user = $this->createSuperAdmin();
+
+        $matched = Beneficiary::factory()->individual()->create(['created_by' => $user->id]);
+        $matched->individual->update(['address' => 'Unique Nile Corniche Address']);
+
+        $other = Beneficiary::factory()->individual()->create(['created_by' => $user->id]);
+        $other->individual->update(['address' => 'Downtown Street']);
+
+        $this->actingAs($user)
+            ->get(route('admin.beneficiaries.index', ['query' => 'Nile Corniche']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('beneficiaries.data', 1)
+                ->where('beneficiaries.data.0.id', $matched->id)
+            );
     }
 }

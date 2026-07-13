@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  CalendarDays,
   FileText,
   FolderKanban,
   HelpCircle,
@@ -168,6 +169,12 @@ export const sidebarData: SidebarData = {
           url: campaignsIndex.url(),
           icon: Megaphone,
           permission: 'view_campaigns',
+        },
+        {
+          title: 'Meetings',
+          url: '/admin/meetings',
+          icon: CalendarDays,
+          permission: 'view_meetings',
         },
         {
           title: 'Campaign Expenses',

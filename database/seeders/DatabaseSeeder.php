@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             FinancialFoundationSeeder::class,   // 3 — Currencies, accounts, payment methods
             UserSeeder::class,                  // 4 — Users + donor profiles
             CampaignSeeder::class,              // 5 — Campaign categories + campaigns
+            MeetingSeeder::class,               // 5b — Meetings linked to campaigns
             BeneficiarySeeder::class,           // 6 — Beneficiaries + all sub-entities
             FinancialSeeder::class,             // 7 — Full financial dataset
             CmsSeeder::class,                   // 8 — CMS content

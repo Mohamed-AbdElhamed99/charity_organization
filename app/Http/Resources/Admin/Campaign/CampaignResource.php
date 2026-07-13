@@ -47,6 +47,12 @@ class CampaignResource extends JsonResource
                 'url' => $media->getUrl(),
                 'mime_type' => $media->mime_type,
             ])->values(),
+            'meeting_ids' => $this->whenLoaded('meetings', fn () => $this->meetings->pluck('id')->values()),
+            'meetings' => $this->whenLoaded('meetings', fn () => $this->meetings->map(fn ($meeting) => [
+                'id' => $meeting->id,
+                'title' => $meeting->title,
+                'meeting_number' => $meeting->meeting_number,
+            ])->values()),
             'expenses_count' => $this->whenCounted('expenses'),
             'donations_count' => $this->whenCounted('donations'),
             'total_donated' => $this->when(

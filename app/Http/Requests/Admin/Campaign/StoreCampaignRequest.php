@@ -57,6 +57,8 @@ class StoreCampaignRequest extends FormRequest
             'cover' => ['nullable', 'image', 'max:5120'],
             'gallery' => ['nullable', 'array'],
             'gallery.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4'],
+            'meeting_ids' => ['nullable', 'array'],
+            'meeting_ids.*' => ['integer', 'exists:meetings,id'],
         ];
     }
 

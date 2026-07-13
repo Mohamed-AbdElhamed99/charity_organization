@@ -47,14 +47,7 @@ trait ValidatesBeneficiaryPayload
             "{$prefix}.last_name" => ['required', 'string', 'max:255'],
             "{$prefix}.gender" => ['nullable', 'string', Rule::enum(UserGender::class)],
             "{$prefix}.birthdate" => ['nullable', 'date'],
-            "{$prefix}.national_id" => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('beneficiary_individuals', 'national_id')->ignore(
-                    $this->resolveIndividualProfileId()
-                ),
-            ],
+            "{$prefix}.national_id" => ['nullable', 'string', 'max:255'],
             "{$prefix}.phone" => ['nullable', 'string', 'max:255'],
             "{$prefix}.address" => ['nullable', 'string', 'max:255'],
             "{$prefix}.country_id" => ['nullable', 'integer', Rule::exists('countries', 'id')],
@@ -178,16 +171,5 @@ trait ValidatesBeneficiaryPayload
             BeneficiaryType::Family => $this->familyRules(),
             BeneficiaryType::Organization => $this->organizationRules(),
         };
-    }
-
-    private function resolveIndividualProfileId(): ?int
-    {
-        $beneficiary = $this->route('beneficiary');
-
-        if (! $beneficiary instanceof Beneficiary) {
-            return null;
-        }
-
-        return $beneficiary->individual()->value('id');
     }
 }

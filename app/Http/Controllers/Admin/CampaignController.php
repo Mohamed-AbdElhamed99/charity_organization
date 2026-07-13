@@ -13,10 +13,13 @@ use App\Http\Requests\Admin\Campaign\UpdateCampaignRequest;
 use App\Http\Resources\Admin\Campaign\CampaignResource;
 use App\Models\Campaign;
 use App\Models\CampaignCategory;
+use App\Models\Meeting;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,22 +40,18 @@ class CampaignController extends Controller
 
         return Inertia::render('admin/campaigns/campaigns-index', [
             'campaigns' => $campaigns,
-            'categories' => CampaignCategory::query()
-                ->where('is_active', true)
-                ->orderBy('name_en')
-                ->get(['id', 'name_ar', 'name_en']),
+            'categories' => $this->activeCategories(),
             'search' => $filters,
         ]);
     }
 
-    public function show(Campaign $campaign): Response
+    public function create(Request $request): Response
     {
-        abort_unless(request()->user()?->can('view_campaigns'), 403);
+        abort_unless($request->user()?->can('create_campaigns'), 403);
 
-        $campaign->load(['category', 'media'])->loadCount(['expenses', 'donations']);
-
-        return Inertia::render('admin/campaigns/campaigns-show', [
-            'campaign' => (new CampaignResource($campaign))->resolve(),
+        return Inertia::render('admin/campaigns/campaigns-create', [
+            'categories' => $this->activeCategories(),
+            'meetingOptions' => $this->meetingOptions(),
         ]);
     }
 
@@ -61,7 +60,7 @@ class CampaignController extends Controller
         $validated = $request->validated();
         $slug = $this->resolveUniqueSlug($validated['slug'] ?? null, $validated['title_en']);
 
-        $this->campaignService->createCampaign(new CreateCampaignDTO(
+        $campaign = $this->campaignService->createCampaign(new CreateCampaignDTO(
             slug: $slug,
             titleAr: $validated['title_ar'],
             titleEn: $validated['title_en'],
@@ -91,11 +90,50 @@ class CampaignController extends Controller
             createdBy: Auth::id(),
             cover: $request->file('cover'),
             gallery: $request->file('gallery') ?? [],
+            meetingIds: array_map('intval', $validated['meeting_ids'] ?? []),
         ));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Campaign created successfully.')]);
 
-        return back();
+        return redirect()->route('admin.campaigns.show', $campaign);
+    }
+
+    public function show(Campaign $campaign): Response
+    {
+        abort_unless(request()->user()?->can('view_campaigns'), 403);
+
+        $campaign->load(['category', 'media', 'meetings'])->loadCount(['expenses', 'donations']);
+
+        $distributedCents = (int) DB::table('beneficiary_support_items as bsi')
+            ->join('beneficiary_supports as bs', 'bs.id', '=', 'bsi.beneficiary_support_id')
+            ->where('bs.campaign_id', $campaign->id)
+            ->sum('bsi.total_cost');
+
+        $campaignExpensesCents = (int) $campaign->expenses()
+            ->get()
+            ->sum(fn ($expense) => (int) round((float) $expense->amount * 100));
+
+        return Inertia::render('admin/campaigns/campaigns-show', [
+            'campaign' => (new CampaignResource($campaign))->resolve(),
+            'reconciliation' => [
+                'distributed_total' => $distributedCents,
+                'campaign_expenses_total' => $campaignExpensesCents,
+                'gap' => $campaignExpensesCents - $distributedCents,
+            ],
+        ]);
+    }
+
+    public function edit(Request $request, Campaign $campaign): Response
+    {
+        abort_unless($request->user()?->can('edit_campaigns'), 403);
+
+        $campaign->load(['category', 'media', 'meetings']);
+
+        return Inertia::render('admin/campaigns/campaigns-edit', [
+            'campaign' => (new CampaignResource($campaign))->resolve(),
+            'categories' => $this->activeCategories(),
+            'meetingOptions' => $this->meetingOptions(),
+        ]);
     }
 
     public function update(UpdateCampaignRequest $request, Campaign $campaign): RedirectResponse
@@ -132,11 +170,12 @@ class CampaignController extends Controller
             cover: $request->file('cover'),
             gallery: $request->file('gallery'),
             removedGalleryIds: $validated['removed_gallery_ids'] ?? null,
+            meetingIds: array_map('intval', $validated['meeting_ids'] ?? []),
         ));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Campaign updated successfully.')]);
 
-        return back();
+        return redirect()->route('admin.campaigns.show', $campaign);
     }
 
     public function destroy(Campaign $campaign): RedirectResponse
@@ -154,6 +193,32 @@ class CampaignController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Campaign deleted successfully.')]);
 
         return back();
+    }
+
+    /**
+     * @return Collection<int, CampaignCategory>
+     */
+    private function activeCategories()
+    {
+        return CampaignCategory::query()
+            ->where('is_active', true)
+            ->orderBy('name_en')
+            ->get(['id', 'name_ar', 'name_en']);
+    }
+
+    /**
+     * @return Collection<int, array{value: string, label: string}>
+     */
+    private function meetingOptions()
+    {
+        return Meeting::query()
+            ->orderByDesc('meeting_date')
+            ->get(['id', 'title', 'meeting_number'])
+            ->map(fn (Meeting $meeting) => [
+                'value' => (string) $meeting->id,
+                'label' => "{$meeting->meeting_number} — {$meeting->title}",
+            ])
+            ->values();
     }
 
     private function resolveUniqueSlug(?string $slug, string $titleEn): string

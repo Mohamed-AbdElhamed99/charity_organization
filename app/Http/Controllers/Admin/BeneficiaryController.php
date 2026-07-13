@@ -7,6 +7,7 @@ use App\Contracts\Services\BeneficiaryServiceInterface;
 use App\Enums\BeneficiaryStatus;
 use App\Enums\BeneficiaryType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Beneficiary\BulkDestroyBeneficiaryRequest;
 use App\Http\Requests\Admin\Beneficiary\StoreBeneficiaryRequest;
 use App\Http\Requests\Admin\Beneficiary\UpdateBeneficiaryRequest;
 use App\Http\Requests\Admin\Beneficiary\UpdateBeneficiaryStatusRequest;
@@ -34,7 +35,17 @@ class BeneficiaryController extends Controller
     {
         abort_unless($request->user()?->can('viewAny', Beneficiary::class), 403);
 
-        $filters = $request->only(['query', 'type', 'status', 'sort', 'direction', 'page', 'per_page']);
+        $filters = $request->only([
+            'query',
+            'type',
+            'status',
+            'country_id',
+            'state_id',
+            'sort',
+            'direction',
+            'page',
+            'per_page',
+        ]);
         $paginator = $this->beneficiaryService->getPaginatedBeneficiaries($filters);
 
         $beneficiaries = $paginator->toArray();
@@ -51,6 +62,7 @@ class BeneficiaryController extends Controller
                 'value' => $status->value,
                 'label' => $status->label(),
             ])->values(),
+            'geoOptions' => $this->geoOptions(),
         ]);
     }
 
@@ -151,6 +163,15 @@ class BeneficiaryController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Beneficiary deleted successfully.')]);
 
         return redirect()->route('admin.beneficiaries.index');
+    }
+
+    public function bulkDestroy(BulkDestroyBeneficiaryRequest $request): RedirectResponse
+    {
+        $this->beneficiaryService->bulkDelete($request->validated('ids'));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Beneficiaries deleted successfully.')]);
+
+        return back();
     }
 
     public function updateStatus(UpdateBeneficiaryStatusRequest $request, Beneficiary $beneficiary): RedirectResponse

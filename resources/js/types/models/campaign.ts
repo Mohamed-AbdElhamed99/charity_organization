@@ -43,6 +43,12 @@ export interface Campaign {
   meta_description_en: string | null
   cover_url: string
   gallery: CampaignGalleryItem[]
+  meeting_ids?: number[]
+  meetings?: Array<{
+    id: number
+    title: string
+    meeting_number: string
+  }>
   expenses_count?: number
   donations_count?: number
   total_donated?: number

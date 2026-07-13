@@ -11,6 +11,7 @@ readonly class UpdateCampaignDTO
     /**
      * @param  array<int, UploadedFile>|null  $gallery
      * @param  array<int, int>|null  $removedGalleryIds
+     * @param  array<int, int>  $meetingIds
      */
     public function __construct(
         public string $slug,
@@ -42,5 +43,6 @@ readonly class UpdateCampaignDTO
         public ?UploadedFile $cover = null,
         public ?array $gallery = null,
         public ?array $removedGalleryIds = null,
+        public array $meetingIds = [],
     ) {}
 }

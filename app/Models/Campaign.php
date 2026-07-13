@@ -115,6 +115,14 @@ class Campaign extends Model implements HasMedia
         return $this->hasMany(Transfer::class);
     }
 
+    /** Meetings linked to this campaign */
+    public function meetings(): BelongsToMany
+    {
+        return $this->belongsToMany(Meeting::class)
+            ->withPivot(['relationship_type', 'notes'])
+            ->withTimestamps();
+    }
+
     // ─── Scopes ──────────────────────────────────────────────────────────────
 
     public function scopePublic($query)
