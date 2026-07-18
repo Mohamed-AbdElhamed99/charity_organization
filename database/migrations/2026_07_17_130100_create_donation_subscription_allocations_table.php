@@ -22,13 +22,13 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('donation_subscription_id')
-                ->constrained('donation_subscriptions')
+                ->constrained('donation_subscriptions', indexName: 'dsa_subscription_id_foreign')
                 ->cascadeOnDelete()
                 ->comment('The recurring donation this allocation belongs to');
 
             $table->foreignId('campaign_id')
                 ->nullable()
-                ->constrained('campaigns')
+                ->constrained('campaigns', indexName: 'dsa_campaign_id_foreign')
                 ->nullOnDelete()
                 ->comment('Campaign this share is designated for; null = general fund');
 
@@ -40,8 +40,8 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index('donation_subscription_id');
-            $table->index('campaign_id');
+            $table->index('donation_subscription_id', 'dsa_subscription_id_index');
+            $table->index('campaign_id', 'dsa_campaign_id_index');
         });
 
         // Backfill: every existing subscription had exactly one target
