@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { usePage } from "@inertiajs/react";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -63,21 +64,34 @@ type BreakdownSnapshot = {
 
 type RecurrenceFrequency = "one_time" | "weekly" | "monthly" | "quarterly" | "yearly";
 
+type SavedPaymentMethod = {
+  id: string;
+  brand: string;
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+  is_default: boolean;
+};
+
 const frequencyButtonActiveClass = "rounded-md px-4 py-2 text-sm font-medium transition bg-white text-ink shadow-sm";
 const frequencyButtonInactiveClass = "rounded-md px-4 py-2 text-sm font-medium transition text-body-text hover:text-ink";
 
 function PaymentStep({
+  clientSecret,
   paymentIntentId,
   chargeCents,
   isRecurring,
   labels,
+  savedPaymentMethods,
   onError,
   onBack,
 }: {
+  clientSecret: string;
   paymentIntentId: string;
   chargeCents: number;
   isRecurring: boolean;
   labels: SiteTranslations["donatePage"];
+  savedPaymentMethods: SavedPaymentMethod[];
   onError: (message: string) => void;
   onBack: () => void;
 }) {
@@ -86,6 +100,28 @@ function PaymentStep({
   const [processing, setProcessing] = useState(false);
   const [elementReady, setElementReady] = useState(false);
   const [expressCheckoutReady, setExpressCheckoutReady] = useState(false);
+  const defaultSavedId = savedPaymentMethods.find((m) => m.is_default)?.id ?? savedPaymentMethods[0]?.id ?? null;
+  const [selectedSavedId, setSelectedSavedId] = useState<string | null>(defaultSavedId);
+  const [useNewCard, setUseNewCard] = useState(savedPaymentMethods.length === 0);
+
+  const confirmWithSavedCard = async (paymentMethodId: string) => {
+    if (!stripe) {
+      return;
+    }
+
+    setProcessing(true);
+    onError("");
+
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: paymentMethodId,
+    });
+
+    if (result.error) {
+      onError(result.error.message ?? labels.paymentError);
+    }
+
+    setProcessing(false);
+  };
 
   const confirmPayment = async () => {
     if (!stripe || !elements) {
@@ -111,6 +147,12 @@ function PaymentStep({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (!useNewCard && selectedSavedId) {
+      await confirmWithSavedCard(selectedSavedId);
+      return;
+    }
+
     await confirmPayment();
   };
 
@@ -120,28 +162,59 @@ function PaymentStep({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className={expressCheckoutReady ? "" : "h-0 overflow-hidden"}>
-        <ExpressCheckoutElement
-          onReady={({ availablePaymentMethods }) =>
-            setExpressCheckoutReady(Boolean(availablePaymentMethods))
-          }
-          onConfirm={handleExpressCheckoutConfirm}
-        />
+      {savedPaymentMethods.length > 0 ? (
+        <div className="space-y-2 rounded-xl border border-surface-soft bg-white p-4">
+          {savedPaymentMethods.map((method) => (
+            <label key={method.id} className="flex items-center gap-3 text-sm text-ink">
+              <input
+                type="radio"
+                name="saved_payment_method"
+                checked={!useNewCard && selectedSavedId === method.id}
+                onChange={() => {
+                  setUseNewCard(false);
+                  setSelectedSavedId(method.id);
+                }}
+              />
+              <span className="capitalize">
+                {method.brand} •••• {method.last4} ({method.exp_month}/{method.exp_year})
+              </span>
+            </label>
+          ))}
+          <label className="flex items-center gap-3 text-sm text-ink">
+            <input
+              type="radio"
+              name="saved_payment_method"
+              checked={useNewCard}
+              onChange={() => setUseNewCard(true)}
+            />
+            <span>{labels.orPayWithCard}</span>
+          </label>
+        </div>
+      ) : null}
+      <div className={useNewCard ? "" : "hidden"}>
+        <div className={expressCheckoutReady ? "" : "h-0 overflow-hidden"}>
+          <ExpressCheckoutElement
+            onReady={({ availablePaymentMethods }) =>
+              setExpressCheckoutReady(Boolean(availablePaymentMethods))
+            }
+            onConfirm={handleExpressCheckoutConfirm}
+          />
+        </div>
+        {expressCheckoutReady ? (
+          <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-body-text/60">
+            <span className="h-px flex-1 bg-black/10" />
+            {labels.orPayWithCard}
+            <span className="h-px flex-1 bg-black/10" />
+          </div>
+        ) : null}
+        {!elementReady ? (
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ) : null}
+        <PaymentElement onReady={() => setElementReady(true)} />
       </div>
-      {expressCheckoutReady ? (
-        <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-body-text/60">
-          <span className="h-px flex-1 bg-black/10" />
-          {labels.orPayWithCard}
-          <span className="h-px flex-1 bg-black/10" />
-        </div>
-      ) : null}
-      {!elementReady ? (
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      ) : null}
-      <PaymentElement onReady={() => setElementReady(true)} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
@@ -191,8 +264,10 @@ export function DonationCheckout({
   goalReached = false,
 }: DonationCheckoutProps) {
   const labels = t.donatePage;
+  const authUser = (usePage().props as { auth?: { user?: { id: number } | null } }).auth?.user ?? null;
 
   const [frequency, setFrequency] = useState<RecurrenceFrequency>("one_time");
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
   const [amountCents, setAmountCents] = useState(5000);
   const [customAmount, setCustomAmount] = useState("");
   const [allocationRows, setAllocationRows] = useState<AllocationRow[]>([]);
@@ -268,6 +343,32 @@ export function DonationCheckout({
       })
       .finally(() => setCampaignsLoading(false));
   }, [isRecurring, campaignsLoaded, campaignsLoading]);
+
+  // Prefill donor fields and load saved cards for a logged-in donor.
+  useEffect(() => {
+    if (!authUser) {
+      return;
+    }
+
+    fetch(route("donations.saved-payment-methods"), {
+      headers: { Accept: "application/json" },
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { payment_methods?: SavedPaymentMethod[]; donor?: { first_name: string; last_name: string; email: string; phone: string | null } } | null) => {
+        if (!data) {
+          return;
+        }
+        setSavedPaymentMethods(Array.isArray(data.payment_methods) ? data.payment_methods : []);
+        if (data.donor) {
+          setFirstName((current) => current || data.donor!.first_name);
+          setLastName((current) => current || data.donor!.last_name);
+          setEmail((current) => current || data.donor!.email);
+          setPhone((current) => current || data.donor!.phone || "");
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser]);
 
   const allocationsValid =
     allocationRows.length > 0 &&
@@ -398,10 +499,12 @@ export function DonationCheckout({
         </div>
         <Elements stripe={stripePromise} options={{ clientSecret }}>
           <PaymentStep
+            clientSecret={clientSecret}
             paymentIntentId={paymentIntentId}
             chargeCents={breakdown.chargeCents}
             isRecurring={isRecurring}
             labels={labels}
+            savedPaymentMethods={savedPaymentMethods}
             onError={setError}
             onBack={resetPaymentStep}
           />

@@ -3,6 +3,8 @@
 namespace App\Contracts;
 
 use App\DTOs\PaymentIntentData;
+use App\DTOs\PaymentMethodData;
+use App\DTOs\SetupIntentData;
 use App\DTOs\SubscriptionIntentData;
 use App\Enums\RecurrenceFrequency;
 use Stripe\Event;
@@ -44,4 +46,22 @@ interface PaymentGateway
      * @return array{paymentIntentId: string|null, chargeId: string|null}
      */
     public function resolveInvoicePaymentDetails(string $invoiceId): array;
+
+    /**
+     * Create a SetupIntent so a card can be validated and attached to the
+     * Stripe Customer for future use, without charging anything.
+     */
+    public function createSetupIntent(string $customerId): SetupIntentData;
+
+    /**
+     * Fetch display details (brand/last4/expiry) for a payment method,
+     * confirming it belongs to the given customer.
+     */
+    public function retrievePaymentMethod(string $paymentMethodId): PaymentMethodData;
+
+    public function detachPaymentMethod(string $paymentMethodId): void;
+
+    public function setDefaultPaymentMethod(string $customerId, string $paymentMethodId): void;
+
+    public function cancelSubscription(string $subscriptionId): void;
 }

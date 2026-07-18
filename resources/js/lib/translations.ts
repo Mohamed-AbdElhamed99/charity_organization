@@ -203,6 +203,107 @@ export interface SiteTranslations {
     ar: string;
     label: string;
   };
+  accountNav: {
+    myAccount: string;
+    profile: string;
+    myDonations: string;
+    logout: string;
+    login: string;
+    register: string;
+  };
+  verificationBanner: {
+    message: string;
+    resend: string;
+    sent: string;
+  };
+  accountPage: {
+    register: {
+      title: string;
+      intro: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      password: string;
+      passwordConfirmation: string;
+      submit: string;
+      haveAccount: string;
+      loginLink: string;
+    };
+    login: {
+      title: string;
+      intro: string;
+      email: string;
+      password: string;
+      remember: string;
+      submit: string;
+      forgotPassword: string;
+      noAccount: string;
+      registerLink: string;
+    };
+    forgotPassword: {
+      title: string;
+      intro: string;
+      email: string;
+      submit: string;
+    };
+    resetPassword: {
+      title: string;
+      email: string;
+      password: string;
+      passwordConfirmation: string;
+      submit: string;
+    };
+    profile: {
+      title: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      newPassword: string;
+      newPasswordConfirmation: string;
+      currentPassword: string;
+      save: string;
+      saved: string;
+      emailChangedNotice: string;
+    };
+    paymentMethods: {
+      title: string;
+      intro: string;
+      addNew: string;
+      cardEndingIn: string;
+      expires: string;
+      default: string;
+      makeDefault: string;
+      remove: string;
+      noSaved: string;
+      cardholderNameLabel: string;
+      saveCard: string;
+      cancel: string;
+    };
+    donations: {
+      title: string;
+      historyTitle: string;
+      subscriptionsTitle: string;
+      noDonations: string;
+      noSubscriptions: string;
+      status: string;
+      amount: string;
+      campaign: string;
+      general: string;
+      frequency: string;
+      date: string;
+      cancelSubscription: string;
+      cancelConfirm: string;
+      canceled: string;
+    };
+  };
+  notFoundPage: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    cta: string;
+  };
 }
 
 export const translations: Record<Locale, SiteTranslations> = {
@@ -417,6 +518,107 @@ export const translations: Record<Locale, SiteTranslations> = {
       ],
     },
     langSwitch: { en: "EN", ar: "AR", label: "Language" },
+    accountNav: {
+      myAccount: "My Account",
+      profile: "Profile",
+      myDonations: "My Donations",
+      logout: "Log out",
+      login: "Log in",
+      register: "Sign up",
+    },
+    verificationBanner: {
+      message: "Please verify your email address to secure your account.",
+      resend: "Resend verification email",
+      sent: "Verification link sent. Please check your inbox.",
+    },
+    accountPage: {
+      register: {
+        title: "Create your donor account",
+        intro: "Save your info, track your donations, and manage recurring gifts.",
+        firstName: "First name",
+        lastName: "Last name",
+        email: "Email",
+        phone: "Phone (optional)",
+        password: "Password",
+        passwordConfirmation: "Confirm password",
+        submit: "Create account",
+        haveAccount: "Already have an account?",
+        loginLink: "Log in",
+      },
+      login: {
+        title: "Log in to your account",
+        intro: "Access your donation history and manage recurring gifts.",
+        email: "Email",
+        password: "Password",
+        remember: "Remember me",
+        submit: "Log in",
+        forgotPassword: "Forgot your password?",
+        noAccount: "Don't have an account?",
+        registerLink: "Sign up",
+      },
+      forgotPassword: {
+        title: "Forgot your password?",
+        intro: "Enter your email and we'll send you a link to reset it.",
+        email: "Email",
+        submit: "Send reset link",
+      },
+      resetPassword: {
+        title: "Reset your password",
+        email: "Email",
+        password: "New password",
+        passwordConfirmation: "Confirm new password",
+        submit: "Reset password",
+      },
+      profile: {
+        title: "My Profile",
+        firstName: "First name",
+        lastName: "Last name",
+        email: "Email",
+        phone: "Phone",
+        newPassword: "New password (leave blank to keep current)",
+        newPasswordConfirmation: "Confirm new password",
+        currentPassword: "Current password",
+        save: "Save changes",
+        saved: "Profile updated.",
+        emailChangedNotice: "We sent a new verification link to your updated email.",
+      },
+      paymentMethods: {
+        title: "Payment Methods",
+        intro: "Cards you save here can be used for faster checkout on future donations.",
+        addNew: "Add new card",
+        cardEndingIn: "Card ending in",
+        expires: "Expires",
+        default: "Default",
+        makeDefault: "Make default",
+        remove: "Remove",
+        noSaved: "You haven't saved any payment methods yet.",
+        cardholderNameLabel: "Cardholder name",
+        saveCard: "Save card",
+        cancel: "Cancel",
+      },
+      donations: {
+        title: "My Donations",
+        historyTitle: "Donation history",
+        subscriptionsTitle: "Recurring donations",
+        noDonations: "You haven't made any donations yet.",
+        noSubscriptions: "You have no active recurring donations.",
+        status: "Status",
+        amount: "Amount",
+        campaign: "Campaign",
+        general: "General Fund",
+        frequency: "Frequency",
+        date: "Date",
+        cancelSubscription: "Cancel",
+        cancelConfirm: "Are you sure you want to cancel this recurring donation?",
+        canceled: "Canceled",
+      },
+    },
+    notFoundPage: {
+      eyebrow: "404",
+      title: "Page not found",
+      body: "The page you're looking for doesn't exist or has been moved.",
+      cta: "Back to homepage",
+    },
   },
   ar: {
     brandName: "مجموعة نيوإيجيبت",
@@ -625,6 +827,107 @@ export const translations: Record<Locale, SiteTranslations> = {
       ],
     },
     langSwitch: { en: "EN", ar: "ع", label: "اللغة" },
+    accountNav: {
+      myAccount: "حسابي",
+      profile: "الملف الشخصي",
+      myDonations: "تبرعاتي",
+      logout: "تسجيل الخروج",
+      login: "تسجيل الدخول",
+      register: "إنشاء حساب",
+    },
+    verificationBanner: {
+      message: "يرجى تأكيد بريدك الإلكتروني لتأمين حسابك.",
+      resend: "إعادة إرسال رابط التأكيد",
+      sent: "تم إرسال رابط التأكيد. يرجى مراجعة بريدك الإلكتروني.",
+    },
+    accountPage: {
+      register: {
+        title: "إنشاء حساب متبرع",
+        intro: "احفظ بياناتك، وتابع تبرعاتك، وأدر تبرعاتك المتكررة.",
+        firstName: "الاسم الأول",
+        lastName: "اسم العائلة",
+        email: "البريد الإلكتروني",
+        phone: "رقم الهاتف (اختياري)",
+        password: "كلمة المرور",
+        passwordConfirmation: "تأكيد كلمة المرور",
+        submit: "إنشاء الحساب",
+        haveAccount: "لديك حساب بالفعل؟",
+        loginLink: "تسجيل الدخول",
+      },
+      login: {
+        title: "تسجيل الدخول إلى حسابك",
+        intro: "تابع سجل تبرعاتك وأدر تبرعاتك المتكررة.",
+        email: "البريد الإلكتروني",
+        password: "كلمة المرور",
+        remember: "تذكرني",
+        submit: "تسجيل الدخول",
+        forgotPassword: "نسيت كلمة المرور؟",
+        noAccount: "ليس لديك حساب؟",
+        registerLink: "إنشاء حساب",
+      },
+      forgotPassword: {
+        title: "نسيت كلمة المرور؟",
+        intro: "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيينها.",
+        email: "البريد الإلكتروني",
+        submit: "إرسال رابط إعادة التعيين",
+      },
+      resetPassword: {
+        title: "إعادة تعيين كلمة المرور",
+        email: "البريد الإلكتروني",
+        password: "كلمة المرور الجديدة",
+        passwordConfirmation: "تأكيد كلمة المرور الجديدة",
+        submit: "إعادة تعيين كلمة المرور",
+      },
+      profile: {
+        title: "الملف الشخصي",
+        firstName: "الاسم الأول",
+        lastName: "اسم العائلة",
+        email: "البريد الإلكتروني",
+        phone: "رقم الهاتف",
+        newPassword: "كلمة مرور جديدة (اتركها فارغة للاحتفاظ بالحالية)",
+        newPasswordConfirmation: "تأكيد كلمة المرور الجديدة",
+        currentPassword: "كلمة المرور الحالية",
+        save: "حفظ التغييرات",
+        saved: "تم تحديث الملف الشخصي.",
+        emailChangedNotice: "لقد أرسلنا رابط تأكيد جديد إلى بريدك الإلكتروني المحدث.",
+      },
+      paymentMethods: {
+        title: "وسائل الدفع",
+        intro: "البطاقات المحفوظة هنا يمكن استخدامها لإتمام تبرعاتك القادمة بشكل أسرع.",
+        addNew: "إضافة بطاقة جديدة",
+        cardEndingIn: "بطاقة تنتهي بـ",
+        expires: "تنتهي في",
+        default: "افتراضية",
+        makeDefault: "اجعلها افتراضية",
+        remove: "إزالة",
+        noSaved: "لم تقم بحفظ أي وسيلة دفع بعد.",
+        cardholderNameLabel: "اسم حامل البطاقة",
+        saveCard: "حفظ البطاقة",
+        cancel: "إلغاء",
+      },
+      donations: {
+        title: "تبرعاتي",
+        historyTitle: "سجل التبرعات",
+        subscriptionsTitle: "التبرعات المتكررة",
+        noDonations: "لم تقم بأي تبرعات بعد.",
+        noSubscriptions: "لا توجد لديك تبرعات متكررة نشطة.",
+        status: "الحالة",
+        amount: "المبلغ",
+        campaign: "الحملة",
+        general: "الصندوق العام",
+        frequency: "التكرار",
+        date: "التاريخ",
+        cancelSubscription: "إلغاء",
+        cancelConfirm: "هل أنت متأكد أنك تريد إلغاء هذا التبرع المتكرر؟",
+        canceled: "ملغى",
+      },
+    },
+    notFoundPage: {
+      eyebrow: "404",
+      title: "الصفحة غير موجودة",
+      body: "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+      cta: "العودة إلى الصفحة الرئيسية",
+    },
   },
 };
 

@@ -17,6 +17,7 @@ use App\Models\CampaignCategory;
 use App\Models\Country;
 use App\Models\Donation;
 use App\Models\DonationSubscription;
+use App\Models\User;
 use App\Services\DonationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -170,7 +171,7 @@ class DonationController extends Controller
             isAnonymous: (bool) ($validated['is_anonymous'] ?? false),
             donorMessage: $validated['donor_message'] ?? null,
         ));
-
+        
         return response()->json($result);
     }
 
@@ -204,6 +205,42 @@ class DonationController extends Controller
     }
 
     /**
+     * The logged-in donor's saved Stripe payment methods, for the "use a
+     * saved card" option in the donation checkout form.
+     */
+    public function savedPaymentMethodsList(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return response()->json([]);
+        }
+
+        $methods = $user->donorPaymentMethods()
+            ->orderByDesc('is_default')
+            ->orderByDesc('id')
+            ->get(['id', 'stripe_payment_method_id', 'brand', 'last4', 'exp_month', 'exp_year', 'is_default'])
+            ->map(fn ($method) => [
+                'id' => $method->stripe_payment_method_id,
+                'brand' => $method->brand,
+                'last4' => $method->last4,
+                'exp_month' => $method->exp_month,
+                'exp_year' => $method->exp_year,
+                'is_default' => $method->is_default,
+            ]);
+
+        return response()->json([
+            'payment_methods' => $methods,
+            'donor' => [
+                'first_name' => explode(' ', $user->name, 2)[0] ?? '',
+                'last_name' => explode(' ', $user->name, 2)[1] ?? '',
+                'email' => $user->email,
+                'phone' => $user->phone,
+            ],
+        ]);
+    }
+
+    /**
      * Active, public, open-for-donation campaigns for the recurring donation
      * allocation picker.
      */
@@ -223,7 +260,7 @@ class DonationController extends Controller
         return response()->json($campaigns);
     }
 
-    public function thankYou(string $paymentIntentId): Response
+    public function thankYou(Request $request, string $paymentIntentId): Response
     {
         $donation = Donation::query()
             ->where('stripe_payment_intent_id', $paymentIntentId)
@@ -232,7 +269,7 @@ class DonationController extends Controller
 
         return Inertia::render('site/donations/thank-you', [
             'paymentIntentId' => $paymentIntentId,
-            'donation' => $donation ? $this->donationSnapshot($donation) : null,
+            'donation' => $donation ? $this->donationSnapshot($donation, $request->user()) : null,
         ]);
     }
 
@@ -247,14 +284,16 @@ class DonationController extends Controller
             return response()->json(['status' => 'unknown']);
         }
 
-        return response()->json($this->donationSnapshot($donation));
+        return response()->json($this->donationSnapshot($donation, $request->user()));
     }
 
-    public function subscriptionPortal(string $stripeSubscriptionId): RedirectResponse
+    public function subscriptionPortal(Request $request, string $stripeSubscriptionId): RedirectResponse
     {
         $subscription = DonationSubscription::query()
             ->where('stripe_subscription_id', $stripeSubscriptionId)
             ->firstOrFail();
+
+        abort_unless($subscription->donor_id === $request->user()?->id, 403);
 
         $url = $this->gateway->createBillingPortalSession(
             $subscription->stripe_customer_id,
@@ -267,8 +306,10 @@ class DonationController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function donationSnapshot(Donation $donation): array
+    private function donationSnapshot(Donation $donation, ?User $viewer = null): array
     {
+        $ownsSubscription = $viewer !== null && $viewer->id === $donation->donor_id;
+
         return [
             'status' => $donation->status?->value,
             'amount_cents' => $donation->amount,
@@ -276,7 +317,7 @@ class DonationController extends Controller
             'is_general' => $donation->is_general,
             'email' => $donation->donor?->email,
             'is_recurring' => $donation->is_recurring,
-            'manage_subscription_url' => $donation->is_recurring && $donation->donationSubscription
+            'manage_subscription_url' => $donation->is_recurring && $donation->donationSubscription && $ownsSubscription
                 ? route('donations.subscriptions.portal', $donation->donationSubscription->stripe_subscription_id)
                 : null,
         ];

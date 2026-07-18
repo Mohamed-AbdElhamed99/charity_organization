@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, User as UserIcon } from "lucide-react";
+import { Link, router, usePage } from "@inertiajs/react";
 import type { Locale, SiteTranslations } from "../../lib/translations";
 import { SiteButton } from "./site-button";
 import { LangSwitch } from "./lang-switch";
 import { route } from "ziggy-js";
+
+type AuthUser = {
+  id: number;
+  name: string;
+  email: string;
+  email_verified_at: string | null;
+};
 
 export interface SiteHeaderProps {
   t: SiteTranslations;
@@ -11,6 +19,8 @@ export interface SiteHeaderProps {
   onLocaleChange?: (locale: Locale) => void;
   /** When true, header starts transparent over the hero. */
   transparentOnTop?: boolean;
+  /** Pixels to push the fixed header down by (e.g. for a banner above it). */
+  topOffset?: number;
 }
 
 export function SiteHeader({
@@ -18,9 +28,16 @@ export function SiteHeader({
   locale,
   onLocaleChange,
   transparentOnTop = true,
+  topOffset = 0,
 }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(!transparentOnTop);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const authUser = (usePage().props as { auth?: { user?: AuthUser | null } }).auth?.user ?? null;
+
+  const logout = () => {
+    router.post(route("account.logout"));
+  };
 
   useEffect(() => {
     if (!transparentOnTop) return;
@@ -45,7 +62,8 @@ export function SiteHeader({
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${headerBg}`}
+      style={{ top: topOffset }}
+      className={`fixed inset-x-0 z-50 transition-all duration-300 ${headerBg}`}
     >
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-6 px-6 py-4">
         <a
@@ -80,6 +98,59 @@ export function SiteHeader({
             onLocaleChange={onLocaleChange}
             tone={scrolled ? "dark" : "light"}
           />
+          {authUser ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setAccountMenuOpen((v) => !v)}
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ${linkColor} hover:bg-white/10 ${scrolled ? "hover:bg-ink/5" : ""}`}
+              >
+                <UserIcon className="h-4 w-4" />
+                <span className="max-w-[120px] truncate">{authUser.name}</span>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+
+              {accountMenuOpen ? (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white py-2 shadow-xl ring-1 ring-black/5 rtl:left-0 rtl:right-auto">
+                  <Link
+                    href={route("account.profile.edit")}
+                    className="block px-4 py-2 text-sm text-ink hover:bg-ink/5"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    {t.accountNav.profile}
+                  </Link>
+                  <Link
+                    href={route("account.donations.index")}
+                    className="block px-4 py-2 text-sm text-ink hover:bg-ink/5"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    {t.accountNav.myDonations}
+                  </Link>
+                  <Link
+                    href={route("account.payment-methods.index")}
+                    className="block px-4 py-2 text-sm text-ink hover:bg-ink/5"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    {t.accountPage.paymentMethods.title}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 rtl:text-right"
+                  >
+                    {t.accountNav.logout}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <a
+              href={route("account.login")}
+              className={`text-sm font-medium ${linkColor} hover:opacity-80`}
+            >
+              {t.accountNav.login}
+            </a>
+          )}
           <SiteButton href={route("donate.general")} variant="primary">
             {t.nav.donateCta}
           </SiteButton>
@@ -109,6 +180,26 @@ export function SiteHeader({
                 {link.label}
               </a>
             ))}
+            {authUser ? (
+              <>
+                <a href={route("account.profile.edit")} className="rounded-lg px-3 py-3 text-base font-medium text-ink hover:bg-ink/5">
+                  {t.accountNav.profile}
+                </a>
+                <a href={route("account.donations.index")} className="rounded-lg px-3 py-3 text-base font-medium text-ink hover:bg-ink/5">
+                  {t.accountNav.myDonations}
+                </a>
+                <a href={route("account.payment-methods.index")} className="rounded-lg px-3 py-3 text-base font-medium text-ink hover:bg-ink/5">
+                  {t.accountPage.paymentMethods.title}
+                </a>
+                <button type="button" onClick={logout} className="rounded-lg px-3 py-3 text-left text-base font-medium text-red-600 hover:bg-red-50">
+                  {t.accountNav.logout}
+                </button>
+              </>
+            ) : (
+              <a href={route("account.login")} className="rounded-lg px-3 py-3 text-base font-medium text-ink hover:bg-ink/5">
+                {t.accountNav.login}
+              </a>
+            )}
             <div className="mt-3 flex items-center justify-between gap-3 border-t border-black/5 pt-4">
               <LangSwitch
                 t={t}

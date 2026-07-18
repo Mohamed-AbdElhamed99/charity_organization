@@ -56,7 +56,7 @@ class NewsControllerTest extends TestCase
     public function test_guests_cannot_access_news_index(): void
     {
         $this->get(route('admin.news.index'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_news_index(): void

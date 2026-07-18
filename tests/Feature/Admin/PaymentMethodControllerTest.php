@@ -29,7 +29,7 @@ class PaymentMethodControllerTest extends TestCase
     public function test_guests_cannot_access_payment_methods_index(): void
     {
         $this->get(route('admin.payment-methods.index'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_payment_methods_index(): void

@@ -4,6 +4,8 @@ namespace Tests\Support;
 
 use App\Contracts\PaymentGateway;
 use App\DTOs\PaymentIntentData;
+use App\DTOs\PaymentMethodData;
+use App\DTOs\SetupIntentData;
 use App\DTOs\SubscriptionIntentData;
 use App\Enums\RecurrenceFrequency;
 use Stripe\Event;
@@ -20,6 +22,21 @@ class FakePaymentGateway implements PaymentGateway
 
     /** @var array<int, SubscriptionIntentData> */
     private array $subscriptions = [];
+
+    /** @var array<int, SetupIntentData> */
+    private array $setupIntents = [];
+
+    /** @var array<string, PaymentMethodData> */
+    public array $paymentMethodsById = [];
+
+    /** @var array<int, string> */
+    public array $detachedPaymentMethods = [];
+
+    /** @var array<int, array{customerId: string, paymentMethodId: string}> */
+    public array $defaultPaymentMethodCalls = [];
+
+    /** @var array<int, string> */
+    public array $canceledSubscriptions = [];
 
     /**
      * Captured arguments of each createSubscription() call, for tests to
@@ -116,5 +133,44 @@ class FakePaymentGateway implements PaymentGateway
             'paymentIntentId' => 'pi_test_invoice_'.$invoiceId,
             'chargeId' => 'ch_test_invoice_'.$invoiceId,
         ];
+    }
+
+    public function createSetupIntent(string $customerId): SetupIntentData
+    {
+        $id = 'seti_test_'.count($this->setupIntents);
+        $setupIntent = new SetupIntentData(
+            setupIntentId: $id,
+            clientSecret: 'cs_test_'.$id,
+            customerId: $customerId,
+        );
+        $this->setupIntents[] = $setupIntent;
+
+        return $setupIntent;
+    }
+
+    public function retrievePaymentMethod(string $paymentMethodId): PaymentMethodData
+    {
+        return $this->paymentMethodsById[$paymentMethodId] ?? new PaymentMethodData(
+            id: $paymentMethodId,
+            brand: 'visa',
+            last4: '4242',
+            expMonth: 12,
+            expYear: (int) now()->addYear()->format('Y'),
+        );
+    }
+
+    public function detachPaymentMethod(string $paymentMethodId): void
+    {
+        $this->detachedPaymentMethods[] = $paymentMethodId;
+    }
+
+    public function setDefaultPaymentMethod(string $customerId, string $paymentMethodId): void
+    {
+        $this->defaultPaymentMethodCalls[] = ['customerId' => $customerId, 'paymentMethodId' => $paymentMethodId];
+    }
+
+    public function cancelSubscription(string $subscriptionId): void
+    {
+        $this->canceledSubscriptions[] = $subscriptionId;
     }
 }

@@ -26,7 +26,7 @@ class RoleControllerTest extends TestCase
     public function test_guests_cannot_access_roles_index(): void
     {
         $this->get(route('admin.roles.index'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_roles_index(): void

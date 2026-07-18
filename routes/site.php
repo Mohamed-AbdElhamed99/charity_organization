@@ -21,6 +21,7 @@ Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.
 Route::get('/campaigns/{campaign:slug}', [CampaignController::class, 'show'])->name('campaigns.show');
 Route::get('/donations', [DonationController::class, 'index'])->name('donations.index');
 Route::get('/donations/campaigns-list', [DonationController::class, 'donatableCampaignsList'])->name('donations.campaigns-list');
+Route::get('/donations/saved-payment-methods', [DonationController::class, 'savedPaymentMethodsList'])->name('donations.saved-payment-methods');
 Route::get('/campaigns/{campaign:slug}/donate', [DonationController::class, 'campaignDonate'])->name('campaigns.donate');
 Route::get('/donate', [DonationController::class, 'generalDonate'])->name('donate.general');
 Route::post('/donations/intent', [DonationController::class, 'storeIntent'])
@@ -31,7 +32,9 @@ Route::post('/donations/subscribe', [DonationController::class, 'storeSubscripti
     ->name('donations.subscribe');
 Route::get('/donations/{paymentIntentId}/thank-you', [DonationController::class, 'thankYou'])->name('donations.thank-you');
 Route::get('/donations/{paymentIntentId}/status', [DonationController::class, 'status'])->name('donations.status');
-Route::get('/donations/subscriptions/{stripeSubscriptionId}/portal', [DonationController::class, 'subscriptionPortal'])->name('donations.subscriptions.portal');
+Route::get('/donations/subscriptions/{stripeSubscriptionId}/portal', [DonationController::class, 'subscriptionPortal'])
+    ->middleware('auth')
+    ->name('donations.subscriptions.portal');
 Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
 Route::get('/terms', [LegalDocumentController::class, 'terms'])->name('terms');
 Route::get('/privacy', [LegalDocumentController::class, 'privacy'])->name('privacy');

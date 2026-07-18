@@ -18,7 +18,8 @@ use App\Models\DonorProfile;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\DonationReceiptMail;
 class DonationService
 {
     public function __construct(
@@ -39,7 +40,7 @@ class DonationService
             $dto->phone,
             $dto->countryId,
         );
-
+        
         [$isGeneral, $campaignId] = $this->resolveCampaignAssignment($dto->isGeneral, $dto->campaignId);
 
         $chargeCents = $dto->donorCoversFee
@@ -81,7 +82,7 @@ class DonationService
                 ],
             ]);
         });
-
+Mail::to($donor->email)->send(new DonationReceiptMail($donation));
         return [
             'clientSecret' => $paymentIntent->clientSecret,
             'publishableKey' => config('services.stripe.key'),

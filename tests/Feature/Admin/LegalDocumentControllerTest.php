@@ -47,7 +47,7 @@ class LegalDocumentControllerTest extends TestCase
     public function test_guests_cannot_edit_terms(): void
     {
         $this->get(route('admin.legal.terms.edit'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_terms_edit_page(): void

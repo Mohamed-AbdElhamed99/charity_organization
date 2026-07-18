@@ -26,7 +26,7 @@ class ContactMessageControllerTest extends TestCase
     public function test_guests_cannot_access_contact_messages_index(): void
     {
         $this->get(route('admin.contact-messages.index'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_contact_messages_index(): void

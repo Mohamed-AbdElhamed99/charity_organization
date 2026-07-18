@@ -33,6 +33,7 @@ class UserFactory extends Factory
             'phone' => fake()->unique()->numerify('+1##########'),
             'status' => fake()->randomElement(UserStatus::cases()),
             'password' => static::$password ??= Hash::make('password'),
+            'password_set_at' => now(),
             'national_id' => fake()->unique()->numerify('##############'),
             'job' => fake()->jobTitle(),
             'birthdate' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),

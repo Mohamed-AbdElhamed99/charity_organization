@@ -29,11 +29,15 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\TransferController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Middleware\EnsureUserIsStaff;
 use Illuminate\Support\Facades\Route;
 
 // Route::inertia('/', 'welcome')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// `EnsureUserIsStaff` performs its own auth check and 404s unauthorized
+// visitors (guests and non-staff users alike), so the admin panel's
+// existence is never revealed to them.
+Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::redirect('/', '/admin/dashboard');
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

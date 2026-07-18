@@ -75,9 +75,9 @@ class DashboardControllerTest extends TestCase
             );
     }
 
-    public function test_unauthenticated_users_are_redirected_from_dashboard(): void
+    public function test_unauthenticated_users_get_a_404_from_dashboard(): void
     {
-        $this->get(route('admin.dashboard'))->assertRedirect();
+        $this->get(route('admin.dashboard'))->assertNotFound();
     }
 
     // ─── Stats shape and types ────────────────────────────────────────────────

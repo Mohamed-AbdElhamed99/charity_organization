@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('web')
                 ->group(base_path('routes/site.php'));
             Route::middleware('web')
+                ->group(base_path('routes/account.php'));
+            Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
         }
     )
@@ -38,13 +40,42 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
 
         ]);
+
+        // The `auth` middleware protects both admin routes and the donor
+        // `/account/*` area; send unauthenticated visitors to the matching
+        // login page instead of always defaulting to the admin login.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('account/*', 'donations/subscriptions/*/portal')
+            ? route('account.login')
+            : route('login'));
+
+        // The `guest` middleware (used by both admin's Fortify routes and
+        // the donor `/account/*` auth routes) redirects an already
+        // authenticated visitor away; send staff to the admin panel and
+        // everyone else (donors) to their own account area.
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = $request->user();
+
+            return $user !== null && $user->hasAnyRole(['super_admin', 'staff', 'field_worker'])
+                ? route('admin.dashboard')
+                : route('account.donations.index');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request): Response {
-            if ($response->getStatusCode() === 403 && ! $request->expectsJson()) {
+            if ($request->expectsJson()) {
+                return $response;
+            }
+
+            if ($response->getStatusCode() === 403) {
                 return Inertia::render('admin/errors/forbidden')
                     ->toResponse($request)
                     ->setStatusCode(403);
+            }
+
+            if ($response->getStatusCode() === 404) {
+                return Inertia::render('errors/not-found')
+                    ->toResponse($request)
+                    ->setStatusCode(404);
             }
 
             return $response;

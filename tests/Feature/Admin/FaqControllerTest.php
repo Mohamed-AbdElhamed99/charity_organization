@@ -41,7 +41,7 @@ class FaqControllerTest extends TestCase
     public function test_guests_cannot_access_faqs_index(): void
     {
         $this->get(route('admin.faqs.index'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_faqs_index(): void

@@ -4,10 +4,13 @@ namespace App\Services\Payments;
 
 use App\Contracts\PaymentGateway;
 use App\DTOs\PaymentIntentData;
+use App\DTOs\PaymentMethodData;
+use App\DTOs\SetupIntentData;
 use App\DTOs\SubscriptionIntentData;
 use App\Enums\RecurrenceFrequency;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
@@ -132,7 +135,10 @@ class StripeGateway implements PaymentGateway
             'payment_settings' => [
                 'save_default_payment_method' => 'on_subscription',
             ],
-            'expand' => ['latest_invoice'],
+            // `confirmation_secret` is itself an expandable field on the
+            // invoice, so it must be expanded via the nested path below;
+            // expanding only `latest_invoice` leaves it null.
+            'expand' => ['latest_invoice.confirmation_secret'],
             'metadata' => $metadata,
         ]);
 
@@ -140,7 +146,12 @@ class StripeGateway implements PaymentGateway
         // client secret via `confirmation_secret` rather than a direct
         // `payment_intent` reference. The PaymentIntent ID is recoverable
         // from the client secret itself (format: "pi_xxx_secret_yyy").
-        $clientSecret = $subscription->latest_invoice->confirmation_secret->client_secret;
+        $clientSecret = $subscription->latest_invoice?->confirmation_secret?->client_secret;
+
+        if ($clientSecret === null) {
+            throw new RuntimeException("Stripe subscription {$subscription->id} was created without a confirmable client secret on its latest invoice.");
+        }
+
         $paymentIntentId = strstr($clientSecret, '_secret_', true) ?: $clientSecret;
 
         return new SubscriptionIntentData(
@@ -185,6 +196,52 @@ class StripeGateway implements PaymentGateway
             'paymentIntentId' => $paymentIntent->id,
             'chargeId' => $chargeId,
         ];
+    }
+
+    public function createSetupIntent(string $customerId): SetupIntentData
+    {
+        $setupIntent = $this->client->setupIntents->create([
+            'customer' => $customerId,
+            'usage' => 'off_session',
+            'automatic_payment_methods' => ['enabled' => true],
+        ]);
+
+        return new SetupIntentData(
+            setupIntentId: $setupIntent->id,
+            clientSecret: $setupIntent->client_secret,
+            customerId: $customerId,
+        );
+    }
+
+    public function retrievePaymentMethod(string $paymentMethodId): PaymentMethodData
+    {
+        $paymentMethod = $this->client->paymentMethods->retrieve($paymentMethodId);
+        $card = $paymentMethod->card;
+
+        return new PaymentMethodData(
+            id: $paymentMethod->id,
+            brand: (string) $card?->brand,
+            last4: (string) $card?->last4,
+            expMonth: (int) $card?->exp_month,
+            expYear: (int) $card?->exp_year,
+        );
+    }
+
+    public function detachPaymentMethod(string $paymentMethodId): void
+    {
+        $this->client->paymentMethods->detach($paymentMethodId);
+    }
+
+    public function setDefaultPaymentMethod(string $customerId, string $paymentMethodId): void
+    {
+        $this->client->customers->update($customerId, [
+            'invoice_settings' => ['default_payment_method' => $paymentMethodId],
+        ]);
+    }
+
+    public function cancelSubscription(string $subscriptionId): void
+    {
+        $this->client->subscriptions->cancel($subscriptionId);
     }
 
     /**

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\UserGender;
 use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,17 +24,17 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
-    'name', 'email', 'password',
+    'name', 'email', 'password', 'password_set_at',
     'phone', 'status', 'national_id', 'job', 'birthdate',
     'bio', 'social_links', 'gender',
     'address', 'country_id', 'state_id',
     'provider', 'provider_id', 'provider_token', 'provider_refresh_token',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements HasMedia, PasskeyUser
+class User extends Authenticatable implements HasMedia, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, InteractsWithMedia, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, InteractsWithMedia, MustVerifyEmailTrait, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
 
     // ─── Casts ───────────────────────────────────────────────────────────────
 
@@ -41,6 +43,7 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'password_set_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'birthdate' => 'date',
             'social_links' => 'array',
@@ -72,6 +75,17 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
     public function donorProfile(): HasOne
     {
         return $this->hasOne(DonorProfile::class);
+    }
+
+    public function donorPaymentMethods(): HasMany
+    {
+        return $this->hasMany(DonorPaymentMethod::class);
+    }
+
+    /** Recurring donation subscriptions started by this user as a donor */
+    public function donationSubscriptions(): HasMany
+    {
+        return $this->hasMany(DonationSubscription::class, 'donor_id');
     }
 
     /** Campaigns this user created */
@@ -163,5 +177,11 @@ class User extends Authenticatable implements HasMedia, PasskeyUser
     public function getIsAdminAttribute(): bool
     {
         return $this->hasRole('super_admin');
+    }
+
+    /** Whether this donor has ever set a real password (false for guest-checkout-created accounts). */
+    public function getHasUsablePasswordAttribute(): bool
+    {
+        return $this->password_set_at !== null;
     }
 }

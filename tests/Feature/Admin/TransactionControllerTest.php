@@ -47,7 +47,7 @@ class TransactionControllerTest extends TestCase
     public function test_guests_cannot_access_transactions_index(): void
     {
         $this->get(route('admin.transactions.index'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_transactions_index(): void

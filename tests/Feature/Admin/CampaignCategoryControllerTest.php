@@ -39,7 +39,7 @@ class CampaignCategoryControllerTest extends TestCase
     public function test_guests_cannot_access_campaign_categories_index(): void
     {
         $this->get(route('admin.campaign-categories.index'))
-            ->assertRedirect(route('login'));
+            ->assertNotFound();
     }
 
     public function test_authorized_user_can_view_campaign_categories_index(): void
