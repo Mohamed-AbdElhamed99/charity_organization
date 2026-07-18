@@ -25,6 +25,7 @@ class Donation extends Model
             'is_general' => 'boolean',
             'donor_covers_fee' => 'boolean',
             'is_anonymous' => 'boolean',
+            'is_recurring' => 'boolean',
             'amount' => 'integer',
             'metadata' => 'array',
             'receipt_sent_at' => 'datetime',
@@ -44,6 +45,11 @@ class Donation extends Model
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
+    }
+
+    public function donationSubscription(): BelongsTo
+    {
+        return $this->belongsTo(DonationSubscription::class);
     }
 
     public function scopeGeneral($query)

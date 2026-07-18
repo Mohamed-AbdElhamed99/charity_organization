@@ -44,6 +44,8 @@ return [
         'fee_fixed_cents' => (int) env('STRIPE_FEE_FIXED_CENTS', 30),
         // Added to covered-fee charge so rounding does not under-net the org; leave 0 unless needed.
         'fee_buffer_cents' => (int) env('STRIPE_FEE_BUFFER_CENTS', 0),
+        // Stripe Product used for recurring donation Subscriptions; auto-created and cached if left blank.
+        'donation_product_id' => env('STRIPE_DONATION_PRODUCT_ID'),
     ],
 
 ];

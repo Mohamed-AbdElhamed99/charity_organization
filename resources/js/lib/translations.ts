@@ -133,6 +133,22 @@ export interface SiteTranslations {
     paymentError: string;
     confirmTitle: string;
     confirmBody: string;
+    orPayWithCard: string;
+    frequencyLabel: string;
+    frequencyOneTime: string;
+    frequencyWeekly: string;
+    frequencyMonthly: string;
+    frequencyQuarterly: string;
+    frequencyYearly: string;
+    perMonthSuffix: string;
+    allocationTarget: string;
+    allocationAmount: string;
+    generalFundOption: string;
+    addCampaignAllocation: string;
+    removeAllocation: string;
+    totalPerCycle: string;
+    allocationAmountError: string;
+    loadingCampaigns: string;
   };
   thankYouPage: {
     title: string;
@@ -142,6 +158,8 @@ export interface SiteTranslations {
     successGeneral: string;
     successCampaign: string;
     receiptNote: string;
+    recurringNote: string;
+    manageSubscription: string;
     failedTitle: string;
     failedBody: string;
     retry: string;
@@ -318,6 +336,22 @@ export const translations: Record<Locale, SiteTranslations> = {
       paymentError: "Could not start checkout.",
       confirmTitle: "Confirming your donation…",
       confirmBody: "Please wait while we verify your payment.",
+      orPayWithCard: "Or pay with card",
+      frequencyLabel: "How often would you like to give?",
+      frequencyOneTime: "One-time",
+      frequencyWeekly: "Weekly",
+      frequencyMonthly: "Monthly",
+      frequencyQuarterly: "Quarterly",
+      frequencyYearly: "Yearly",
+      perMonthSuffix: "/cycle",
+      allocationTarget: "Campaign or fund",
+      allocationAmount: "Amount",
+      generalFundOption: "General Fund",
+      addCampaignAllocation: "Add another campaign",
+      removeAllocation: "Remove",
+      totalPerCycle: "Total per cycle:",
+      allocationAmountError: "Amount is below the minimum donation.",
+      loadingCampaigns: "Loading campaigns…",
     },
     thankYouPage: {
       title: "Thank you",
@@ -328,6 +362,8 @@ export const translations: Record<Locale, SiteTranslations> = {
       successGeneral: "Your gift will support our general programs.",
       successCampaign: "It is designated for",
       receiptNote: "A receipt is on its way to",
+      recurringNote: "This is a monthly recurring donation. You will be charged automatically each month.",
+      manageSubscription: "Manage your monthly donation",
       failedTitle: "Payment could not be completed",
       failedBody: "Your card was not charged. You can try again from the donate page.",
       retry: "Try again",
@@ -509,6 +545,22 @@ export const translations: Record<Locale, SiteTranslations> = {
       paymentError: "تعذّر بدء عملية الدفع.",
       confirmTitle: "جاري تأكيد تبرعك…",
       confirmBody: "يرجى الانتظار أثناء التحقق من الدفع.",
+      orPayWithCard: "أو ادفع بالبطاقة",
+      frequencyLabel: "كم مرة تريد التبرع؟",
+      frequencyOneTime: "مرة واحدة",
+      frequencyWeekly: "أسبوعيًا",
+      frequencyMonthly: "شهريًا",
+      frequencyQuarterly: "ربع سنوي",
+      frequencyYearly: "سنويًا",
+      perMonthSuffix: "/دورة",
+      allocationTarget: "الحملة أو الصندوق",
+      allocationAmount: "المبلغ",
+      generalFundOption: "الصندوق العام",
+      addCampaignAllocation: "أضف حملة أخرى",
+      removeAllocation: "إزالة",
+      totalPerCycle: "المجموع لكل دورة:",
+      allocationAmountError: "المبلغ أقل من الحد الأدنى للتبرع.",
+      loadingCampaigns: "جارٍ تحميل الحملات…",
     },
     thankYouPage: {
       title: "شكرًا لك",
@@ -518,6 +570,8 @@ export const translations: Record<Locale, SiteTranslations> = {
       successGeneral: "سيُوجَّه تبرعك لدعم برامجنا العامة.",
       successCampaign: "مُخصَّص لـ",
       receiptNote: "سيتم إرسال إيصال إلى",
+      recurringNote: "هذا تبرع شهري متكرر. سيتم خصم المبلغ تلقائيًا كل شهر.",
+      manageSubscription: "إدارة تبرعك الشهري",
       failedTitle: "تعذّر إتمام الدفع",
       failedBody: "لم يتم خصم المبلغ من بطاقتك. يمكنك المحاولة مرة أخرى من صفحة التبرع.",
       retry: "حاول مرة أخرى",

@@ -20,13 +20,18 @@ Route::get('/news/{news:slug}', [NewsController::class, 'show'])->name('news.sho
 Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
 Route::get('/campaigns/{campaign:slug}', [CampaignController::class, 'show'])->name('campaigns.show');
 Route::get('/donations', [DonationController::class, 'index'])->name('donations.index');
+Route::get('/donations/campaigns-list', [DonationController::class, 'donatableCampaignsList'])->name('donations.campaigns-list');
 Route::get('/campaigns/{campaign:slug}/donate', [DonationController::class, 'campaignDonate'])->name('campaigns.donate');
 Route::get('/donate', [DonationController::class, 'generalDonate'])->name('donate.general');
 Route::post('/donations/intent', [DonationController::class, 'storeIntent'])
     ->middleware('throttle:10,1')
     ->name('donations.intent');
+Route::post('/donations/subscribe', [DonationController::class, 'storeSubscription'])
+    ->middleware('throttle:10,1')
+    ->name('donations.subscribe');
 Route::get('/donations/{paymentIntentId}/thank-you', [DonationController::class, 'thankYou'])->name('donations.thank-you');
 Route::get('/donations/{paymentIntentId}/status', [DonationController::class, 'status'])->name('donations.status');
+Route::get('/donations/subscriptions/{stripeSubscriptionId}/portal', [DonationController::class, 'subscriptionPortal'])->name('donations.subscriptions.portal');
 Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
 Route::get('/terms', [LegalDocumentController::class, 'terms'])->name('terms');
 Route::get('/privacy', [LegalDocumentController::class, 'privacy'])->name('privacy');

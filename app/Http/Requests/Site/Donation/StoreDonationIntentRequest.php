@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Site\Donation;
 
-use App\Enums\CampaignStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -22,15 +21,10 @@ class StoreDonationIntentRequest extends FormRequest
         $minAmount = config('donations.min_amount_cents', 100);
 
         return [
-            'campaign_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('campaigns', 'id')->where(function ($query) {
-                    $query->where('status', CampaignStatus::Active->value)
-                        ->where('is_public', true)
-                        ->where('open_donation_form', true);
-                }),
-            ],
+            // Existence/availability of the campaign is resolved by DonationService,
+            // which falls back to a general donation if the campaign is missing,
+            // deleted, or no longer accepting donations.
+            'campaign_id' => ['nullable', 'integer'],
             'is_general' => ['required', 'boolean'],
             'amount' => ['required', 'integer', 'min:'.$minAmount],
             'donor_covers_fee' => ['required', 'boolean'],

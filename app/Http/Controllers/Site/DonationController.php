@@ -2,17 +2,24 @@
 
 namespace App\Http\Controllers\Site;
 
+use App\Contracts\PaymentGateway;
 use App\DTOs\CreateDonationIntentDTO;
+use App\DTOs\CreateDonationSubscriptionDTO;
+use App\DTOs\DonationAllocationInput;
 use App\Enums\CampaignStatus;
+use App\Enums\RecurrenceFrequency;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Site\Donation\StoreDonationIntentRequest;
+use App\Http\Requests\Site\Donation\StoreDonationSubscriptionRequest;
 use App\Http\Resources\Site\CampaignResource;
 use App\Models\Campaign;
 use App\Models\CampaignCategory;
 use App\Models\Country;
 use App\Models\Donation;
+use App\Models\DonationSubscription;
 use App\Services\DonationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -22,6 +29,7 @@ class DonationController extends Controller
 {
     public function __construct(
         private readonly DonationService $donationService,
+        private readonly PaymentGateway $gateway,
     ) {}
 
     public function index(Request $request): Response
@@ -166,22 +174,65 @@ class DonationController extends Controller
         return response()->json($result);
     }
 
+    public function storeSubscription(StoreDonationSubscriptionRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $allocations = array_map(
+            fn (array $allocation) => new DonationAllocationInput(
+                campaignId: isset($allocation['campaign_id']) ? (int) $allocation['campaign_id'] : null,
+                isGeneral: (bool) ($allocation['is_general'] ?? false),
+                amountCents: (int) $allocation['amount'],
+            ),
+            $validated['allocations'],
+        );
+
+        $result = $this->donationService->createSubscriptionIntent(new CreateDonationSubscriptionDTO(
+            frequency: RecurrenceFrequency::from($validated['frequency']),
+            allocations: $allocations,
+            donorCoversFee: (bool) $validated['donor_covers_fee'],
+            firstName: $validated['first_name'],
+            lastName: $validated['last_name'],
+            email: $validated['email'],
+            phone: $validated['phone'] ?? null,
+            countryId: isset($validated['country_id']) ? (int) $validated['country_id'] : null,
+            isAnonymous: (bool) ($validated['is_anonymous'] ?? false),
+            donorMessage: $validated['donor_message'] ?? null,
+        ));
+
+        return response()->json($result);
+    }
+
+    /**
+     * Active, public, open-for-donation campaigns for the recurring donation
+     * allocation picker.
+     */
+    public function donatableCampaignsList(): JsonResponse
+    {
+        $campaigns = Campaign::query()
+            ->public()
+            ->withOpenDonation()
+            ->orderBy('title_en')
+            ->get(['id', 'title_ar', 'title_en'])
+            ->map(fn (Campaign $campaign) => [
+                'id' => $campaign->id,
+                'title' => $campaign->title,
+            ])
+            ->values();
+
+        return response()->json($campaigns);
+    }
+
     public function thankYou(string $paymentIntentId): Response
     {
         $donation = Donation::query()
             ->where('stripe_payment_intent_id', $paymentIntentId)
-            ->with(['campaign', 'donor'])
+            ->with(['campaign', 'donor', 'donationSubscription'])
             ->first();
 
         return Inertia::render('site/donations/thank-you', [
             'paymentIntentId' => $paymentIntentId,
-            'donation' => $donation ? [
-                'status' => $donation->status?->value,
-                'amount_cents' => $donation->amount,
-                'campaign_title' => $donation->is_general ? null : $donation->campaign?->title,
-                'is_general' => $donation->is_general,
-                'email' => $donation->donor?->email,
-            ] : null,
+            'donation' => $donation ? $this->donationSnapshot($donation) : null,
         ]);
     }
 
@@ -189,18 +240,46 @@ class DonationController extends Controller
     {
         $donation = Donation::query()
             ->where('stripe_payment_intent_id', $paymentIntentId)
-            ->with('donor')
+            ->with(['donor', 'donationSubscription'])
             ->first();
 
         if ($donation === null) {
             return response()->json(['status' => 'unknown']);
         }
 
-        return response()->json([
+        return response()->json($this->donationSnapshot($donation));
+    }
+
+    public function subscriptionPortal(string $stripeSubscriptionId): RedirectResponse
+    {
+        $subscription = DonationSubscription::query()
+            ->where('stripe_subscription_id', $stripeSubscriptionId)
+            ->firstOrFail();
+
+        $url = $this->gateway->createBillingPortalSession(
+            $subscription->stripe_customer_id,
+            route('donations.index'),
+        );
+
+        return redirect()->away($url);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function donationSnapshot(Donation $donation): array
+    {
+        return [
             'status' => $donation->status?->value,
             'amount_cents' => $donation->amount,
+            'campaign_title' => $donation->is_general ? null : $donation->campaign?->title,
+            'is_general' => $donation->is_general,
             'email' => $donation->donor?->email,
-        ]);
+            'is_recurring' => $donation->is_recurring,
+            'manage_subscription_url' => $donation->is_recurring && $donation->donationSubscription
+                ? route('donations.subscriptions.portal', $donation->donationSubscription->stripe_subscription_id)
+                : null,
+        ];
     }
 
     /**

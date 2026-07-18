@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Contracts\PaymentGateway;
 use App\Enums\DonationStatus;
+use App\Enums\DonationSubscriptionStatus;
 use App\Models\Account;
 use App\Models\Campaign;
 use App\Models\Donation;
+use App\Models\DonationSubscription;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\DonationWebhookService;
@@ -198,5 +200,200 @@ class StripeWebhookTest extends TestCase
             $secondBalance
         );
         $this->assertSame(bcadd($opening, '47.00', 2), $firstBalance);
+    }
+
+    public function test_invoice_paid_creates_donation_and_credits_campaign(): void
+    {
+        $campaign = Campaign::factory()->create([
+            'status' => 'active',
+            'is_public' => true,
+            'open_donation_form' => true,
+            'collected_amount' => 0,
+        ]);
+
+        $subscription = DonationSubscription::factory()->forCampaign($campaign)->create([
+            'amount_cents' => 7500,
+            'stripe_subscription_id' => 'sub_invoice_test_1',
+        ]);
+
+        $eventPayload = [
+            'id' => 'evt_invoice_paid_1',
+            'type' => 'invoice.paid',
+            'data' => [
+                'object' => [
+                    'object' => 'invoice',
+                    'id' => 'in_test_1',
+                    'amount_paid' => 7500,
+                    'parent' => [
+                        'subscription_details' => [
+                            'subscription' => 'sub_invoice_test_1',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom($eventPayload));
+
+        $donation = Donation::query()->where('donation_subscription_id', $subscription->id)->first();
+        $this->assertNotNull($donation);
+        $this->assertTrue($donation->is_recurring);
+        $this->assertSame(DonationStatus::Succeeded, $donation->status);
+        $this->assertSame('in_test_1', $donation->stripe_invoice_id);
+        $this->assertNotNull($donation->transaction_id);
+
+        $campaign->refresh();
+        $this->assertSame(7500, $campaign->collected_amount);
+    }
+
+    public function test_invoice_paid_splits_one_invoice_into_multiple_donations_with_apportioned_fees(): void
+    {
+        $campaignOne = Campaign::factory()->create([
+            'status' => 'active',
+            'is_public' => true,
+            'open_donation_form' => true,
+            'collected_amount' => 0,
+        ]);
+        $campaignTwo = Campaign::factory()->create([
+            'status' => 'active',
+            'is_public' => true,
+            'open_donation_form' => true,
+            'collected_amount' => 0,
+        ]);
+
+        $subscription = DonationSubscription::factory()->create([
+            'amount_cents' => 10000,
+            'stripe_subscription_id' => 'sub_split_invoice_1',
+        ]);
+        $subscription->allocations()->delete();
+        $subscription->allocations()->create(['campaign_id' => $campaignOne->id, 'is_general' => false, 'amount_cents' => 3000]);
+        $subscription->allocations()->create(['campaign_id' => $campaignTwo->id, 'is_general' => false, 'amount_cents' => 4000]);
+        $subscription->allocations()->create(['campaign_id' => null, 'is_general' => true, 'amount_cents' => 3000]);
+
+        $this->gateway->actualFeeCents = 300;
+
+        $eventPayload = [
+            'id' => 'evt_invoice_split_1',
+            'type' => 'invoice.paid',
+            'data' => [
+                'object' => [
+                    'object' => 'invoice',
+                    'id' => 'in_split_test_1',
+                    'amount_paid' => 10000,
+                    'parent' => [
+                        'subscription_details' => [
+                            'subscription' => 'sub_split_invoice_1',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom($eventPayload));
+
+        $donations = Donation::query()->where('donation_subscription_id', $subscription->id)->get();
+        $this->assertCount(3, $donations);
+        $this->assertTrue($donations->every(fn (Donation $donation) => $donation->status === DonationStatus::Succeeded));
+        $this->assertTrue($donations->every(fn (Donation $donation) => $donation->is_recurring));
+        $this->assertTrue($donations->every(fn (Donation $donation) => $donation->stripe_invoice_id === 'in_split_test_1'));
+
+        $totalFeeCents = $donations->sum(fn (Donation $donation) => (int) round($donation->transaction->fee_amount * 100));
+        $this->assertSame(300, $totalFeeCents);
+
+        $totalGrossCents = $donations->sum(fn (Donation $donation) => (int) round($donation->transaction->gross_amount * 100));
+        $this->assertSame(10000, $totalGrossCents);
+
+        $campaignOne->refresh();
+        $campaignTwo->refresh();
+        $this->assertSame(3000, $campaignOne->collected_amount);
+        $this->assertSame(4000, $campaignTwo->collected_amount);
+    }
+
+    public function test_invoice_paid_is_idempotent_for_the_same_invoice(): void
+    {
+        $subscription = DonationSubscription::factory()->create([
+            'amount_cents' => 4000,
+            'stripe_subscription_id' => 'sub_invoice_test_2',
+        ]);
+
+        $eventPayload = [
+            'id' => 'evt_invoice_paid_2',
+            'type' => 'invoice.paid',
+            'data' => [
+                'object' => [
+                    'object' => 'invoice',
+                    'id' => 'in_test_2',
+                    'amount_paid' => 4000,
+                    'parent' => [
+                        'subscription_details' => [
+                            'subscription' => 'sub_invoice_test_2',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $service = app(DonationWebhookService::class);
+        $service->handle(Event::constructFrom($eventPayload));
+
+        // A duplicate delivery of the webhook uses a new event id but the same invoice.
+        $eventPayload['id'] = 'evt_invoice_paid_2_retry';
+        $service->handle(Event::constructFrom($eventPayload));
+
+        $this->assertSame(
+            1,
+            Donation::query()->where('donation_subscription_id', $subscription->id)->count()
+        );
+    }
+
+    public function test_invoice_payment_failed_marks_subscription_past_due(): void
+    {
+        $subscription = DonationSubscription::factory()->create([
+            'stripe_subscription_id' => 'sub_failed_1',
+        ]);
+
+        $eventPayload = [
+            'id' => 'evt_invoice_failed_1',
+            'type' => 'invoice.payment_failed',
+            'data' => [
+                'object' => [
+                    'object' => 'invoice',
+                    'id' => 'in_failed_1',
+                    'parent' => [
+                        'subscription_details' => [
+                            'subscription' => 'sub_failed_1',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom($eventPayload));
+
+        $subscription->refresh();
+        $this->assertSame(DonationSubscriptionStatus::PastDue, $subscription->status);
+    }
+
+    public function test_subscription_deleted_marks_subscription_canceled(): void
+    {
+        $subscription = DonationSubscription::factory()->create([
+            'stripe_subscription_id' => 'sub_deleted_1',
+        ]);
+
+        $eventPayload = [
+            'id' => 'evt_subscription_deleted_1',
+            'type' => 'customer.subscription.deleted',
+            'data' => [
+                'object' => [
+                    'object' => 'subscription',
+                    'id' => 'sub_deleted_1',
+                ],
+            ],
+        ];
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom($eventPayload));
+
+        $subscription->refresh();
+        $this->assertSame(DonationSubscriptionStatus::Canceled, $subscription->status);
     }
 }

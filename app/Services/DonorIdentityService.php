@@ -19,17 +19,17 @@ class DonorIdentityService
     ): User {
         $name = trim($firstName.' '.$lastName);
 
-        $user = User::query()->where('email', $email)->first();
-
-        if ($user === null) {
-            $user = User::create([
+        $user = User::query()->firstOrCreate(
+            ['email' => $email],
+            [
                 'name' => $name,
-                'email' => $email,
                 'phone' => $phone,
                 'country_id' => $countryId,
                 'password' => Hash::make(Str::random(32)),
-            ]);
-        } else {
+            ],
+        );
+
+        if (! $user->wasRecentlyCreated) {
             $user->fill([
                 'name' => $name,
                 'phone' => $phone ?? $user->phone,

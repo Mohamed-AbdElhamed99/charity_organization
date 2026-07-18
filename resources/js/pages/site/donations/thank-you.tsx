@@ -13,6 +13,8 @@ type DonationSnapshot = {
   campaign_title: string | null;
   is_general: boolean;
   email?: string | null;
+  is_recurring?: boolean;
+  manage_subscription_url?: string | null;
 };
 
 type PageProps = {
@@ -30,6 +32,10 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
   const [status, setStatus] = useState(donation?.status ?? "pending");
   const [amountCents, setAmountCents] = useState(donation?.amount_cents ?? 0);
   const [email, setEmail] = useState<string | null>(donation?.email ?? null);
+  const [isRecurring, setIsRecurring] = useState(donation?.is_recurring ?? false);
+  const [manageSubscriptionUrl, setManageSubscriptionUrl] = useState<string | null>(
+    donation?.manage_subscription_url ?? null,
+  );
   const campaignTitle = donation?.campaign_title ?? null;
   const isGeneral = donation?.is_general ?? false;
 
@@ -60,6 +66,14 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
 
       if (data.email) {
         setEmail(data.email);
+      }
+
+      if (data.is_recurring) {
+        setIsRecurring(true);
+      }
+
+      if (data.manage_subscription_url) {
+        setManageSubscriptionUrl(data.manage_subscription_url);
       }
 
       if (data.status === "succeeded" || data.status === "failed") {
@@ -107,6 +121,21 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
               {email ? (
                 <p className="mt-2 text-sm text-body-text/70">
                   {labels.receiptNote} {email}.
+                </p>
+              ) : null}
+              {isRecurring ? (
+                <p className="mt-2 text-sm text-body-text/70">
+                  {labels.recurringNote}
+                </p>
+              ) : null}
+              {isRecurring && manageSubscriptionUrl ? (
+                <p className="mt-4">
+                  <a
+                    href={manageSubscriptionUrl}
+                    className="font-medium text-action-red hover:underline"
+                  >
+                    {labels.manageSubscription}
+                  </a>
                 </p>
               ) : null}
             </>

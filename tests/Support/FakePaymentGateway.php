@@ -4,6 +4,8 @@ namespace Tests\Support;
 
 use App\Contracts\PaymentGateway;
 use App\DTOs\PaymentIntentData;
+use App\DTOs\SubscriptionIntentData;
+use App\Enums\RecurrenceFrequency;
 use Stripe\Event;
 
 class FakePaymentGateway implements PaymentGateway
@@ -12,6 +14,20 @@ class FakePaymentGateway implements PaymentGateway
 
     /** @var array<int, PaymentIntentData> */
     private array $intents = [];
+
+    /** @var array<string, string> */
+    private array $customersByEmail = [];
+
+    /** @var array<int, SubscriptionIntentData> */
+    private array $subscriptions = [];
+
+    /**
+     * Captured arguments of each createSubscription() call, for tests to
+     * assert the correct frequency/interval was requested.
+     *
+     * @var array<int, array{customerId: string, amountCents: int, currency: string, frequency: RecurrenceFrequency, metadata: array}>
+     */
+    public array $subscriptionCalls = [];
 
     public function estimateFee(int $amountCents, string $currency): int
     {
@@ -55,5 +71,50 @@ class FakePaymentGateway implements PaymentGateway
     public function constructWebhookEvent(string $payload, string $sigHeader): Event
     {
         return Event::constructFrom(json_decode($payload, true) ?? []);
+    }
+
+    public function findOrCreateCustomer(string $email, array $attributes): string
+    {
+        return $this->customersByEmail[$email] ??= 'cus_test_'.count($this->customersByEmail);
+    }
+
+    public function createSubscription(string $customerId, int $amountCents, string $currency, RecurrenceFrequency $frequency, array $metadata): SubscriptionIntentData
+    {
+        $id = 'sub_test_'.count($this->subscriptions);
+        $paymentIntentId = 'pi_test_sub_'.count($this->subscriptions);
+
+        $this->subscriptionCalls[] = [
+            'customerId' => $customerId,
+            'amountCents' => $amountCents,
+            'currency' => $currency,
+            'frequency' => $frequency,
+            'metadata' => $metadata,
+        ];
+
+        $subscription = new SubscriptionIntentData(
+            subscriptionId: $id,
+            clientSecret: 'cs_test_'.$paymentIntentId,
+            paymentIntentId: $paymentIntentId,
+            customerId: $customerId,
+            amount: $amountCents,
+            currency: strtolower($currency),
+            billingCycleAnchor: now()->getTimestamp(),
+        );
+        $this->subscriptions[] = $subscription;
+
+        return $subscription;
+    }
+
+    public function createBillingPortalSession(string $customerId, string $returnUrl): string
+    {
+        return 'https://billing.stripe.test/session/'.$customerId;
+    }
+
+    public function resolveInvoicePaymentDetails(string $invoiceId): array
+    {
+        return [
+            'paymentIntentId' => 'pi_test_invoice_'.$invoiceId,
+            'chargeId' => 'ch_test_invoice_'.$invoiceId,
+        ];
     }
 }

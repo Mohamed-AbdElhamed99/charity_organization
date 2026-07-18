@@ -110,4 +110,47 @@ class DonationIntentTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('chargeCents', 5000);
     }
+
+    public function test_intent_falls_back_to_general_when_campaign_id_does_not_exist(): void
+    {
+        $response = $this->postJson(route('donations.intent'), [
+            'campaign_id' => 999999,
+            'is_general' => false,
+            'amount' => 5000,
+            'donor_covers_fee' => false,
+            'first_name' => 'Jane',
+            'last_name' => 'Donor',
+            'email' => 'jane-missing-campaign@example.com',
+        ]);
+
+        $response->assertOk();
+
+        $donation = Donation::query()->where('stripe_payment_intent_id', $response->json('paymentIntentId'))->first();
+        $this->assertNotNull($donation);
+        $this->assertTrue($donation->is_general);
+        $this->assertNull($donation->campaign_id);
+    }
+
+    public function test_intent_falls_back_to_general_when_campaign_is_no_longer_open(): void
+    {
+        $campaign = $this->createDonatableCampaign();
+        $campaign->update(['open_donation_form' => false]);
+
+        $response = $this->postJson(route('donations.intent'), [
+            'campaign_id' => $campaign->id,
+            'is_general' => false,
+            'amount' => 5000,
+            'donor_covers_fee' => false,
+            'first_name' => 'Jane',
+            'last_name' => 'Donor',
+            'email' => 'jane-closed-campaign@example.com',
+        ]);
+
+        $response->assertOk();
+
+        $donation = Donation::query()->where('stripe_payment_intent_id', $response->json('paymentIntentId'))->first();
+        $this->assertNotNull($donation);
+        $this->assertTrue($donation->is_general);
+        $this->assertNull($donation->campaign_id);
+    }
 }
