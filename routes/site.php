@@ -12,7 +12,7 @@ use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe');
-
+    
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/lang/{locale}', LocaleController::class)->name('lang.switch');
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');

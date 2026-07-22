@@ -56,7 +56,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::get('/', [UserController::class, 'index'])->name('index')->middleware($perm(ModulePermission::USERS, 'view'));
             Route::post('/', [UserController::class, 'store'])->name('store')->middleware($perm(ModulePermission::USERS, 'create'));
             Route::get('{user}', [UserController::class, 'show'])->name('show')->middleware($perm(ModulePermission::USERS, 'view'));
-            Route::put('{user}', [UserController::class, 'update'])->name('update')->middleware($perm(ModulePermission::USERS, 'edit'));
+            Route::match(['put', 'patch'], '{user}', [UserController::class, 'update'])->name('update')->middleware($perm(ModulePermission::USERS, 'edit'));
             Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::USERS, 'delete'));
             Route::post('bulk-destroy', [UserController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::USERS, 'delete'));
             Route::post('{id}/restore', [UserController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::USERS, 'delete'));

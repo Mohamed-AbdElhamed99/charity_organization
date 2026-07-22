@@ -94,7 +94,7 @@ export function UsersActionDialog({
         return data
       })
 
-      form.patch(route('admin.users.update', currentRow.id), options)
+      form.put(route('admin.users.update', currentRow.id), options)
       return
     }
 
