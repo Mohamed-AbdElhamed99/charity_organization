@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Account extends Model
+class BankAccount extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -19,9 +19,9 @@ class Account extends Model
     protected function casts(): array
     {
         return [
-            'type'            => AccountType::class,
+            'type' => AccountType::class,
             'opening_balance' => 'decimal:2',
-            'is_active'       => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -34,7 +34,7 @@ class Account extends Model
 
     public function transactions(): HasMany
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class, 'account_id');
     }
 
     // ─── Scopes ──────────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ class Account extends Model
     {
         return Attribute::make(
             get: function () {
-                $in  = $this->transactions()->where('direction', 'in')->sum('net_amount');
+                $in = $this->transactions()->where('direction', 'in')->sum('net_amount');
                 $out = $this->transactions()->where('direction', 'out')->sum('net_amount');
 
                 return $this->opening_balance + $in - $out;

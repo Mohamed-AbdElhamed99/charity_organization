@@ -69,14 +69,20 @@ class MigrateLegacyTransactionsCommand extends Command
 
     /** Lookup caches built once at the start of the run. */
     private array $userIds = [];        // set of valid new users.id
+
     private array $itemIds = [];        // set of valid new items.id
+
     private array $paymentByKeyword = []; // keyword => payment_method id
+
     private ?int $defaultCurrencyId = null;
 
     /** Detail-table indexes keyed by legacy transaction_id. */
     private array $deposits = [];
+
     private array $expenses = [];        // transaction_id => [rows...]
+
     private array $generalExpenses = []; // transaction_id => [rows...]
+
     private array $txUsers = [];
 
     /** Legacy general_expenses (id => name) name lookup. */
@@ -104,7 +110,7 @@ class MigrateLegacyTransactionsCommand extends Command
         ];
 
         $this->info("Migrating from connection [{$this->legacy}]"
-            . ($dryRun ? ' (DRY RUN — will roll back)' : '') . '...');
+            .($dryRun ? ' (DRY RUN — will roll back)' : '').'...');
 
         DB::beginTransaction();
         try {
@@ -137,12 +143,14 @@ class MigrateLegacyTransactionsCommand extends Command
             }
         } catch (Throwable $e) {
             DB::rollBack();
-            $this->error('Migration failed and was rolled back: ' . $e->getMessage());
-            $this->line($e->getFile() . ':' . $e->getLine());
+            $this->error('Migration failed and was rolled back: '.$e->getMessage());
+            $this->line($e->getFile().':'.$e->getLine());
+
             return self::FAILURE;
         }
 
         $this->printSummary();
+
         return self::SUCCESS;
     }
 
@@ -155,13 +163,15 @@ class MigrateLegacyTransactionsCommand extends Command
         try {
             DB::connection($this->legacy)->getPdo();
         } catch (Throwable $e) {
-            $this->error("Cannot connect to legacy DB [{$this->legacy}]: " . $e->getMessage());
+            $this->error("Cannot connect to legacy DB [{$this->legacy}]: ".$e->getMessage());
             $this->line('Add the connection to config/database.php (see class docblock).');
+
             return false;
         }
 
         if (! Schema::connection($this->legacy)->hasTable('transactions')) {
-            $this->error("Legacy connection has no `transactions` table — wrong database?");
+            $this->error('Legacy connection has no `transactions` table — wrong database?');
+
             return false;
         }
 
@@ -236,7 +246,7 @@ class MigrateLegacyTransactionsCommand extends Command
             DB::table('payment_methods')->insert([
                 'id' => $pm->id,
                 'name' => $pm->name,
-                'code' => Str::slug($pm->name, '_') ?: ('pm_' . $pm->id),
+                'code' => Str::slug($pm->name, '_') ?: ('pm_'.$pm->id),
                 'is_active' => 1,
                 'created_at' => $pm->created_at ?? $now,
                 'updated_at' => $pm->updated_at ?? $now,
@@ -256,8 +266,8 @@ class MigrateLegacyTransactionsCommand extends Command
         DB::connection($this->legacy)->table('items')->orderBy('id')
             ->chunk((int) $this->option('chunk'), function ($items) use ($now) {
                 foreach ($items as $it) {
-                    $ar = $it->name_ar ?: $it->name_en ?: ('Item #' . $it->id);
-                    $en = $it->name_en ?: $it->name_ar ?: ('Item #' . $it->id);
+                    $ar = $it->name_ar ?: $it->name_en ?: ('Item #'.$it->id);
+                    $en = $it->name_en ?: $it->name_ar ?: ('Item #'.$it->id);
                     DB::table('items')->insert([
                         'id' => $it->id,
                         'name_ar' => $ar,
@@ -280,7 +290,7 @@ class MigrateLegacyTransactionsCommand extends Command
         $now = now();
 
         foreach ($rows as $a) {
-            DB::table('accounts')->insert([
+            DB::table('bank_accounts')->insert([
                 'id' => $a->id,
                 'name' => $a->name,
                 'account_number' => $a->number,
@@ -313,14 +323,14 @@ class MigrateLegacyTransactionsCommand extends Command
             return;
         }
 
-        $offset = (int) (DB::table('accounts')->max('id') ?? 0);
+        $offset = (int) (DB::table('bank_accounts')->max('id') ?? 0);
         $now = now();
 
         foreach (DB::connection($this->legacy)->table('accounts')->get() as $a) {
             $newId = $offset + (int) $a->id;
             $this->bankAccountMap[(int) $a->id] = $newId;
 
-            DB::table('accounts')->insert([
+            DB::table('bank_accounts')->insert([
                 'id' => $newId,
                 'name' => $a->name,
                 'account_number' => $a->number,
@@ -330,7 +340,7 @@ class MigrateLegacyTransactionsCommand extends Command
                 'type' => 'bank',
                 'opening_balance' => $this->num($a->balance ?? 0),
                 'is_active' => 1,
-                'notes' => 'Imported from legacy bank accounts (legacy id ' . $a->id . ').',
+                'notes' => 'Imported from legacy bank accounts (legacy id '.$a->id.').',
                 'created_at' => $a->created_at ?? $now,
                 'updated_at' => $a->updated_at ?? $now,
                 'deleted_at' => null,
@@ -449,10 +459,10 @@ class MigrateLegacyTransactionsCommand extends Command
         $this->stats['transactions']++;
 
         match ($type) {
-            'donation'        => $this->insertDonation($t),
-            'campaign_expense'=> $this->insertCampaignExpenses($t),
+            'donation' => $this->insertDonation($t),
+            'campaign_expense' => $this->insertCampaignExpenses($t),
             'general_expense' => $this->insertGeneralExpenses($t),
-            default           => null, // bank_transfer / adjustment: no detail row
+            default => null, // bank_transfer / adjustment: no detail row
         };
 
         return $balance;
@@ -492,6 +502,7 @@ class MigrateLegacyTransactionsCommand extends Command
                     // Skip rows the org flagged to ignore.
                     if (! empty($b->is_ignore)) {
                         $this->stats['skipped']++;
+
                         continue;
                     }
 
@@ -502,8 +513,8 @@ class MigrateLegacyTransactionsCommand extends Command
                             ->update([
                                 'is_reconciled' => ! empty($b->completed) ? 1 : 0,
                                 'reference_number' => DB::raw(
-                                    'COALESCE(reference_number, ' .
-                                    DB::getPdo()->quote((string) ($b->invoice_number ?: $b->check_slip ?: ('BANK#' . $b->id))) .
+                                    'COALESCE(reference_number, '.
+                                    DB::getPdo()->quote((string) ($b->invoice_number ?: $b->check_slip ?: ('BANK#'.$b->id))).
                                     ')'
                                 ),
                             ]);
@@ -531,7 +542,7 @@ class MigrateLegacyTransactionsCommand extends Command
             ? ($this->bankAccountMap[(int) $b->account_id] ?? null)
             : null;
 
-        $reference = $b->invoice_number ?: $b->check_slip ?: ('BANK#' . $b->id);
+        $reference = $b->invoice_number ?: $b->check_slip ?: ('BANK#'.$b->id);
 
         DB::table('transactions')->insert([
             'id' => $idOffset + (int) $b->id,
@@ -559,12 +570,20 @@ class MigrateLegacyTransactionsCommand extends Command
 
     private function bankNotes($b): ?string
     {
-        $parts = ['Legacy bank_transaction #' . $b->id];
-        if (! empty($b->details)) $parts[] = (string) $b->details;
-        if (! empty($b->note))    $parts[] = (string) $b->note;
-        if (! empty($b->invoice)) $parts[] = 'Invoice: ' . $b->invoice;
+        $parts = ['Legacy bank_transaction #'.$b->id];
+        if (! empty($b->details)) {
+            $parts[] = (string) $b->details;
+        }
+        if (! empty($b->note)) {
+            $parts[] = (string) $b->note;
+        }
+        if (! empty($b->invoice)) {
+            $parts[] = 'Invoice: '.$b->invoice;
+        }
+
         return implode("\n", $parts);
     }
+
     /*
      *
      * The authoritative signal is the legacy `transactions.type` column
@@ -582,6 +601,7 @@ class MigrateLegacyTransactionsCommand extends Command
         if (isset($this->expenses[$t->id])) {
             return 'campaign_expense';     // has itemized line-items
         }
+
         // General-expense pivot, OR no detail rows at all (un-itemized expense).
         return 'general_expense';
     }
@@ -644,8 +664,9 @@ class MigrateLegacyTransactionsCommand extends Command
         // Un-itemized expense (no legacy pivot rows): synthesize one detail row
         // from the parent so the transaction is never left without a detail.
         if (empty($rows)) {
-            $name = trim((string) ($t->note ?? '')) ?: ('Legacy expense #' . $t->id);
+            $name = trim((string) ($t->note ?? '')) ?: ('Legacy expense #'.$t->id);
             $this->writeGeneralExpense($t, $name, null);
+
             return;
         }
 
@@ -700,6 +721,7 @@ class MigrateLegacyTransactionsCommand extends Command
                 return $id;
             }
         }
+
         return null; // unmapped: raw value is preserved in notes
     }
 
@@ -709,15 +731,23 @@ class MigrateLegacyTransactionsCommand extends Command
         if ($note !== '') {
             return $this->truncate($note, 255);
         }
-        return ucfirst(str_replace('_', ' ', $type)) . ' #' . $t->id . ' (legacy import)';
+
+        return ucfirst(str_replace('_', ' ', $type)).' #'.$t->id.' (legacy import)';
     }
 
     private function buildNotes($t): ?string
     {
         $parts = [];
-        if (! empty($t->note))         $parts[] = (string) $t->note;
-        if (! empty($t->payment_type)) $parts[] = 'Legacy payment type: ' . $t->payment_type;
-        if (! empty($t->invoice))      $parts[] = 'Legacy invoice ref: ' . $t->invoice;
+        if (! empty($t->note)) {
+            $parts[] = (string) $t->note;
+        }
+        if (! empty($t->payment_type)) {
+            $parts[] = 'Legacy payment type: '.$t->payment_type;
+        }
+        if (! empty($t->invoice)) {
+            $parts[] = 'Legacy invoice ref: '.$t->invoice;
+        }
+
         return $parts ? implode("\n", $parts) : null;
     }
 
@@ -731,6 +761,7 @@ class MigrateLegacyTransactionsCommand extends Command
         if ($value === null) {
             return null;
         }
+
         return Str::limit($value, $max, '');
     }
 

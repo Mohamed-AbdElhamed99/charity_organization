@@ -18,7 +18,6 @@ use App\Models\Meeting;
 use App\Models\MeetingDecision;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -94,9 +93,8 @@ class MeetingDecisionController extends Controller
         return back();
     }
 
-    public function destroy(Request $request, Meeting $meeting, MeetingDecision $decision): RedirectResponse
+    public function destroy(Meeting $meeting, MeetingDecision $decision): RedirectResponse
     {
-        abort_unless($request->user()?->can('edit_meetings'), 403);
         abort_unless($decision->meeting_id === $meeting->id, 404);
 
         $this->meetingService->deleteDecision($decision);

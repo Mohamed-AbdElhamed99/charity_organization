@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
  * Beneficiary User Access Control
  *
  * Two-layer access model:
- *   Layer 1 (Spatie): User's role must have 'view_beneficiary_details' permission.
+ *   Layer 1 (Spatie): User's role must have 'view_sensitive_details_beneficiaries' permission.
  *   Layer 2 (this table): Even with that permission, access to a specific
  *                         beneficiary must be explicitly granted here,
  *                         with exact fields the user may see.

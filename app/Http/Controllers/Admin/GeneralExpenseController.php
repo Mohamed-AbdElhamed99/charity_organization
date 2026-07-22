@@ -10,7 +10,7 @@ use App\Http\Requests\Admin\GeneralExpense\DestroyGeneralExpenseRequest;
 use App\Http\Requests\Admin\GeneralExpense\StoreGeneralExpenseRequest;
 use App\Http\Requests\Admin\GeneralExpense\UpdateGeneralExpenseRequest;
 use App\Http\Resources\Admin\GeneralExpense\GeneralExpenseResource;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\GeneralExpense;
 use App\Models\GeneralExpenseCategory;
 use App\Models\PaymentMethod;
@@ -28,8 +28,6 @@ class GeneralExpenseController extends Controller
 
     public function index(Request $request): Response
     {
-        abort_unless($request->user()?->can('view_expenses'), 403);
-
         $filters = $request->only(['query', 'category_id', 'date_from', 'date_to', 'page', 'per_page']);
         $paginator = $this->generalExpenseService->getPaginatedExpenses($filters);
 
@@ -39,7 +37,7 @@ class GeneralExpenseController extends Controller
         return Inertia::render('admin/general-expenses/general-expenses-index', [
             'expenses' => $expenses,
             'categories' => GeneralExpenseCategory::query()->active()->orderBy('name')->get(['id', 'name']),
-            'accounts' => Account::query()->active()->orderBy('name')->get(['id', 'name']),
+            'accounts' => BankAccount::query()->active()->orderBy('name')->get(['id', 'name']),
             'paymentMethods' => PaymentMethod::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
             'search' => $filters,
         ]);
@@ -61,6 +59,9 @@ class GeneralExpenseController extends Controller
             description: $validated['description'] ?? null,
             notes: $validated['notes'] ?? null,
             referenceNumber: $validated['reference_number'] ?? null,
+            originalCurrencyId: isset($validated['original_currency_id']) ? (int) $validated['original_currency_id'] : null,
+            originalAmount: isset($validated['original_amount']) ? (float) $validated['original_amount'] : null,
+            exchangeRate: isset($validated['exchange_rate']) ? (float) $validated['exchange_rate'] : null,
         ));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('General expense recorded successfully.')]);

@@ -1,6 +1,5 @@
-import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { Link } from '@inertiajs/react'
-import { route } from 'ziggy-js'
+import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
 import { Eye, Pencil, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Transaction } from '@/types/models/transaction'
-import { useTransactions } from './transactions-provider'
 
 type DataTableRowActionsProps = {
   row: Row<Transaction>
@@ -24,7 +22,6 @@ export function DataTableRowActions({
   row,
   onReverse,
 }: DataTableRowActionsProps) {
-  const { setOpen, setCurrentRow } = useTransactions()
   const transaction = row.original
   const canReverse =
     transaction.transaction_type !== 'adjustment' && !transaction.deleted_at
@@ -49,16 +46,13 @@ export function DataTableRowActions({
             </DropdownMenuShortcut>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(transaction)
-            setOpen('edit')
-          }}
-        >
-          Edit
-          <DropdownMenuShortcut>
-            <Pencil size={16} />
-          </DropdownMenuShortcut>
+        <DropdownMenuItem asChild>
+          <Link href={route('admin.transactions.edit', transaction.id)}>
+            Edit
+            <DropdownMenuShortcut>
+              <Pencil size={16} />
+            </DropdownMenuShortcut>
+          </Link>
         </DropdownMenuItem>
         {canReverse && (
           <>

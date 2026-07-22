@@ -9,7 +9,7 @@ class StoreNewsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create_news') ?? false;
+        return true;
     }
 
     /**

@@ -28,14 +28,13 @@ class BeneficiarySupportReportController extends Controller
 
     public function show(BeneficiarySupportReportRequest $request, Beneficiary $beneficiary): Response|StreamedResponse
     {
-        abort_unless($request->user()?->can('view_beneficiary_reports'), 403);
         abort_unless($this->identityResolver->canViewIdentity($request->user(), $beneficiary), 403);
 
         $filters = $request->validated();
         $format = $filters['format'] ?? null;
 
         if ($format !== null) {
-            abort_unless($request->user()?->can('export_beneficiary_reports'), 403);
+            abort_unless($request->user()?->can('export_beneficiary_support_reports'), 403);
 
             return $this->export($request, $beneficiary, $filters, $format);
         }

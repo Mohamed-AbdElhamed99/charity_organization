@@ -28,8 +28,6 @@ class DonorProfileController extends Controller
 
     public function index(Request $request): Response
     {
-        abort_unless($request->user()?->can('view_donor_profiles'), 403);
-
         $filters = $request->only(['query', 'type', 'page', 'per_page']);
         $paginator = $this->donorProfileService->getPaginatedDonorProfiles($filters);
 
@@ -50,8 +48,6 @@ class DonorProfileController extends Controller
 
     public function show(DonorProfile $donorProfile): Response
     {
-        abort_unless(request()->user()?->can('view_donor_profiles'), 403);
-
         $donorProfile->load(['user', 'country', 'state']);
 
         return Inertia::render('admin/donor-profiles/donor-profiles-show', [
@@ -103,8 +99,6 @@ class DonorProfileController extends Controller
 
     public function destroy(DonorProfile $donorProfile): RedirectResponse
     {
-        abort_unless(request()->user()?->can('delete_donor_profiles'), 403);
-
         $this->donorProfileService->deleteDonorProfile($donorProfile);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Donor profile deleted successfully.')]);

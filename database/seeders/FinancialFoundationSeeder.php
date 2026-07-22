@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Currency;
 use App\Models\PaymentMethod;
 use Illuminate\Database\Seeder;
@@ -37,53 +37,53 @@ class FinancialFoundationSeeder extends Seeder
 
         $accountsData = [
             [
-                'name'            => 'Chase Business Checking',
-                'account_number'  => '4521-7890-1234-5678',
-                'bank_name'       => 'Chase',
-                'bank_branch'     => 'New York Main Branch',
-                'currency_id'     => $usd->id,
-                'type'            => 'bank',
+                'name' => 'Chase Business Checking',
+                'account_number' => '4521-7890-1234-5678',
+                'bank_name' => 'Chase',
+                'bank_branch' => 'New York Main Branch',
+                'currency_id' => $usd->id,
+                'type' => 'bank',
                 'opening_balance' => 25_000.00,
-                'is_active'       => true,
-                'notes'           => 'Primary operating account',
+                'is_active' => true,
+                'notes' => 'Primary operating account',
             ],
             [
-                'name'            => 'Zelle Donations Wallet',
-                'account_number'  => null,
-                'bank_name'       => null,
-                'bank_branch'     => null,
-                'currency_id'     => $usd->id,
-                'type'            => 'digital',
+                'name' => 'Zelle Donations Wallet',
+                'account_number' => null,
+                'bank_name' => null,
+                'bank_branch' => null,
+                'currency_id' => $usd->id,
+                'type' => 'digital',
                 'opening_balance' => 0.00,
-                'is_active'       => true,
-                'notes'           => 'Zelle incoming donations',
+                'is_active' => true,
+                'notes' => 'Zelle incoming donations',
             ],
             [
-                'name'            => 'Petty Cash',
-                'account_number'  => null,
-                'bank_name'       => null,
-                'bank_branch'     => null,
-                'currency_id'     => $usd->id,
-                'type'            => 'cash',
+                'name' => 'Petty Cash',
+                'account_number' => null,
+                'bank_name' => null,
+                'bank_branch' => null,
+                'currency_id' => $usd->id,
+                'type' => 'cash',
                 'opening_balance' => 500.00,
-                'is_active'       => true,
-                'notes'           => 'Office petty cash fund',
+                'is_active' => true,
+                'notes' => 'Office petty cash fund',
             ],
             [
-                'name'            => 'Cairo Operations Account',
-                'account_number'  => '0123-4567-8901',
-                'bank_name'       => 'National Bank of Egypt',
-                'bank_branch'     => 'Cairo Branch',
-                'currency_id'     => $egp->id,
-                'type'            => 'bank',
+                'name' => 'Cairo Operations Account',
+                'account_number' => '0123-4567-8901',
+                'bank_name' => 'National Bank of Egypt',
+                'bank_branch' => 'Cairo Branch',
+                'currency_id' => $egp->id,
+                'type' => 'bank',
                 'opening_balance' => 50_000.00,
-                'is_active'       => true,
-                'notes'           => 'Egypt field operations account',
+                'is_active' => true,
+                'notes' => 'Egypt field operations account',
             ],
         ];
 
         foreach ($accountsData as $data) {
-            Account::firstOrCreate(['name' => $data['name']], $data);
+            BankAccount::firstOrCreate(['name' => $data['name']], $data);
         }
 
         // ─── Payment Methods ──────────────────────────────────────────────────
@@ -103,10 +103,10 @@ class FinancialFoundationSeeder extends Seeder
             PaymentMethod::firstOrCreate(['code' => $data['code']], $data);
         }
 
-        $this->command->info('✅ Financial foundation seeded (' .
-            Currency::count() . ' currencies, ' .
-            Account::count() . ' accounts, ' .
-            PaymentMethod::count() . ' payment methods).'
+        $this->command->info('✅ Financial foundation seeded ('.
+            Currency::count().' currencies, '.
+            BankAccount::count().' accounts, '.
+            PaymentMethod::count().' payment methods).'
         );
     }
 }

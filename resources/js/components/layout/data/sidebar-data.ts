@@ -13,7 +13,6 @@ import {
   Layers,
   Receipt,
   Scale,
-  Send,
   Shield,
   Tags,
   UserRound,
@@ -32,7 +31,6 @@ import { index as generalExpensesIndex } from '@/routes/admin/general-expenses'
 import { index as paymentMethodsIndex } from '@/routes/admin/payment-methods'
 import { index as donationsIndex } from '@/routes/admin/donations'
 import { index as transactionsIndex } from '@/routes/admin/transactions'
-import { index as transfersIndex } from '@/routes/admin/transfers'
 import { edit as legalPrivacyEdit } from '@/routes/admin/legal/privacy'
 import { edit as legalTermsEdit } from '@/routes/admin/legal/terms'
 import { type SidebarData } from '@/types/nav-types';
@@ -63,7 +61,7 @@ export const sidebarData: SidebarData = {
           title: 'Users',
           url: '/admin/users',
           icon: Users,
-          permission: 'manage_users',
+          permission: 'view_users',
         },
         {
           title: 'News',
@@ -81,13 +79,13 @@ export const sidebarData: SidebarData = {
           title: 'Campaign Categories',
           url: '/admin/campaign-categories',
           icon: FolderKanban,
-          permission: 'manage_campaign_categories',
+          permission: 'view_campaign_categories',
         },
         {
           title: 'Roles',
           url: '/admin/roles',
           icon: Shield,
-          permission: 'manage_roles',
+          permission: 'view_roles',
         },
         {
           title: 'FAQs',
@@ -99,19 +97,19 @@ export const sidebarData: SidebarData = {
           title: 'Terms & Conditions',
           url: legalTermsEdit.url(),
           icon: Scale,
-          permission: 'manage_legal',
+          permission: 'view_legal_documents',
         },
         {
           title: 'Privacy Policy',
           url: legalPrivacyEdit.url(),
           icon: FileText,
-          permission: 'manage_legal',
+          permission: 'view_legal_documents',
         },
         {
           title: 'Contact Messages',
           url: contactMessagesIndex.url(),
           icon: Mail,
-          permission: 'view_contact_submissions',
+          permission: 'view_contact_messages',
         },
       ],
     },
@@ -150,19 +148,19 @@ export const sidebarData: SidebarData = {
           title: 'Payment Methods',
           url: paymentMethodsIndex.url(),
           icon: CreditCard,
-          permission: 'manage_payment_methods',
+          permission: 'view_payment_methods',
         },
         {
           title: 'Expense Categories',
           url: generalExpenseCategoriesIndex.url(),
           icon: Layers,
-          permission: 'manage_general_expense_categories',
+          permission: 'view_general_expense_categories',
         },
         {
           title: 'General Expenses',
           url: generalExpensesIndex.url(),
           icon: Receipt,
-          permission: 'view_expenses',
+          permission: 'view_general_expenses',
         },
         {
           title: 'Campaigns',
@@ -180,7 +178,7 @@ export const sidebarData: SidebarData = {
           title: 'Campaign Expenses',
           url: campaignExpensesIndex.url(),
           icon: Receipt,
-          permission: 'view_campaigns',
+          permission: 'view_campaign_expenses',
         },
         {
           title: 'Donations',
@@ -193,12 +191,6 @@ export const sidebarData: SidebarData = {
           url: transactionsIndex.url(),
           icon: ArrowLeftRight,
           permission: 'view_transactions',
-        },
-        {
-          title: 'Transfers',
-          url: transfersIndex.url(),
-          icon: Send,
-          permission: 'view_transfers',
         },
       ],
     },

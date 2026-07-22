@@ -3,6 +3,7 @@ import { route } from "ziggy-js";
 import { SiteLayout } from "@/layouts/site-layout";
 import { useLocale } from "@/context/locale-context";
 import InputError from "@/components/input-error";
+import PasskeyVerify from "@/components/passkey-verify";
 
 export default function AccountLogin({ status }: { status?: string }) {
   const { t, dir } = useLocale();
@@ -16,7 +17,7 @@ export default function AccountLogin({ status }: { status?: string }) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    form.post(route("account.login"));
+    form.post(route("login.store"));
   };
 
   return (
@@ -48,6 +49,7 @@ export default function AccountLogin({ status }: { status?: string }) {
                 onChange={(event) => form.setData("email", event.target.value)}
                 required
                 dir="ltr"
+                autoComplete="email"
                 className="rounded-lg border border-surface-soft bg-white px-4 py-3 text-sm outline-none focus:border-action-red"
               />
               <InputError message={form.errors.email} />
@@ -64,6 +66,7 @@ export default function AccountLogin({ status }: { status?: string }) {
                 onChange={(event) => form.setData("password", event.target.value)}
                 required
                 dir="ltr"
+                autoComplete="current-password"
                 className="rounded-lg border border-surface-soft bg-white px-4 py-3 text-sm outline-none focus:border-action-red"
               />
               <InputError message={form.errors.password} />
@@ -90,6 +93,8 @@ export default function AccountLogin({ status }: { status?: string }) {
             >
               {i18n.submit}
             </button>
+
+            <PasskeyVerify />
 
             <p className="text-center text-sm text-body-text">
               {i18n.noAccount}{" "}

@@ -8,7 +8,6 @@ use App\Http\Requests\Admin\AidItem\UpdateAidItemRequest;
 use App\Models\AidItem;
 use App\Services\AidItemService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,10 +17,8 @@ class AidItemController extends Controller
         private readonly AidItemService $aidItemService,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        abort_unless($request->user()?->can('manage_beneficiary_support'), 403);
-
         $items = $this->aidItemService->paginate()
             ->through(fn (AidItem $item) => [
                 'id' => $item->id,

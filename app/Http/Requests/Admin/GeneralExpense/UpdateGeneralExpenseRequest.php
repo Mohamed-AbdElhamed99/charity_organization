@@ -9,7 +9,7 @@ class UpdateGeneralExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('edit_expenses') ?? false;
+        return true;
     }
 
     /**

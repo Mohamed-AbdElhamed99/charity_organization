@@ -8,7 +8,7 @@ class DestroyGeneralExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('delete_expenses') ?? false;
+        return true;
     }
 
     /**

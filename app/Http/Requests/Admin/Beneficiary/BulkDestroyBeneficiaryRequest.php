@@ -9,7 +9,7 @@ class BulkDestroyBeneficiaryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('delete_beneficiaries') ?? false;
+        return true;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ModulePermission;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -10,130 +11,61 @@ use Spatie\Permission\PermissionRegistrar;
 /**
  * Seeds all Spatie roles and permissions.
  * Must run FIRST — users and all other seeders depend on roles existing.
+ *
+ * Permissions are generated from `App\Enums\ModulePermission`, so every
+ * module/ability pairing defined in `config/permissions.php` is kept in
+ * sync automatically — there is no separate hardcoded permission list.
  */
 class RolesAndPermissionsSeeder extends Seeder
 {
-    // ─── All system permissions ───────────────────────────────────────────────
-
-    private const PERMISSIONS = [
-        // Campaigns
-        'view_campaigns',
-        'create_campaigns',
-        'edit_campaigns',
-        'delete_campaigns',
-        'publish_campaigns',
-        'manage_campaign_categories',
-
-        // Meetings
-        'view_meetings',
-        'create_meetings',
-        'edit_meetings',
-        'delete_meetings',
-        'approve_meeting_minutes',
-
-        // Beneficiaries — base CRUD
-        'view_beneficiaries',
-        'create_beneficiaries',
-        'edit_beneficiaries',
-        'delete_beneficiaries',
-
-        // Beneficiaries — sensitive data (Layer 1 gate; Layer 2 is per-record grant)
-        'view_beneficiary_details',
-
-        // Assessments
-        'conduct_assessments',
-        'review_assessments',
-        'approve_assessments',
-
-        // Beneficiary access grants
-        'manage_beneficiary_access',
-        'manage_beneficiary_support',
-        'view_beneficiary_reports',
-        'export_beneficiary_reports',
-
-        // Financial
-        'view_accounts',
-        'create_accounts',
-        'edit_accounts',
-        'delete_accounts',
-        'view_transactions',
-        'create_transactions',
-        'edit_transactions',
-        'delete_transactions',
-        'view_donations',
-        'create_donations',
-        'export_donations',
-        'view_expenses',
-        'create_expenses',
-        'edit_expenses',
-        'delete_expenses',
-        'manage_payment_methods',
-        'manage_general_expense_categories',
-        'view_donor_profiles',
-        'create_donor_profiles',
-        'edit_donor_profiles',
-        'delete_donor_profiles',
-        'view_transfers',
-        'create_transfers',
-        'view_reports',
-
-        // CMS
-        'view_news',
-        'create_news',
-        'edit_news',
-        'delete_news',
-        'manage_cms',
-        'manage_legal',
-        'view_faqs',
-        'create_faqs',
-        'edit_faqs',
-        'delete_faqs',
-
-        // Admin
-        'manage_users',
-        'manage_roles',
-        'manage_settings',
-        'view_contact_submissions',
-        'delete_contact_submissions',
-    ];
-
     // ─── Role → Permission mapping ────────────────────────────────────────────
 
     private const ROLES = [
         'super_admin' => '*', // all permissions
 
         'staff' => [
-            'view_campaigns', 'create_campaigns', 'edit_campaigns', 'manage_campaign_categories',
+            'access_dashboard',
+            'view_campaigns', 'create_campaigns', 'edit_campaigns',
+            'view_campaign_categories', 'create_campaign_categories', 'edit_campaign_categories',
+
             'view_meetings', 'create_meetings', 'edit_meetings', 'approve_meeting_minutes',
+
             'view_beneficiaries', 'create_beneficiaries', 'edit_beneficiaries',
-            'view_beneficiary_details',
-            'manage_beneficiary_support', 'view_beneficiary_reports', 'export_beneficiary_reports',
-            'conduct_assessments',
+            'view_sensitive_details_beneficiaries',
+            'create_beneficiary_assessments',
+            'create_aid_items', 'edit_aid_items',
+            'create_beneficiary_supports',
+            'view_beneficiary_support_reports', 'export_beneficiary_support_reports',
+            'view_campaign_beneficiary_reports', 'export_campaign_beneficiary_reports',
+
             'view_accounts', 'create_accounts', 'edit_accounts',
             'view_transactions', 'create_transactions',
-            'view_donations', 'create_donations', 'export_donations',
-            'view_expenses', 'create_expenses', 'edit_expenses', 'delete_expenses',
-            'manage_payment_methods', 'manage_general_expense_categories',
+            'view_donations', 'export_donations',
+            'view_general_expenses', 'create_general_expenses', 'edit_general_expenses', 'delete_general_expenses',
+            'view_campaign_expenses', 'create_campaign_expenses', 'edit_campaign_expenses',
+            'view_payment_methods', 'create_payment_methods', 'edit_payment_methods', 'delete_payment_methods',
+            'view_general_expense_categories', 'create_general_expense_categories', 'edit_general_expense_categories', 'delete_general_expense_categories',
             'view_donor_profiles', 'create_donor_profiles', 'edit_donor_profiles', 'delete_donor_profiles',
             'view_transfers', 'create_transfers',
-            'view_reports',
+
             'view_news', 'create_news', 'edit_news',
-            'manage_legal', 'view_faqs', 'create_faqs', 'edit_faqs',
-            'view_contact_submissions', 'delete_contact_submissions',
+            'view_legal_documents', 'edit_legal_documents',
+            'view_faqs', 'create_faqs', 'edit_faqs',
+            'view_contact_messages', 'mark_reviewed_contact_messages', 'delete_contact_messages',
         ],
 
         'field_worker' => [
+            'access_dashboard',
             'view_beneficiaries', 'create_beneficiaries',
-            'view_beneficiary_details',
-            'view_beneficiary_reports',
-            'conduct_assessments',
+            'view_sensitive_details_beneficiaries',
+            'view_beneficiary_support_reports', 'view_campaign_beneficiary_reports',
+            'create_beneficiary_assessments',
             'view_campaigns',
         ],
 
         'donor' => [
             'view_campaigns',
             'view_news',
-            'create_donations',
         ],
     ];
 
@@ -142,8 +74,11 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create all permissions
-        $permissions = collect(static::PERMISSIONS)
+        // Create every permission generated by the ModulePermission enum
+        $permissions = collect(ModulePermission::cases())
+            ->flatMap(fn (ModulePermission $module) => $module->allPermissions())
+            ->unique()
+            ->values()
             ->mapWithKeys(fn (string $name) => [
                 $name => Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']),
             ]);

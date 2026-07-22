@@ -47,7 +47,7 @@ class AssessmentService implements AssessmentServiceInterface
                     : $assessment->recommended_aid_amount,
             ];
 
-            if ($user->can('review_assessments') && isset($data['status'])) {
+            if ($user->can('review_beneficiary_assessments') && isset($data['status'])) {
                 $status = AssessmentStatus::from($data['status']);
 
                 if ($status === AssessmentStatus::Approved) {

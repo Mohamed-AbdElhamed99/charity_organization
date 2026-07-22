@@ -62,8 +62,6 @@ class DonationController extends Controller
 
     public function export(DonationFilterRequest $request): StreamedResponse|RedirectResponse
     {
-        abort_unless($request->user()?->can('export_donations'), 403);
-
         $filters = $request->validated();
         $format = $filters['format'] ?? 'csv';
         $count = $this->reportService->countForExport($filters);

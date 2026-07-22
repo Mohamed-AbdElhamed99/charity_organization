@@ -16,5 +16,8 @@ readonly class CreateGeneralExpenseDTO
         public ?string $description,
         public ?string $notes,
         public ?string $referenceNumber,
+        public ?int $originalCurrencyId = null,
+        public ?float $originalAmount = null,
+        public ?float $exchangeRate = null,
     ) {}
 }

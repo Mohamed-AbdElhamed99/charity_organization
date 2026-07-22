@@ -9,7 +9,7 @@ class StoreRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_roles') ?? false;
+        return true;
     }
 
     /**

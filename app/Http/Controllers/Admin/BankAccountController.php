@@ -12,14 +12,14 @@ use App\Http\Requests\Admin\Account\RestoreAccountRequest;
 use App\Http\Requests\Admin\Account\StoreAccountRequest;
 use App\Http\Requests\Admin\Account\UpdateAccountRequest;
 use App\Http\Resources\Admin\Account\AccountResource;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Currency;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class AccountController extends Controller
+class BankAccountController extends Controller
 {
     public function __construct(
         private readonly AccountServiceInterface $accountService,
@@ -65,7 +65,7 @@ class AccountController extends Controller
         return back();
     }
 
-    public function update(UpdateAccountRequest $request, Account $account): RedirectResponse
+    public function update(UpdateAccountRequest $request, BankAccount $account): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -86,7 +86,7 @@ class AccountController extends Controller
         return back();
     }
 
-    public function destroy(Account $account): RedirectResponse
+    public function destroy(BankAccount $account): RedirectResponse
     {
         $this->accountService->deleteAccount($account);
 

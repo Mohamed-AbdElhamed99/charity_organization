@@ -38,8 +38,6 @@ class UserController extends Controller
 
     public function show(User $user): Response
     {
-        abort_unless(request()->user()?->can('manage_users'), 403);
-
         $user->load(['roles', 'permissions', 'country', 'state', 'media']);
 
         return Inertia::render('admin/users/users-show', [

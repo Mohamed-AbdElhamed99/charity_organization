@@ -24,6 +24,7 @@ use App\Contracts\Services\RoleServiceInterface;
 use App\Contracts\Services\TransactionServiceInterface;
 use App\Contracts\Services\TransferServiceInterface;
 use App\Contracts\Services\UserServiceInterface;
+use App\Models\User;
 use App\Services\AccountService;
 use App\Services\AssessmentService;
 use App\Services\BeneficiaryService;
@@ -49,6 +50,7 @@ use App\Services\UserService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use InvalidArgumentException;
@@ -101,6 +103,22 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureAuthorization();
+    }
+
+    /**
+     * Super admins bypass permission checks; every other ability falls through
+     * to Spatie's normal role/permission evaluation.
+     */
+    protected function configureAuthorization(): void
+    {
+        Gate::before(function ($user, string $ability): ?bool {
+            if ($user instanceof User && $user->hasRole('super_admin')) {
+                return true;
+            }
+
+            return null;
+        });
     }
 
     /**

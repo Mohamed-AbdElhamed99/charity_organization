@@ -10,7 +10,7 @@ class StoreAccountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create_accounts') ?? false;
+        return true;
     }
 
     /**

@@ -8,7 +8,7 @@ class UpdateFaqRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('edit_faqs') ?? false;
+        return true;
     }
 
     /**

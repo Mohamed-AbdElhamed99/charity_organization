@@ -11,7 +11,7 @@ class CampaignBeneficiaryReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('view_beneficiary_reports') ?? false;
+        return true;
     }
 
     /**

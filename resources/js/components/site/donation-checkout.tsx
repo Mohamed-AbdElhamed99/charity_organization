@@ -194,6 +194,16 @@ function PaymentStep({
       <div className={useNewCard ? "" : "hidden"}>
         <div className={expressCheckoutReady ? "" : "h-0 overflow-hidden"}>
           <ExpressCheckoutElement
+            options={{
+              paymentMethods: {
+                applePay: "auto",
+                googlePay: "auto",
+                link: "auto",
+                paypal: "never",
+                klarna: "never",
+                amazonPay: "never",
+              },
+            }}
             onReady={({ availablePaymentMethods }) =>
               setExpressCheckoutReady(Boolean(availablePaymentMethods))
             }

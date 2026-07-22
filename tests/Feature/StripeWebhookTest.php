@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Contracts\PaymentGateway;
 use App\Enums\DonationStatus;
 use App\Enums\DonationSubscriptionStatus;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Campaign;
 use App\Models\Donation;
 use App\Models\DonationSubscription;
@@ -44,7 +44,7 @@ class StripeWebhookTest extends TestCase
             'services.stripe.secret' => 'sk_test_fake',
             'services.stripe.webhook_secret' => 'whsec_test',
         ]);
-        $this->app->instance(PaymentGateway::class, new StripeGateway);
+        $this->app->instance(PaymentGateway::class, $this->app->make(StripeGateway::class));
 
         $this->post(route('webhooks.stripe'), [], [
             'Stripe-Signature' => 'invalid',
@@ -132,7 +132,7 @@ class StripeWebhookTest extends TestCase
 
     public function test_running_balance_updates_sequentially(): void
     {
-        $account = Account::query()->where('name', 'Chase Business Checking')->firstOrFail();
+        $account = BankAccount::query()->where('name', 'Chase Business Checking')->firstOrFail();
         $user = User::factory()->create();
 
         $first = Donation::query()->create([

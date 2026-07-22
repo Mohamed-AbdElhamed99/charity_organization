@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CampaignExpense\StoreCampaignExpenseRequest;
 use App\Http\Requests\Admin\CampaignExpense\UpdateCampaignExpenseRequest;
 use App\Http\Resources\Admin\CampaignExpense\CampaignExpenseResource;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Campaign;
 use App\Models\CampaignExpense;
 use App\Models\Item;
@@ -27,8 +27,6 @@ class CampaignExpenseController extends Controller
 
     public function index(Request $request): Response
     {
-        abort_unless($request->user()?->can('view_expenses'), 403);
-
         $filters = $request->only(['query', 'date_from', 'date_to', 'page', 'per_page']);
         $paginator = $this->campaignExpenseService->getPaginatedExpenses($filters);
 
@@ -39,7 +37,7 @@ class CampaignExpenseController extends Controller
             'expenses' => $expenses,
             'campaigns' => Campaign::query()->orderBy('title_en')->get(['id', 'title_ar', 'title_en']),
             'items' => Item::query()->where('is_active', true)->orderBy('name_en')->get(['id', 'name_ar', 'name_en']),
-            'accounts' => Account::query()->active()->orderBy('name')->get(['id', 'name']),
+            'accounts' => BankAccount::query()->active()->orderBy('name')->get(['id', 'name']),
             'users' => User::query()->orderBy('name')->get(['id', 'name']),
             'search' => $filters,
         ]);
@@ -47,8 +45,6 @@ class CampaignExpenseController extends Controller
 
     public function campaignIndex(Request $request, Campaign $campaign): Response
     {
-        abort_unless($request->user()?->can('view_expenses'), 403);
-
         $filters = $request->only(['query', 'date_from', 'date_to', 'page', 'per_page']);
         $paginator = $this->campaignExpenseService->getPaginatedExpenses($filters, $campaign->id);
 
@@ -59,7 +55,7 @@ class CampaignExpenseController extends Controller
             'campaign' => ['id' => $campaign->id, 'title_en' => $campaign->title_en, 'title_ar' => $campaign->title_ar],
             'expenses' => $expenses,
             'items' => Item::query()->where('is_active', true)->orderBy('name_en')->get(['id', 'name_ar', 'name_en']),
-            'accounts' => Account::query()->active()->orderBy('name')->get(['id', 'name']),
+            'accounts' => BankAccount::query()->active()->orderBy('name')->get(['id', 'name']),
             'users' => User::query()->orderBy('name')->get(['id', 'name']),
             'search' => $filters,
         ]);
@@ -81,6 +77,9 @@ class CampaignExpenseController extends Controller
             notes: $validated['notes'] ?? null,
             paymentMethodId: $validated['payment_method_id'] ?? null,
             referenceNumber: $validated['reference_number'] ?? null,
+            originalCurrencyId: isset($validated['original_currency_id']) ? (int) $validated['original_currency_id'] : null,
+            originalAmount: isset($validated['original_amount']) ? (float) $validated['original_amount'] : null,
+            exchangeRate: isset($validated['exchange_rate']) ? (float) $validated['exchange_rate'] : null,
         ));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Campaign expense recorded successfully.')]);

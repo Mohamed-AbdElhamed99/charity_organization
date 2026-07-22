@@ -8,7 +8,7 @@ class UpdateAidItemRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_beneficiary_support') ?? false;
+        return true;
     }
 
     /**

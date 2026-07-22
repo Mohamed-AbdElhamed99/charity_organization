@@ -9,7 +9,6 @@ use App\Http\Requests\Admin\Meeting\StoreMeetingAttachmentRequest;
 use App\Models\Meeting;
 use App\Models\MeetingAttachment;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -34,9 +33,8 @@ class MeetingAttachmentController extends Controller
         return back();
     }
 
-    public function download(Request $request, Meeting $meeting, MeetingAttachment $attachment): StreamedResponse
+    public function download(Meeting $meeting, MeetingAttachment $attachment): StreamedResponse
     {
-        abort_unless($request->user()?->can('view_meetings'), 403);
         abort_unless($attachment->meeting_id === $meeting->id, 404);
 
         abort_unless(Storage::disk('public')->exists($attachment->file_path), 404);
@@ -44,9 +42,8 @@ class MeetingAttachmentController extends Controller
         return Storage::disk('public')->download($attachment->file_path, $attachment->file_name);
     }
 
-    public function destroy(Request $request, Meeting $meeting, MeetingAttachment $attachment): RedirectResponse
+    public function destroy(Meeting $meeting, MeetingAttachment $attachment): RedirectResponse
     {
-        abort_unless($request->user()?->can('edit_meetings'), 403);
         abort_unless($attachment->meeting_id === $meeting->id, 404);
 
         $this->meetingService->deleteAttachment($attachment);

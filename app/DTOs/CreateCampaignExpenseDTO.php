@@ -16,5 +16,8 @@ readonly class CreateCampaignExpenseDTO
         public ?string $notes,
         public ?int $paymentMethodId = null,
         public ?string $referenceNumber = null,
+        public ?int $originalCurrencyId = null,
+        public ?float $originalAmount = null,
+        public ?float $exchangeRate = null,
     ) {}
 }

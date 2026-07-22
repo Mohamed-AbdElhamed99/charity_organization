@@ -63,6 +63,9 @@ class GeneralExpenseService implements GeneralExpenseServiceInterface
             'description' => $dto->description ?? $dto->name,
             'notes' => $dto->notes,
             'reference_number' => $dto->referenceNumber,
+            'original_currency_id' => $dto->originalCurrencyId,
+            'original_amount' => $dto->originalAmount,
+            'exchange_rate' => $dto->exchangeRate,
         ]);
 
         return $transaction->generalExpense;

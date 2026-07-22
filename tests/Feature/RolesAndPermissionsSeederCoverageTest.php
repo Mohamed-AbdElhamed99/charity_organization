@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-use Database\Seeders\RolesAndPermissionsSeeder;
+use App\Enums\ModulePermission;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Tests\TestCase;
 
 class RolesAndPermissionsSeederCoverageTest extends TestCase
 {
-    public function test_all_backend_authorization_permissions_exist_in_seeder(): void
+    public function test_all_backend_authorization_permissions_exist_in_module_permission_enum(): void
     {
         $seededPermissions = $this->seededPermissions();
         $usedPermissions = $this->permissionsUsedInBackendAuthorization();
@@ -19,11 +19,11 @@ class RolesAndPermissionsSeederCoverageTest extends TestCase
         $this->assertSame(
             [],
             $missing,
-            'Missing permissions in RolesAndPermissionsSeeder::PERMISSIONS: '.implode(', ', $missing)
+            'Missing permissions in App\Enums\ModulePermission: '.implode(', ', $missing)
         );
     }
 
-    public function test_all_sidebar_permissions_exist_in_seeder(): void
+    public function test_all_sidebar_permissions_exist_in_module_permission_enum(): void
     {
         $seededPermissions = $this->seededPermissions();
         $sidebarPermissions = $this->permissionsUsedInSidebar();
@@ -33,7 +33,7 @@ class RolesAndPermissionsSeederCoverageTest extends TestCase
         $this->assertSame(
             [],
             $missing,
-            'Missing sidebar permissions in RolesAndPermissionsSeeder::PERMISSIONS: '.implode(', ', $missing)
+            'Missing sidebar permissions in App\Enums\ModulePermission: '.implode(', ', $missing)
         );
     }
 
@@ -42,9 +42,11 @@ class RolesAndPermissionsSeederCoverageTest extends TestCase
      */
     private function seededPermissions(): array
     {
-        /** @var list<string> $permissions */
-        $permissions = (new \ReflectionClass(RolesAndPermissionsSeeder::class))
-            ->getConstant('PERMISSIONS');
+        $permissions = collect(ModulePermission::cases())
+            ->flatMap(fn (ModulePermission $module) => $module->allPermissions())
+            ->unique()
+            ->values()
+            ->all();
 
         sort($permissions);
 

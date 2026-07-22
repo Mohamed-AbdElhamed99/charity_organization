@@ -28,13 +28,11 @@ class CampaignBeneficiaryReportController extends Controller
 
     public function show(CampaignBeneficiaryReportRequest $request, Campaign $campaign): Response|StreamedResponse
     {
-        abort_unless($request->user()?->can('view_beneficiary_reports'), 403);
-
         $filters = $request->validated();
         $format = $filters['format'] ?? null;
 
         if ($format !== null) {
-            abort_unless($request->user()?->can('export_beneficiary_reports'), 403);
+            abort_unless($request->user()?->can('export_campaign_beneficiary_reports'), 403);
 
             return $this->export($request, $campaign, $filters, $format);
         }

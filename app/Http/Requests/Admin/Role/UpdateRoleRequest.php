@@ -11,10 +11,6 @@ class UpdateRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        if (! ($this->user()?->can('manage_roles') ?? false)) {
-            return false;
-        }
-
         $role = $this->route('role');
 
         if ($role instanceof Role && app(RoleServiceInterface::class)->isProtectedFromEdit($role)) {

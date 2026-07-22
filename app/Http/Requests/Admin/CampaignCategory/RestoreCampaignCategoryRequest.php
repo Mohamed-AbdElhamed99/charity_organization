@@ -8,7 +8,7 @@ class RestoreCampaignCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_campaign_categories') ?? false;
+        return true;
     }
 
     /**

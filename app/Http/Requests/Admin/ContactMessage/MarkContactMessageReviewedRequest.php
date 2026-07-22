@@ -8,7 +8,7 @@ class MarkContactMessageReviewedRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('view_contact_submissions') ?? false;
+        return true;
     }
 
     /**

@@ -8,7 +8,7 @@ class DestroyContactMessageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('delete_contact_submissions') ?? false;
+        return true;
     }
 
     /**

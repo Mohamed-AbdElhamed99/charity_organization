@@ -67,8 +67,6 @@ class RoleController extends Controller
 
     public function destroy(Role $role): RedirectResponse
     {
-        abort_unless(request()->user()?->can('manage_roles'), 403);
-
         $this->roleService->deleteRole($role);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role deleted successfully.')]);

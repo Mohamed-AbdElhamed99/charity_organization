@@ -45,10 +45,8 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
-        abort_unless($request->user()?->can('create_campaigns'), 403);
-
         return Inertia::render('admin/campaigns/campaigns-create', [
             'categories' => $this->activeCategories(),
             'meetingOptions' => $this->meetingOptions(),
@@ -100,8 +98,6 @@ class CampaignController extends Controller
 
     public function show(Campaign $campaign): Response
     {
-        abort_unless(request()->user()?->can('view_campaigns'), 403);
-
         $campaign->load(['category', 'media', 'meetings'])->loadCount(['expenses', 'donations']);
 
         $distributedCents = (int) DB::table('beneficiary_support_items as bsi')
@@ -123,10 +119,8 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function edit(Request $request, Campaign $campaign): Response
+    public function edit(Campaign $campaign): Response
     {
-        abort_unless($request->user()?->can('edit_campaigns'), 403);
-
         $campaign->load(['category', 'media', 'meetings']);
 
         return Inertia::render('admin/campaigns/campaigns-edit', [
@@ -180,8 +174,6 @@ class CampaignController extends Controller
 
     public function destroy(Campaign $campaign): RedirectResponse
     {
-        abort_unless(request()->user()?->can('delete_campaigns'), 403);
-
         try {
             $this->campaignService->deleteCampaign($campaign);
         } catch (DomainException $exception) {

@@ -11,7 +11,7 @@ class StoreCampaignRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create_campaigns') ?? false;
+        return true;
     }
 
     protected function prepareForValidation(): void

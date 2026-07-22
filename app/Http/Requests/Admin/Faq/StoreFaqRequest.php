@@ -8,7 +8,7 @@ class StoreFaqRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create_faqs') ?? false;
+        return true;
     }
 
     /**

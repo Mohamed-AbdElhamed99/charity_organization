@@ -9,7 +9,7 @@ class BulkDestroyPaymentMethodRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_payment_methods') ?? false;
+        return true;
     }
 
     /**

@@ -15,7 +15,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Transaction extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -33,14 +33,16 @@ class Transaction extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'transaction_type'  => TransactionType::class,
-            'direction'         => TransactionDirection::class,
-            'transaction_date'  => 'date',
-            'gross_amount'      => 'decimal:2',
-            'fee_amount'        => 'decimal:2',
-            'net_amount'        => 'decimal:2',
-            'running_balance'   => 'decimal:2',
-            'is_reconciled'     => 'boolean',
+            'transaction_type' => TransactionType::class,
+            'direction' => TransactionDirection::class,
+            'transaction_date' => 'date',
+            'gross_amount' => 'decimal:2',
+            'fee_amount' => 'decimal:2',
+            'net_amount' => 'decimal:2',
+            'original_amount' => 'decimal:2',
+            'exchange_rate' => 'decimal:8',
+            'running_balance' => 'decimal:2',
+            'is_reconciled' => 'boolean',
         ];
     }
 
@@ -48,12 +50,17 @@ class Transaction extends Model implements HasMedia
 
     public function account(): BelongsTo
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(BankAccount::class, 'account_id');
     }
 
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
+    }
+
+    public function originalCurrency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'original_currency_id');
     }
 
     public function paymentMethod(): BelongsTo
@@ -147,14 +154,14 @@ class Transaction extends Model implements HasMedia
     protected function detail(): Attribute
     {
         return Attribute::make(
-            get: fn () => match($this->transaction_type) {
-                TransactionType::Donation        => $this->donation,
+            get: fn () => match ($this->transaction_type) {
+                TransactionType::Donation => $this->donation,
                 TransactionType::CampaignExpense => $this->campaignExpense,
-                TransactionType::GeneralExpense  => $this->generalExpense,
-                TransactionType::Transfer        => $this->transfer,
+                TransactionType::GeneralExpense => $this->generalExpense,
+                TransactionType::Transfer => $this->transfer,
                 TransactionType::BankTransfer,
-                TransactionType::Adjustment      => $this->bankExpense,
-                default                          => null,
+                TransactionType::Adjustment => $this->bankExpense,
+                default => null,
             },
         );
     }

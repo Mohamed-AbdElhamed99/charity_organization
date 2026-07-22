@@ -8,7 +8,7 @@ class UpdateCampaignExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create_expenses') ?? false;
+        return true;
     }
 
     /**

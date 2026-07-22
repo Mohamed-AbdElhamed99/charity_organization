@@ -8,7 +8,7 @@ use App\Enums\TransferRecipientType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Transfer\StoreTransferRequest;
 use App\Http\Resources\Admin\Transfer\TransferResource;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Campaign;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,8 +23,6 @@ class TransferController extends Controller
 
     public function index(Request $request): Response
     {
-        abort_unless($request->user()?->can('view_transfers'), 403);
-
         $filters = $request->only([
             'query',
             'recipient_type',
@@ -43,7 +41,7 @@ class TransferController extends Controller
         return Inertia::render('admin/transfers/transfers-index', [
             'transfers' => $transfers,
             'campaigns' => Campaign::query()->orderBy('title_en')->get(['id', 'title_ar', 'title_en']),
-            'accounts' => Account::query()->active()->orderBy('name')->get(['id', 'name']),
+            'accounts' => BankAccount::query()->active()->orderBy('name')->get(['id', 'name']),
             'search' => $filters,
         ]);
     }

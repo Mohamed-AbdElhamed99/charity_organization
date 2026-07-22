@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionType;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Currency;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
@@ -20,34 +20,34 @@ class TransactionFactory extends Factory
 
     public function definition(): array
     {
-        $type      = fake()->randomElement(TransactionType::cases());
+        $type = fake()->randomElement(TransactionType::cases());
         $direction = $type->isIncome()
             ? TransactionDirection::In
             : TransactionDirection::Out;
 
         $gross = fake()->randomFloat(2, 10, 10_000);
         // Only donation/Stripe has fees; others have 0
-        $fee   = $type === TransactionType::Donation
+        $fee = $type === TransactionType::Donation
             ? round($gross * fake()->randomFloat(4, 0.022, 0.035) + 0.30, 2)
             : 0;
-        $net   = round($gross - $fee, 2);
+        $net = round($gross - $fee, 2);
 
         return [
-            'account_id'        => Account::inRandomOrder()->value('id') ?? Account::factory(),
-            'transaction_type'  => $type,
-            'direction'         => $direction,
-            'currency_id'       => Currency::inRandomOrder()->value('id') ?? Currency::factory(),
-            'gross_amount'      => $gross,
-            'fee_amount'        => $fee,
-            'net_amount'        => $net,
-            'running_balance'   => null, // computed by service on real insert
-            'transaction_date'  => fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
-            'reference_number'  => fake()->optional(0.5)->bothify('REF-#####-????'),
-            'description'       => fake()->sentence(6),
-            'notes'             => fake()->optional(0.3)->sentence(),
+            'account_id' => BankAccount::inRandomOrder()->value('id') ?? BankAccount::factory(),
+            'transaction_type' => $type,
+            'direction' => $direction,
+            'currency_id' => Currency::inRandomOrder()->value('id') ?? Currency::factory(),
+            'gross_amount' => $gross,
+            'fee_amount' => $fee,
+            'net_amount' => $net,
+            'running_balance' => null, // computed by service on real insert
+            'transaction_date' => fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
+            'reference_number' => fake()->optional(0.5)->bothify('REF-#####-????'),
+            'description' => fake()->sentence(6),
+            'notes' => fake()->optional(0.3)->sentence(),
             'payment_method_id' => PaymentMethod::inRandomOrder()->value('id'),
-            'created_by'        => User::inRandomOrder()->value('id') ?? User::factory(),
-            'is_reconciled'     => fake()->boolean(30),
+            'created_by' => User::inRandomOrder()->value('id') ?? User::factory(),
+            'is_reconciled' => fake()->boolean(30),
         ];
     }
 
@@ -57,7 +57,7 @@ class TransactionFactory extends Factory
     {
         return $this->state(fn () => [
             'transaction_type' => TransactionType::Donation,
-            'direction'        => TransactionDirection::In,
+            'direction' => TransactionDirection::In,
         ]);
     }
 
@@ -65,8 +65,8 @@ class TransactionFactory extends Factory
     {
         return $this->state(fn () => [
             'transaction_type' => TransactionType::CampaignExpense,
-            'direction'        => TransactionDirection::Out,
-            'fee_amount'       => 0,
+            'direction' => TransactionDirection::Out,
+            'fee_amount' => 0,
         ]);
     }
 
@@ -74,8 +74,8 @@ class TransactionFactory extends Factory
     {
         return $this->state(fn () => [
             'transaction_type' => TransactionType::GeneralExpense,
-            'direction'        => TransactionDirection::Out,
-            'fee_amount'       => 0,
+            'direction' => TransactionDirection::Out,
+            'fee_amount' => 0,
         ]);
     }
 
@@ -83,8 +83,8 @@ class TransactionFactory extends Factory
     {
         return $this->state(fn () => [
             'transaction_type' => TransactionType::Transfer,
-            'direction'        => TransactionDirection::Out,
-            'fee_amount'       => 0,
+            'direction' => TransactionDirection::Out,
+            'fee_amount' => 0,
         ]);
     }
 

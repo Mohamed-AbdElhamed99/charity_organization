@@ -2,11 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\GeneralExpense;
 use App\Models\GeneralExpenseCategory;
 use App\Models\PaymentMethod;
-use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -46,7 +45,7 @@ class GeneralExpenseControllerTest extends TestCase
     public function test_authorized_user_can_create_general_expense_with_ledger_entry(): void
     {
         $user = $this->createAuthorizedUser();
-        $account = Account::query()->active()->firstOrFail();
+        $account = BankAccount::query()->active()->firstOrFail();
         $category = GeneralExpenseCategory::factory()->create(['is_active' => true]);
         $paymentMethod = PaymentMethod::query()->active()->firstOrFail();
 

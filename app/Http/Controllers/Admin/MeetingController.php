@@ -36,8 +36,6 @@ class MeetingController extends Controller
 
     public function index(Request $request): Response
     {
-        abort_unless($request->user()?->can('view_meetings'), 403);
-
         $filters = $request->only([
             'query', 'search', 'status', 'type', 'date_from', 'date_to',
             'campaign_id', 'sort', 'direction', 'page', 'per_page',
@@ -64,10 +62,8 @@ class MeetingController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
-        abort_unless($request->user()?->can('create_meetings'), 403);
-
         return Inertia::render('admin/meetings/meetings-create', $this->formOptions());
     }
 
@@ -104,8 +100,6 @@ class MeetingController extends Controller
 
     public function show(Request $request, Meeting $meeting): Response
     {
-        abort_unless($request->user()?->can('view_meetings'), 403);
-
         $meeting = $this->meetingService->findById($meeting->id);
 
         return Inertia::render('admin/meetings/meetings-show', [
@@ -124,10 +118,8 @@ class MeetingController extends Controller
         ]);
     }
 
-    public function edit(Request $request, Meeting $meeting): Response
+    public function edit(Meeting $meeting): Response
     {
-        abort_unless($request->user()?->can('edit_meetings'), 403);
-
         $meeting = $this->meetingService->findById($meeting->id);
 
         return Inertia::render('admin/meetings/meetings-edit', [
@@ -168,10 +160,8 @@ class MeetingController extends Controller
         return redirect()->route('admin.meetings.show', $meeting);
     }
 
-    public function destroy(Request $request, Meeting $meeting): RedirectResponse
+    public function destroy(Meeting $meeting): RedirectResponse
     {
-        abort_unless($request->user()?->can('delete_meetings'), 403);
-
         $this->meetingService->deleteMeeting($meeting);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Meeting deleted successfully.')]);
@@ -181,8 +171,6 @@ class MeetingController extends Controller
 
     public function print(Request $request, Meeting $meeting): Response
     {
-        abort_unless($request->user()?->can('view_meetings'), 403);
-
         $format = $request->string('format', 'standard')->toString();
         $report = $this->meetingService->generatePrintReport($meeting, $format);
 

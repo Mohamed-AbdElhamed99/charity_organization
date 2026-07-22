@@ -4,13 +4,21 @@ namespace App\Services;
 
 use App\Contracts\Services\TransactionServiceInterface;
 use App\Contracts\Services\TransferServiceInterface;
+use App\DTOs\CreateTransactionDTO;
 use App\DTOs\CreateTransferDTO;
-use App\Models\Account;
+use App\Enums\TransactionDirection;
+use App\Enums\TransactionType;
+use App\Enums\TransferRecipientType;
+use App\Models\BankAccount;
 use App\Models\Transfer;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @deprecated Prefer creating transfer-type transactions via TransactionService.
+ */
 class TransferService implements TransferServiceInterface
 {
     public function __construct(
@@ -26,15 +34,17 @@ class TransferService implements TransferServiceInterface
         $query = $filters['query'] ?? null;
 
         return Transfer::query()
-            ->with(['transaction.account', 'transaction.currency', 'campaign', 'beneficiary', 'user', 'creator'])
-            ->when($recipientType, fn ($builder) => $builder->where('recipient_type', $recipientType))
+            ->with(['transaction.account', 'transaction.currency', 'campaign', 'recipient', 'creator'])
+            ->when($recipientType === 'user', fn ($builder) => $builder->where('recipient_type', User::class))
+            ->when($recipientType === 'beneficiary', fn ($builder) => $builder->toBeneficiaries())
+            ->when($recipientType === 'other', fn ($builder) => $builder->whereNull('recipient_type')->whereNotNull('recipient_label'))
             ->when($dateFrom && $dateTo, fn ($builder) => $builder->inDateRange($dateFrom, $dateTo))
             ->when($dateFrom && ! $dateTo, fn ($builder) => $builder->where('transfer_date', '>=', $dateFrom))
             ->when($dateTo && ! $dateFrom, fn ($builder) => $builder->where('transfer_date', '<=', $dateTo))
             ->when($campaignId, fn ($builder) => $builder->forCampaign((int) $campaignId))
             ->when($query, function ($builder) use ($query) {
                 $builder->where(function ($q) use ($query) {
-                    $q->where('recipient_name', 'like', "%{$query}%")
+                    $q->where('recipient_label', 'like', "%{$query}%")
                         ->orWhere('purpose', 'like', "%{$query}%");
                 });
             })
@@ -50,42 +60,49 @@ class TransferService implements TransferServiceInterface
             $account = $this->resolveAccount($dto->accountId);
             $amount = round($dto->amount, 2);
 
-            $transaction = $this->transactionService->createForTransfer([
-                'account_id' => $account->id,
-                'amount' => $amount,
-                'transaction_date' => $dto->transferDate,
-                'description' => "Transfer to {$dto->recipientName}: {$dto->purpose}",
-                'notes' => $dto->notes,
-                'payment_method_id' => $dto->paymentMethodId,
-                'reference_number' => $dto->referenceNumber,
-            ]);
+            $recipientKind = match ($dto->recipientType) {
+                TransferRecipientType::User => 'user',
+                TransferRecipientType::Beneficiary => 'beneficiary',
+                default => 'other',
+            };
 
-            return Transfer::create([
-                'transaction_id' => $transaction->id,
-                'campaign_id' => $dto->campaignId,
-                'recipient_type' => $dto->recipientType,
-                'recipient_name' => $dto->recipientName,
-                'recipient_phone' => $dto->recipientPhone,
-                'beneficiary_id' => $dto->beneficiaryId,
-                'user_id' => $dto->userId,
-                'amount' => $amount,
-                'transfer_date' => $dto->transferDate,
-                'purpose' => $dto->purpose,
-                'notes' => $dto->notes,
-                'created_by' => Auth::id(),
-            ])->fresh(['transaction', 'campaign', 'beneficiary', 'user']);
+            $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+                accountId: $account->id,
+                transactionType: TransactionType::Transfer,
+                direction: TransactionDirection::Out,
+                grossAmount: $amount,
+                feeAmount: 0,
+                transactionDate: $dto->transferDate,
+                referenceNumber: $dto->referenceNumber,
+                description: "Transfer to {$dto->recipientName}: {$dto->purpose}",
+                notes: $dto->notes,
+                paymentMethodId: $dto->paymentMethodId,
+                createdBy: (int) Auth::id(),
+                transfer: [
+                    'recipient_kind' => $recipientKind,
+                    'recipient_id' => $dto->userId ?? $dto->beneficiaryId,
+                    'recipient_label' => $recipientKind === 'other' ? $dto->recipientName : null,
+                    'recipient_phone' => $dto->recipientPhone,
+                    'purpose' => $dto->purpose,
+                    'campaign_id' => $dto->campaignId,
+                    'transfer_date' => $dto->transferDate,
+                    'notes' => $dto->notes,
+                ],
+            ));
+
+            return $transaction->transfer->fresh(['transaction', 'campaign', 'recipient']);
         });
     }
 
-    private function resolveAccount(?int $accountId): Account
+    private function resolveAccount(?int $accountId): BankAccount
     {
         if ($accountId !== null) {
-            return Account::query()
+            return BankAccount::query()
                 ->active()
                 ->findOrFail($accountId);
         }
 
-        return Account::query()
+        return BankAccount::query()
             ->active()
             ->orderBy('id')
             ->firstOrFail();

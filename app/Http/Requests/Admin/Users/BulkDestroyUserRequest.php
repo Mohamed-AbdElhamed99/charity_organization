@@ -9,7 +9,7 @@ class BulkDestroyUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_users') ?? false;
+        return true;
     }
 
     /**

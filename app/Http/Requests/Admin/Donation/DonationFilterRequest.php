@@ -10,7 +10,7 @@ class DonationFilterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('view_donations') ?? false;
+        return true;
     }
 
     /**

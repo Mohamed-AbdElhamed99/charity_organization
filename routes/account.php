@@ -17,8 +17,6 @@ Route::prefix('account')->name('account.')->group(function () {
             ->middleware('throttle:5,1');
 
         Route::get('login', [AuthenticatedDonorSessionController::class, 'create'])->name('login');
-        Route::post('login', [AuthenticatedDonorSessionController::class, 'store'])
-            ->middleware('throttle:5,1');
 
         Route::get('forgot-password', [DonorPasswordResetLinkController::class, 'create'])->name('password.request');
         Route::post('forgot-password', [DonorPasswordResetLinkController::class, 'store'])

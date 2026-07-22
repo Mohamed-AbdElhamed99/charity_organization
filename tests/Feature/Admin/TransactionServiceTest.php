@@ -3,20 +3,20 @@
 namespace Tests\Feature\Admin;
 
 use App\Contracts\Services\TransactionServiceInterface;
-use App\Contracts\Services\TransferServiceInterface;
 use App\DTOs\CreateTransactionDTO;
-use App\DTOs\CreateTransferDTO;
 use App\DTOs\UpdateTransactionDTO;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionType;
-use App\Enums\TransferRecipientType;
-use App\Models\Account;
+use App\Models\BankAccount;
+use App\Models\Currency;
 use App\Models\Transaction;
 use App\Models\Transfer;
 use App\Models\User;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class TransactionServiceTest extends TestCase
@@ -24,8 +24,6 @@ class TransactionServiceTest extends TestCase
     use RefreshDatabase;
 
     private TransactionServiceInterface $transactionService;
-
-    private TransferServiceInterface $transferService;
 
     protected function setUp(): void
     {
@@ -35,7 +33,6 @@ class TransactionServiceTest extends TestCase
         $this->seed(FinancialFoundationSeeder::class);
 
         $this->transactionService = app(TransactionServiceInterface::class);
-        $this->transferService = app(TransferServiceInterface::class);
     }
 
     private function createStaffUser(): User
@@ -49,7 +46,7 @@ class TransactionServiceTest extends TestCase
     public function test_reverse_transaction_creates_compensating_entry(): void
     {
         $user = $this->createStaffUser();
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
 
         $this->actingAs($user);
 
@@ -64,6 +61,12 @@ class TransactionServiceTest extends TestCase
             'created_by' => $user->id,
         ]);
 
+        $transfer = Transfer::factory()->toLabel('Vendor Co')->create([
+            'transaction_id' => $original->id,
+            'amount' => 500.00,
+            'created_by' => $user->id,
+        ]);
+
         $reversal = $this->transactionService->reverseTransaction($original, $user->id);
 
         $this->assertDatabaseHas('transactions', [
@@ -75,10 +78,7 @@ class TransactionServiceTest extends TestCase
             'created_by' => $user->id,
         ]);
 
-        $this->assertStringContainsString(
-            "Reversal of transaction #{$original->id}",
-            $reversal->description,
-        );
+        $this->assertSoftDeleted('transfers', ['id' => $transfer->id]);
 
         $expectedBalance = (string) $account->opening_balance;
         $this->assertSame($expectedBalance, (string) $reversal->fresh()->running_balance);
@@ -87,7 +87,7 @@ class TransactionServiceTest extends TestCase
     public function test_reverse_transaction_rejects_adjustment_entries(): void
     {
         $user = $this->createStaffUser();
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
 
         $this->actingAs($user);
 
@@ -108,68 +108,138 @@ class TransactionServiceTest extends TestCase
         $this->transactionService->reverseTransaction($adjustment, $user->id);
     }
 
-    public function test_transfer_creation_records_transaction_and_transfer(): void
+    public function test_transfer_type_transaction_creates_morph_or_label_detail(): void
     {
         $user = $this->createStaffUser();
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
 
         $this->actingAs($user);
 
-        $transfer = $this->transferService->createTransfer(new CreateTransferDTO(
-            recipientType: TransferRecipientType::Vendor,
-            recipientName: 'ABC Supplies Co.',
-            amount: 1250.50,
-            transferDate: now()->toDateString(),
-            purpose: 'Food boxes purchase',
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionType: TransactionType::Transfer,
+            direction: TransactionDirection::Out,
+            grossAmount: 1250.50,
+            feeAmount: 0,
+            transactionDate: now()->toDateString(),
+            referenceNumber: null,
+            description: null,
             notes: 'Paid by cheque',
+            paymentMethodId: null,
+            createdBy: $user->id,
+            transfer: [
+                'recipient_kind' => 'other',
+                'recipient_label' => 'ABC Supplies Co.',
+                'purpose' => 'Food boxes purchase',
+                'notes' => 'Paid by cheque',
+            ],
         ));
 
-        $this->assertInstanceOf(Transfer::class, $transfer);
         $this->assertDatabaseHas('transfers', [
-            'id' => $transfer->id,
-            'recipient_type' => TransferRecipientType::Vendor->value,
-            'recipient_name' => 'ABC Supplies Co.',
+            'transaction_id' => $transaction->id,
+            'recipient_type' => null,
+            'recipient_id' => null,
+            'recipient_label' => 'ABC Supplies Co.',
             'amount' => '1250.50',
             'purpose' => 'Food boxes purchase',
             'created_by' => $user->id,
         ]);
 
         $this->assertDatabaseHas('transactions', [
-            'id' => $transfer->transaction_id,
+            'id' => $transaction->id,
             'account_id' => $account->id,
             'transaction_type' => TransactionType::Transfer->value,
             'direction' => TransactionDirection::Out->value,
+            'currency_id' => $account->currency_id,
             'net_amount' => '1250.50',
-            'created_by' => $user->id,
         ]);
 
-        $transaction = $transfer->transaction;
         $expectedBalance = bcsub((string) $account->opening_balance, '1250.50', 2);
         $this->assertSame($expectedBalance, (string) $transaction->running_balance);
     }
 
-    public function test_transfer_uses_first_active_account_when_not_specified(): void
+    public function test_transfer_to_user_uses_morph_recipient(): void
     {
         $user = $this->createStaffUser();
-        $defaultAccount = Account::query()->active()->orderBy('id')->firstOrFail();
+        $recipient = User::factory()->create(['name' => 'Staff Member']);
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
 
         $this->actingAs($user);
 
-        $transfer = $this->transferService->createTransfer(new CreateTransferDTO(
-            recipientType: TransferRecipientType::Other,
-            recipientName: 'Partner Organization',
-            amount: 300.00,
-            transferDate: now()->toDateString(),
-            purpose: 'Emergency aid disbursement',
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionType: TransactionType::Transfer,
+            direction: TransactionDirection::Out,
+            grossAmount: 300,
+            feeAmount: 0,
+            transactionDate: now()->toDateString(),
+            referenceNumber: null,
+            description: null,
+            notes: null,
+            paymentMethodId: null,
+            createdBy: $user->id,
+            transfer: [
+                'recipient_kind' => 'user',
+                'recipient_id' => $recipient->id,
+                'purpose' => 'Staff reimbursement',
+            ],
         ));
 
-        $this->assertSame($defaultAccount->id, $transfer->transaction->account_id);
+        $this->assertDatabaseHas('transfers', [
+            'transaction_id' => $transaction->id,
+            'recipient_type' => User::class,
+            'recipient_id' => $recipient->id,
+            'recipient_label' => null,
+        ]);
     }
 
-    public function test_create_transaction_records_entry_with_running_balance(): void
+    public function test_fx_converts_original_amount_into_account_currency(): void
     {
         $user = $this->createStaffUser();
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+        $usd = Currency::query()->where('code', 'USD')->firstOrFail();
+        $egp = Currency::query()->where('code', 'EGP')->firstOrFail();
+
+        $account->update(['currency_id' => $egp->id]);
+
+        $this->actingAs($user);
+
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionType: TransactionType::Transfer,
+            direction: TransactionDirection::Out,
+            grossAmount: 1000,
+            feeAmount: 0,
+            transactionDate: '2026-02-11',
+            referenceNumber: null,
+            description: null,
+            notes: null,
+            paymentMethodId: null,
+            createdBy: $user->id,
+            originalCurrencyId: $usd->id,
+            originalAmount: 1000,
+            exchangeRate: 52,
+            transfer: [
+                'recipient_kind' => 'user',
+                'recipient_id' => $user->id,
+                'purpose' => 'FX transfer',
+            ],
+        ));
+
+        $this->assertSame('52000.00', (string) $transaction->gross_amount);
+        $this->assertSame('52000.00', (string) $transaction->net_amount);
+        $this->assertSame('1000.00', (string) $transaction->original_amount);
+        $this->assertSame('52.00000000', (string) $transaction->exchange_rate);
+        $this->assertSame($egp->id, $transaction->currency_id);
+        $this->assertSame($usd->id, $transaction->original_currency_id);
+    }
+
+    public function test_create_transaction_attaches_documents(): void
+    {
+        Storage::fake('public');
+
+        $user = $this->createStaffUser();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
 
         $this->actingAs($user);
 
@@ -177,7 +247,33 @@ class TransactionServiceTest extends TestCase
             accountId: $account->id,
             transactionType: TransactionType::Donation,
             direction: TransactionDirection::In,
-            currencyId: $account->currency_id,
+            grossAmount: 100,
+            feeAmount: 0,
+            transactionDate: now()->toDateString(),
+            referenceNumber: null,
+            description: 'With receipt',
+            notes: null,
+            paymentMethodId: null,
+            createdBy: $user->id,
+            documents: [
+                UploadedFile::fake()->image('receipt.jpg'),
+            ],
+        ));
+
+        $this->assertCount(1, $transaction->getMedia('receipts'));
+    }
+
+    public function test_create_transaction_records_entry_with_running_balance(): void
+    {
+        $user = $this->createStaffUser();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+
+        $this->actingAs($user);
+
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionType: TransactionType::Donation,
+            direction: TransactionDirection::In,
             grossAmount: 750.00,
             feeAmount: 25.00,
             transactionDate: now()->toDateString(),
@@ -203,7 +299,7 @@ class TransactionServiceTest extends TestCase
     public function test_update_transaction_recalculates_running_balances(): void
     {
         $user = $this->createStaffUser();
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
 
         $this->actingAs($user);
 
@@ -233,7 +329,6 @@ class TransactionServiceTest extends TestCase
             accountId: $account->id,
             transactionType: TransactionType::Donation,
             direction: TransactionDirection::In,
-            currencyId: $account->currency_id,
             grossAmount: 200.00,
             feeAmount: 0,
             transactionDate: $first->transaction_date->toDateString(),
@@ -251,5 +346,30 @@ class TransactionServiceTest extends TestCase
             bcadd((string) $account->opening_balance, '150.00', 2),
             (string) $second->running_balance,
         );
+    }
+
+    public function test_general_expense_fx_posts_account_currency_amount(): void
+    {
+        $user = $this->createStaffUser();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+        $usd = Currency::query()->where('code', 'USD')->firstOrFail();
+        $egp = Currency::query()->where('code', 'EGP')->firstOrFail();
+        $account->update(['currency_id' => $egp->id]);
+
+        $this->actingAs($user);
+
+        $transaction = $this->transactionService->createForGeneralExpense([
+            'account_id' => $account->id,
+            'name' => 'Office rent',
+            'amount' => 1000,
+            'expense_date' => '2026-02-11',
+            'original_currency_id' => $usd->id,
+            'original_amount' => 1000,
+            'exchange_rate' => 52,
+        ]);
+
+        $this->assertSame('52000.00', (string) $transaction->net_amount);
+        $this->assertSame($egp->id, $transaction->currency_id);
+        $this->assertSame('52000.00', (string) $transaction->generalExpense->amount);
     }
 }

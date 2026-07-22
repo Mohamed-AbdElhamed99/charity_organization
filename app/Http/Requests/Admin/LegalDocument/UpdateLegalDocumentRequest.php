@@ -8,7 +8,7 @@ class UpdateLegalDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_legal') ?? false;
+        return true;
     }
 
     protected function prepareForValidation(): void

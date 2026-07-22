@@ -1,0 +1,2156 @@
+[
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/beneficiaries\/{beneficiary}\/assessments",
+        "name": "admin.beneficiaries.assessments.store",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryAssessmentController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/beneficiaries\/{beneficiary}\/assessments\/{assessment}",
+        "name": "admin.beneficiaries.assessments.update",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryAssessmentController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/beneficiaries\/{beneficiary}\/beneficiary-supports\/create",
+        "name": "admin.beneficiaries.beneficiary-supports.create",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiarySupportController@createFromBeneficiary",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/beneficiaries\/bulk-destroy",
+        "name": "admin.beneficiaries.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/beneficiaries\/create",
+        "name": "admin.beneficiaries.create",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@create",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/beneficiaries\/{beneficiary}",
+        "name": "admin.beneficiaries.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/beneficiaries\/{beneficiary}\/edit",
+        "name": "admin.beneficiaries.edit",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@edit",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/beneficiaries",
+        "name": "admin.beneficiaries.index",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/beneficiaries\/{beneficiary}",
+        "name": "admin.beneficiaries.show",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "admin\/beneficiaries\/{beneficiary}\/status",
+        "name": "admin.beneficiaries.status",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@updateStatus",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/beneficiaries",
+        "name": "admin.beneficiaries.store",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/beneficiaries\/{beneficiary}\/support-report",
+        "name": "admin.beneficiaries.support-report",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiarySupportReportController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/beneficiaries\/{beneficiary}",
+        "name": "admin.beneficiaries.update",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiaryController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/beneficiary-supports",
+        "name": "admin.beneficiary-supports.store",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiarySupportController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/campaign-categories\/bulk-destroy",
+        "name": "admin.campaign-categories.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignCategoryController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/campaign-categories\/{campaign_category}",
+        "name": "admin.campaign-categories.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignCategoryController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaign-categories",
+        "name": "admin.campaign-categories.index",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignCategoryController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/campaign-categories\/{id}\/restore",
+        "name": "admin.campaign-categories.restore",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignCategoryController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/campaign-categories",
+        "name": "admin.campaign-categories.store",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignCategoryController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/campaign-categories\/{campaign_category}",
+        "name": "admin.campaign-categories.update",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignCategoryController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaign-expenses",
+        "name": "admin.campaign-expenses.index",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignExpenseController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/campaign-expenses",
+        "name": "admin.campaign-expenses.store",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignExpenseController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "admin\/campaign-expenses\/{expense}",
+        "name": "admin.campaign-expenses.update",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignExpenseController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaigns\/{campaign}\/beneficiary-report",
+        "name": "admin.campaigns.beneficiary-report",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignBeneficiaryReportController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaigns\/{campaign}\/beneficiary-supports\/create",
+        "name": "admin.campaigns.beneficiary-supports.create",
+        "action": "App\\Http\\Controllers\\Admin\\BeneficiarySupportController@createFromCampaign",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaigns\/create",
+        "name": "admin.campaigns.create",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignController@create",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/campaigns\/{campaign}",
+        "name": "admin.campaigns.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaigns\/{campaign}\/edit",
+        "name": "admin.campaigns.edit",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignController@edit",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaigns\/{campaign}\/expenses",
+        "name": "admin.campaigns.expenses.index",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignExpenseController@campaignIndex",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaigns",
+        "name": "admin.campaigns.index",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/campaigns\/{campaign}",
+        "name": "admin.campaigns.show",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/campaigns",
+        "name": "admin.campaigns.store",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/campaigns\/{campaign}",
+        "name": "admin.campaigns.update",
+        "action": "App\\Http\\Controllers\\Admin\\CampaignController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/contact-messages\/bulk-destroy",
+        "name": "admin.contact-messages.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\ContactMessageController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/contact-messages\/{contactMessage}",
+        "name": "admin.contact-messages.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\ContactMessageController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/contact-messages",
+        "name": "admin.contact-messages.index",
+        "action": "App\\Http\\Controllers\\Admin\\ContactMessageController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "admin\/contact-messages\/{contactMessage}\/mark-reviewed",
+        "name": "admin.contact-messages.mark-reviewed",
+        "action": "App\\Http\\Controllers\\Admin\\ContactMessageController@markReviewed",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/contact-messages\/{contactMessage}",
+        "name": "admin.contact-messages.show",
+        "action": "App\\Http\\Controllers\\Admin\\ContactMessageController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/dashboard",
+        "name": "admin.dashboard",
+        "action": "App\\Http\\Controllers\\Admin\\DashboardController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/donations\/export",
+        "name": "admin.donations.export",
+        "action": "App\\Http\\Controllers\\Admin\\DonationController@export",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/donations",
+        "name": "admin.donations.index",
+        "action": "App\\Http\\Controllers\\Admin\\DonationController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/donor-profiles\/{donor_profile}",
+        "name": "admin.donor-profiles.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\DonorProfileController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/donor-profiles",
+        "name": "admin.donor-profiles.index",
+        "action": "App\\Http\\Controllers\\Admin\\DonorProfileController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/donor-profiles\/{id}\/restore",
+        "name": "admin.donor-profiles.restore",
+        "action": "App\\Http\\Controllers\\Admin\\DonorProfileController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/donor-profiles\/{donor_profile}",
+        "name": "admin.donor-profiles.show",
+        "action": "App\\Http\\Controllers\\Admin\\DonorProfileController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/donor-profiles",
+        "name": "admin.donor-profiles.store",
+        "action": "App\\Http\\Controllers\\Admin\\DonorProfileController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/donor-profiles\/{donor_profile}",
+        "name": "admin.donor-profiles.update",
+        "action": "App\\Http\\Controllers\\Admin\\DonorProfileController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/faqs\/bulk-destroy",
+        "name": "admin.faqs.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\FaqController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/faqs\/{faq}",
+        "name": "admin.faqs.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\FaqController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/faqs",
+        "name": "admin.faqs.index",
+        "action": "App\\Http\\Controllers\\Admin\\FaqController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/faqs\/{id}\/restore",
+        "name": "admin.faqs.restore",
+        "action": "App\\Http\\Controllers\\Admin\\FaqController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/faqs",
+        "name": "admin.faqs.store",
+        "action": "App\\Http\\Controllers\\Admin\\FaqController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/faqs\/{faq}",
+        "name": "admin.faqs.update",
+        "action": "App\\Http\\Controllers\\Admin\\FaqController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/general-expense-categories\/bulk-destroy",
+        "name": "admin.general-expense-categories.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseCategoryController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/general-expense-categories\/{general_expense_category}",
+        "name": "admin.general-expense-categories.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseCategoryController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/general-expense-categories",
+        "name": "admin.general-expense-categories.index",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseCategoryController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/general-expense-categories\/{id}\/restore",
+        "name": "admin.general-expense-categories.restore",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseCategoryController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/general-expense-categories",
+        "name": "admin.general-expense-categories.store",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseCategoryController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/general-expense-categories\/{general_expense_category}",
+        "name": "admin.general-expense-categories.update",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseCategoryController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/general-expenses\/{generalExpense}",
+        "name": "admin.general-expenses.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/general-expenses",
+        "name": "admin.general-expenses.index",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/general-expenses",
+        "name": "admin.general-expenses.store",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "admin\/general-expenses\/{generalExpense}",
+        "name": "admin.general-expenses.update",
+        "action": "App\\Http\\Controllers\\Admin\\GeneralExpenseController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/legal\/privacy",
+        "name": "admin.legal.privacy.edit",
+        "action": "App\\Http\\Controllers\\Admin\\LegalDocumentController@editPrivacy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "admin\/legal\/privacy",
+        "name": "admin.legal.privacy.update",
+        "action": "App\\Http\\Controllers\\Admin\\LegalDocumentController@updatePrivacy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/legal\/terms",
+        "name": "admin.legal.terms.edit",
+        "action": "App\\Http\\Controllers\\Admin\\LegalDocumentController@editTerms",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "admin\/legal\/terms",
+        "name": "admin.legal.terms.update",
+        "action": "App\\Http\\Controllers\\Admin\\LegalDocumentController@updateTerms",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/meetings\/{meeting}\/attachments\/{attachment}",
+        "name": "admin.meetings.attachments.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingAttachmentController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/meetings\/{meeting}\/attachments\/{attachment}\/download",
+        "name": "admin.meetings.attachments.download",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingAttachmentController@download",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/meetings\/{meeting}\/attachments",
+        "name": "admin.meetings.attachments.store",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingAttachmentController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/meetings\/create",
+        "name": "admin.meetings.create",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@create",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/meetings\/{meeting}\/decisions\/{decision}",
+        "name": "admin.meetings.decisions.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingDecisionController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/meetings\/{meeting}\/decisions\/reorder",
+        "name": "admin.meetings.decisions.reorder",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingDecisionController@reorder",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/meetings\/{meeting}\/decisions",
+        "name": "admin.meetings.decisions.store",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingDecisionController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/meetings\/{meeting}\/decisions\/{decision}",
+        "name": "admin.meetings.decisions.update",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingDecisionController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "admin\/meetings\/{meeting}\/decisions\/{decision}\/status",
+        "name": "admin.meetings.decisions.updateStatus",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingDecisionController@updateStatus",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/meetings\/{meeting}",
+        "name": "admin.meetings.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/meetings\/{meeting}\/edit",
+        "name": "admin.meetings.edit",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@edit",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/meetings",
+        "name": "admin.meetings.index",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/meetings\/{meeting}\/minutes\/{minutes}\/approve",
+        "name": "admin.meetings.minutes.approve",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingMinutesController@approve",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/meetings\/{meeting}\/minutes",
+        "name": "admin.meetings.minutes.store",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingMinutesController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/meetings\/{meeting}\/minutes\/{minutes}",
+        "name": "admin.meetings.minutes.update",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingMinutesController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/meetings\/{meeting}\/print",
+        "name": "admin.meetings.print",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@print",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/meetings\/{meeting}",
+        "name": "admin.meetings.show",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/meetings",
+        "name": "admin.meetings.store",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/meetings\/{meeting}",
+        "name": "admin.meetings.update",
+        "action": "App\\Http\\Controllers\\Admin\\MeetingController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/news-categories\/bulk-destroy",
+        "name": "admin.news-categories.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\NewsCategoryController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/news-categories\/{news_category}",
+        "name": "admin.news-categories.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\NewsCategoryController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/news-categories",
+        "name": "admin.news-categories.index",
+        "action": "App\\Http\\Controllers\\Admin\\NewsCategoryController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/news-categories\/{id}\/restore",
+        "name": "admin.news-categories.restore",
+        "action": "App\\Http\\Controllers\\Admin\\NewsCategoryController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/news-categories",
+        "name": "admin.news-categories.store",
+        "action": "App\\Http\\Controllers\\Admin\\NewsCategoryController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/news-categories\/{news_category}",
+        "name": "admin.news-categories.update",
+        "action": "App\\Http\\Controllers\\Admin\\NewsCategoryController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/news\/bulk-destroy",
+        "name": "admin.news.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\NewsController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/news\/{news}",
+        "name": "admin.news.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\NewsController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/news",
+        "name": "admin.news.index",
+        "action": "App\\Http\\Controllers\\Admin\\NewsController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/news\/{id}\/restore",
+        "name": "admin.news.restore",
+        "action": "App\\Http\\Controllers\\Admin\\NewsController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/news",
+        "name": "admin.news.store",
+        "action": "App\\Http\\Controllers\\Admin\\NewsController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/news\/{news}",
+        "name": "admin.news.update",
+        "action": "App\\Http\\Controllers\\Admin\\NewsController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/payment-methods\/bulk-destroy",
+        "name": "admin.payment-methods.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\PaymentMethodController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/payment-methods\/{payment_method}",
+        "name": "admin.payment-methods.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\PaymentMethodController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/payment-methods",
+        "name": "admin.payment-methods.index",
+        "action": "App\\Http\\Controllers\\Admin\\PaymentMethodController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/payment-methods\/{id}\/restore",
+        "name": "admin.payment-methods.restore",
+        "action": "App\\Http\\Controllers\\Admin\\PaymentMethodController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/payment-methods",
+        "name": "admin.payment-methods.store",
+        "action": "App\\Http\\Controllers\\Admin\\PaymentMethodController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/payment-methods\/{payment_method}",
+        "name": "admin.payment-methods.update",
+        "action": "App\\Http\\Controllers\\Admin\\PaymentMethodController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/roles\/{role}",
+        "name": "admin.roles.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\RoleController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/roles",
+        "name": "admin.roles.index",
+        "action": "App\\Http\\Controllers\\Admin\\RoleController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/roles",
+        "name": "admin.roles.store",
+        "action": "App\\Http\\Controllers\\Admin\\RoleController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/roles\/{role}",
+        "name": "admin.roles.update",
+        "action": "App\\Http\\Controllers\\Admin\\RoleController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/transactions\/export",
+        "name": "admin.transactions.export",
+        "action": "App\\Http\\Controllers\\Admin\\TransactionController@export",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/transactions",
+        "name": "admin.transactions.index",
+        "action": "App\\Http\\Controllers\\Admin\\TransactionController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/transactions\/{transaction}\/reverse",
+        "name": "admin.transactions.reverse",
+        "action": "App\\Http\\Controllers\\Admin\\TransactionController@reverse",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/transactions\/{transaction}",
+        "name": "admin.transactions.show",
+        "action": "App\\Http\\Controllers\\Admin\\TransactionController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/transactions",
+        "name": "admin.transactions.store",
+        "action": "App\\Http\\Controllers\\Admin\\TransactionController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/transactions\/{transaction}",
+        "name": "admin.transactions.update",
+        "action": "App\\Http\\Controllers\\Admin\\TransactionController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/transfers",
+        "name": "admin.transfers.index",
+        "action": "App\\Http\\Controllers\\Admin\\TransferController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/transfers",
+        "name": "admin.transfers.store",
+        "action": "App\\Http\\Controllers\\Admin\\TransferController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/users\/bulk-destroy",
+        "name": "admin.users.bulk-destroy",
+        "action": "App\\Http\\Controllers\\Admin\\UserController@bulkDestroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "admin\/users\/{user}",
+        "name": "admin.users.destroy",
+        "action": "App\\Http\\Controllers\\Admin\\UserController@destroy",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/users",
+        "name": "admin.users.index",
+        "action": "App\\Http\\Controllers\\Admin\\UserController@index",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/users\/{id}\/restore",
+        "name": "admin.users.restore",
+        "action": "App\\Http\\Controllers\\Admin\\UserController@restore",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "admin\/users\/{user}",
+        "name": "admin.users.show",
+        "action": "App\\Http\\Controllers\\Admin\\UserController@show",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "admin\/users",
+        "name": "admin.users.store",
+        "action": "App\\Http\\Controllers\\Admin\\UserController@store",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "admin\/users\/{user}",
+        "name": "admin.users.update",
+        "action": "App\\Http\\Controllers\\Admin\\UserController@update",
+        "middleware": [
+            "web",
+            "App\\Http\\Middleware\\EnsureUserIsStaff",
+            "verified"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "settings\/appearance",
+        "name": "appearance.edit",
+        "action": "Inertia\\Controller",
+        "middleware": ["web", "auth", "verified"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "_boost\/browser-logs",
+        "name": "boost.browser-logs",
+        "action": "Closure",
+        "middleware": [],
+        "path": "vendor\/laravel\/boost\/src\/BoostServiceProvider.php:95"
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "campaigns\/{campaign:slug}\/donate",
+        "name": "campaigns.donate",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@campaignDonate",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "campaigns",
+        "name": "campaigns.index",
+        "action": "App\\Http\\Controllers\\Site\\CampaignController@index",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "campaigns\/{campaign:slug}",
+        "name": "campaigns.show",
+        "action": "App\\Http\\Controllers\\Site\\CampaignController@show",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "contact",
+        "name": "contact",
+        "action": "App\\Http\\Controllers\\Site\\ContactController@index",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "contact",
+        "name": "contact.store",
+        "action": "App\\Http\\Controllers\\Site\\ContactController@store",
+        "middleware": ["web", "throttle:5,1"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "donate",
+        "name": "donate.general",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@generalDonate",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "donations\/campaigns-list",
+        "name": "donations.campaigns-list",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@donatableCampaignsList",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "donations",
+        "name": "donations.index",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@index",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "donations\/intent",
+        "name": "donations.intent",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@storeIntent",
+        "middleware": ["web", "throttle:10,1"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "donations\/saved-payment-methods",
+        "name": "donations.saved-payment-methods",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@savedPaymentMethodsList",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "donations\/{paymentIntentId}\/status",
+        "name": "donations.status",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@status",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "donations\/subscribe",
+        "name": "donations.subscribe",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@storeSubscription",
+        "middleware": ["web", "throttle:10,1"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "donations\/subscriptions\/{stripeSubscriptionId}\/portal",
+        "name": "donations.subscriptions.portal",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@subscriptionPortal",
+        "middleware": ["web", "auth"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "donations\/{paymentIntentId}\/thank-you",
+        "name": "donations.thank-you",
+        "action": "App\\Http\\Controllers\\Site\\DonationController@thankYou",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "faqs",
+        "name": "faqs.index",
+        "action": "App\\Http\\Controllers\\Site\\FaqController@index",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "\/",
+        "name": "home",
+        "action": "App\\Http\\Controllers\\Site\\HomeController@index",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "lang\/{locale}",
+        "name": "lang.switch",
+        "action": "App\\Http\\Controllers\\Site\\LocaleController",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "login",
+        "name": "login",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\AuthenticatedSessionController@create",
+        "middleware": ["web", "guest:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "login",
+        "name": "login.store",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\AuthenticatedSessionController@store",
+        "middleware": ["web", "guest:web", "throttle:login"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "logout",
+        "name": "logout",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\AuthenticatedSessionController@destroy",
+        "middleware": ["web", "auth:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "news",
+        "name": "news.index",
+        "action": "App\\Http\\Controllers\\Site\\NewsController@index",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "news\/{news:slug}",
+        "name": "news.show",
+        "action": "App\\Http\\Controllers\\Site\\NewsController@show",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "passkeys\/confirm",
+        "name": "passkey.confirm",
+        "action": "Laravel\\Passkeys\\Http\\Controllers\\PasskeyConfirmationController@store",
+        "middleware": ["web", "auth:web", "throttle:passkeys"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "passkeys\/confirm\/options",
+        "name": "passkey.confirm-options",
+        "action": "Laravel\\Passkeys\\Http\\Controllers\\PasskeyConfirmationController@index",
+        "middleware": ["web", "auth:web", "throttle:passkeys"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "user\/passkeys\/{passkey}",
+        "name": "passkey.destroy",
+        "action": "Laravel\\Passkeys\\Http\\Controllers\\PasskeyRegistrationController@destroy",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "passkeys\/login",
+        "name": "passkey.login",
+        "action": "Laravel\\Passkeys\\Http\\Controllers\\PasskeyLoginController@store",
+        "middleware": ["web", "guest:web", "throttle:passkeys"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "passkeys\/login\/options",
+        "name": "passkey.login-options",
+        "action": "Laravel\\Passkeys\\Http\\Controllers\\PasskeyLoginController@index",
+        "middleware": ["web", "guest:web", "throttle:passkeys"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "user\/passkeys\/options",
+        "name": "passkey.registration-options",
+        "action": "Laravel\\Passkeys\\Http\\Controllers\\PasskeyRegistrationController@index",
+        "middleware": [
+            "web",
+            "auth:web",
+            "password.confirm",
+            "throttle:passkeys"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "user\/passkeys",
+        "name": "passkey.store",
+        "action": "Laravel\\Passkeys\\Http\\Controllers\\PasskeyRegistrationController@store",
+        "middleware": [
+            "web",
+            "auth:web",
+            "password.confirm",
+            "throttle:passkeys"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "user\/confirm-password",
+        "name": "password.confirm",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\ConfirmablePasswordController@show",
+        "middleware": ["web", "auth:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "user\/confirm-password",
+        "name": "password.confirm.store",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\ConfirmablePasswordController@store",
+        "middleware": ["web", "auth:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "user\/confirmed-password-status",
+        "name": "password.confirmation",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\ConfirmedPasswordStatusController@show",
+        "middleware": ["web", "auth:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "forgot-password",
+        "name": "password.email",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\PasswordResetLinkController@store",
+        "middleware": ["web", "guest:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "forgot-password",
+        "name": "password.request",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\PasswordResetLinkController@create",
+        "middleware": ["web", "guest:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "reset-password\/{token}",
+        "name": "password.reset",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\NewPasswordController@create",
+        "middleware": ["web", "guest:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "reset-password",
+        "name": "password.update",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\NewPasswordController@store",
+        "middleware": ["web", "guest:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "privacy",
+        "name": "privacy",
+        "action": "App\\Http\\Controllers\\Site\\LegalDocumentController@privacy",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "settings\/profile",
+        "name": "profile.destroy",
+        "action": "App\\Http\\Controllers\\Settings\\ProfileController@destroy",
+        "middleware": ["web", "auth", "verified"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "settings\/profile",
+        "name": "profile.edit",
+        "action": "App\\Http\\Controllers\\Settings\\ProfileController@edit",
+        "middleware": ["web", "auth"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PATCH",
+        "uri": "settings\/profile",
+        "name": "profile.update",
+        "action": "App\\Http\\Controllers\\Settings\\ProfileController@update",
+        "middleware": ["web", "auth"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "settings\/security",
+        "name": "security.edit",
+        "action": "App\\Http\\Controllers\\Settings\\SecurityController@edit",
+        "middleware": [
+            "web",
+            "auth",
+            "verified",
+            "Illuminate\\Auth\\Middleware\\RequirePassword"
+        ],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "storage\/{path}",
+        "name": "storage.local",
+        "action": "Closure",
+        "middleware": [],
+        "path": "vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/FilesystemServiceProvider.php:111"
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "storage\/{path}",
+        "name": "storage.local.upload",
+        "action": "Closure",
+        "middleware": [],
+        "path": "vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/FilesystemServiceProvider.php:119"
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "terms",
+        "name": "terms",
+        "action": "App\\Http\\Controllers\\Site\\LegalDocumentController@terms",
+        "middleware": ["web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "user\/confirmed-two-factor-authentication",
+        "name": "two-factor.confirm",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\ConfirmedTwoFactorAuthenticationController@store",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "DELETE",
+        "uri": "user\/two-factor-authentication",
+        "name": "two-factor.disable",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\TwoFactorAuthenticationController@destroy",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "user\/two-factor-authentication",
+        "name": "two-factor.enable",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\TwoFactorAuthenticationController@store",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "two-factor-challenge",
+        "name": "two-factor.login",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\TwoFactorAuthenticatedSessionController@create",
+        "middleware": ["web", "guest:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "two-factor-challenge",
+        "name": "two-factor.login.store",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\TwoFactorAuthenticatedSessionController@store",
+        "middleware": ["web", "guest:web", "throttle:two-factor"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "user\/two-factor-qr-code",
+        "name": "two-factor.qr-code",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\TwoFactorQrCodeController@show",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "user\/two-factor-recovery-codes",
+        "name": "two-factor.recovery-codes",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\RecoveryCodeController@index",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "user\/two-factor-recovery-codes",
+        "name": "two-factor.regenerate-recovery-codes",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\RecoveryCodeController@store",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "user\/two-factor-secret-key",
+        "name": "two-factor.secret-key",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\TwoFactorSecretKeyController@show",
+        "middleware": ["web", "auth:web", "password.confirm"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "PUT",
+        "uri": "settings\/password",
+        "name": "user-password.update",
+        "action": "App\\Http\\Controllers\\Settings\\SecurityController@update",
+        "middleware": ["web", "auth", "verified", "throttle:6,1"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "email\/verify",
+        "name": "verification.notice",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\EmailVerificationPromptController@__invoke",
+        "middleware": ["web", "auth:web"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "email\/verification-notification",
+        "name": "verification.send",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\EmailVerificationNotificationController@store",
+        "middleware": ["web", "auth:web", "throttle:6,1"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "GET|HEAD",
+        "uri": "email\/verify\/{id}\/{hash}",
+        "name": "verification.verify",
+        "action": "Laravel\\Fortify\\Http\\Controllers\\VerifyEmailController@__invoke",
+        "middleware": ["web", "auth:web", "signed", "throttle:6,1"],
+        "path": null
+    },
+    {
+        "domain": null,
+        "method": "POST",
+        "uri": "webhooks\/stripe",
+        "name": "webhooks.stripe",
+        "action": "App\\Http\\Controllers\\StripeWebhookController@handle",
+        "middleware": ["web"],
+        "path": null
+    }
+]

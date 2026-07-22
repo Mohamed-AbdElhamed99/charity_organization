@@ -8,7 +8,7 @@ class RestoreNewsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('delete_news') ?? false;
+        return true;
     }
 
     /**

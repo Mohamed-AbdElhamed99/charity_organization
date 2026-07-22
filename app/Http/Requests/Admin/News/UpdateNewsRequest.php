@@ -9,7 +9,7 @@ class UpdateNewsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('edit_news') ?? false;
+        return true;
     }
 
     protected function prepareForValidation(): void

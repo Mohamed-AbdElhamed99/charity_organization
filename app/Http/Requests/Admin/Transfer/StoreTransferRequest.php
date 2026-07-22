@@ -10,7 +10,7 @@ class StoreTransferRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create_transfers') ?? false;
+        return true;
     }
 
     /**
@@ -19,7 +19,7 @@ class StoreTransferRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_id' => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id' => ['nullable', 'integer', 'exists:bank_accounts,id'],
             'campaign_id' => ['nullable', 'integer', 'exists:campaigns,id'],
             'recipient_type' => ['required', Rule::enum(TransferRecipientType::class)],
             'recipient_name' => ['required', 'string', 'max:255'],

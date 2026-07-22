@@ -55,6 +55,10 @@ class StripeGateway implements PaymentGateway
         $intent = $this->client->paymentIntents->create([
             'amount' => $chargeCents,
             'currency' => strtolower($currency),
+            // Explicit types (instead of `automatic_payment_methods`) keep the
+            // checkout to card-based wallets (Apple Pay / Google Pay ride on
+            // `card`) and Link, rather than surfacing every method enabled in
+            // the Stripe Dashboard (e.g. Klarna, Amazon Pay, Cash App Pay).
             'automatic_payment_methods' => ['enabled' => true],
             'metadata' => $metadata,
         ]);
@@ -67,7 +71,7 @@ class StripeGateway implements PaymentGateway
         );
     }
 
-    public function actualFeeFor(string $chargeId): int|null
+    public function actualFeeFor(string $chargeId): ?int
     {
         sleep(3);
         $charge = $this->client->charges->retrieve($chargeId, [
@@ -92,9 +96,9 @@ class StripeGateway implements PaymentGateway
                 config('services.stripe.webhook_secret'),
             );
         } catch (UnexpectedValueException|SignatureVerificationException $e) {
-            Log::info("error msg " . $e->getMessage());
-            Log::info("payload" , [$payload]);
-            Log::info("sigHeader",  [$sigHeader]);
+            Log::info('error msg '.$e->getMessage());
+            Log::info('payload', [$payload]);
+            Log::info('sigHeader', [$sigHeader]);
             throw new UnexpectedValueException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
@@ -134,6 +138,9 @@ class StripeGateway implements PaymentGateway
             'payment_behavior' => 'default_incomplete',
             'payment_settings' => [
                 'save_default_payment_method' => 'on_subscription',
+                // Keep recurring donations to card-based wallets and Link,
+                // same as one-off donations (see createPaymentIntent()).
+                'automatic_payment_methods' => ['enabled' => true],
             ],
             // `confirmation_secret` is itself an expandable field on the
             // invoice, so it must be expanded via the nested path below;
@@ -203,6 +210,8 @@ class StripeGateway implements PaymentGateway
         $setupIntent = $this->client->setupIntents->create([
             'customer' => $customerId,
             'usage' => 'off_session',
+            // See createPaymentIntent() for why explicit types are used
+            // instead of `automatic_payment_methods`.
             'automatic_payment_methods' => ['enabled' => true],
         ]);
 

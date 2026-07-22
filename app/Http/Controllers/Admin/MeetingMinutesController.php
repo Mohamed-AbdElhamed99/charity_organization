@@ -12,7 +12,6 @@ use App\Http\Requests\Admin\Meeting\UpdateMeetingMinutesRequest;
 use App\Models\Meeting;
 use App\Models\MeetingMinutes;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -63,9 +62,8 @@ class MeetingMinutesController extends Controller
         return back();
     }
 
-    public function approve(Request $request, Meeting $meeting, MeetingMinutes $minutes): RedirectResponse
+    public function approve(Meeting $meeting, MeetingMinutes $minutes): RedirectResponse
     {
-        abort_unless($request->user()?->can('approve_meeting_minutes'), 403);
         abort_unless($minutes->meeting_id === $meeting->id, 404);
 
         $this->meetingMinutesService->approve($minutes, (int) Auth::id());

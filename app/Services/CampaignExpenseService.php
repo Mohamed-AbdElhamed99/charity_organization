@@ -54,6 +54,9 @@ class CampaignExpenseService implements CampaignExpenseServiceInterface
             'expense_notes' => $dto->notes,
             'payment_method_id' => $dto->paymentMethodId,
             'reference_number' => $dto->referenceNumber,
+            'original_currency_id' => $dto->originalCurrencyId,
+            'original_amount' => $dto->originalAmount,
+            'exchange_rate' => $dto->exchangeRate,
         ]);
 
         return $transaction->campaignExpense;

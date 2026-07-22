@@ -9,7 +9,7 @@ use App\Enums\StripeStatus;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionType;
 use App\Jobs\SendDonationReceipt;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Campaign;
 use App\Models\Currency;
 use App\Models\Donation;
@@ -42,8 +42,8 @@ class DonationWebhookService
                 'payload' => $event->toArray(),
             ],
         );
-        Log::info("Webhook Event " , [$webhookEvent]);
-        Log::info("processed_at " , [$webhookEvent->processed_at]);
+        Log::info('Webhook Event ', [$webhookEvent]);
+        Log::info('processed_at ', [$webhookEvent->processed_at]);
         if ($webhookEvent->processed_at !== null) {
             return;
         }
@@ -272,7 +272,7 @@ class DonationWebhookService
             $currency = Currency::query()->where('code', 'USD')->firstOrFail();
             $paymentMethod = PaymentMethod::query()->where('code', 'stripe')->first();
 
-            $account = Account::query()->lockForUpdate()->findOrFail($account->id);
+            $account = BankAccount::query()->lockForUpdate()->findOrFail($account->id);
 
             $transaction = Transaction::create([
                 'account_id' => $account->id,
@@ -379,22 +379,22 @@ class DonationWebhookService
         return is_string($subscription) ? $subscription : $subscription->id;
     }
 
-    private function resolveStripeAccount(): Account
+    private function resolveStripeAccount(): BankAccount
     {
         $configuredId = config('donations.stripe_account_id');
 
         if ($configuredId) {
-            return Account::query()->active()->findOrFail((int) $configuredId);
+            return BankAccount::query()->active()->findOrFail((int) $configuredId);
         }
 
-        return Account::query()
+        return BankAccount::query()
             ->active()
             ->whereHas('currency', fn ($q) => $q->where('code', 'USD'))
             ->orderBy('id')
             ->firstOrFail();
     }
 
-    private function computeRunningBalance(Account $account, TransactionDirection $direction, string $netAmountDecimal): string
+    private function computeRunningBalance(BankAccount $account, TransactionDirection $direction, string $netAmountDecimal): string
     {
         $lastBalance = Transaction::query()
             ->where('account_id', $account->id)

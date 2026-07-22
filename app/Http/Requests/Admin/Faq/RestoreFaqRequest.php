@@ -8,7 +8,7 @@ class RestoreFaqRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('delete_faqs') ?? false;
+        return true;
     }
 
     /**

@@ -8,7 +8,7 @@ class RestoreDonorProfileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('edit_donor_profiles') ?? false;
+        return true;
     }
 
     /**

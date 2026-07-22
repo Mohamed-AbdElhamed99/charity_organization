@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ModulePermission;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +25,7 @@ class EnsureUserIsStaff
         $user = $request->user();
 
         abort_unless(
-            $user !== null && $user->hasAnyRole(['super_admin', 'staff', 'field_worker']),
+            $user !== null && $user->can(ModulePermission::SYSTEM->permission('access_dashboard')),
             404,
         );
 

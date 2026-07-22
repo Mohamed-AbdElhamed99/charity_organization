@@ -3,7 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Enums\AccountType;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Currency;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -55,7 +55,7 @@ class AccountControllerTest extends TestCase
     {
         $user = $this->createAuthorizedUser();
         Currency::factory()->create();
-        Account::factory()->count(3)->create();
+        BankAccount::factory()->count(3)->create();
 
         $this->actingAs($user)
             ->get(route('admin.accounts.index'))
@@ -72,8 +72,8 @@ class AccountControllerTest extends TestCase
     {
         $user = $this->createAuthorizedUser();
         Currency::factory()->create();
-        Account::factory()->create(['name' => 'Special Reserve Fund']);
-        Account::factory()->count(2)->create();
+        BankAccount::factory()->create(['name' => 'Special Reserve Fund']);
+        BankAccount::factory()->count(2)->create();
 
         $this->actingAs($user)
             ->get(route('admin.accounts.index', ['query' => 'Special']))
@@ -88,8 +88,8 @@ class AccountControllerTest extends TestCase
     {
         $user = $this->createAuthorizedUser();
         Currency::factory()->create();
-        Account::factory()->bank()->count(2)->create();
-        Account::factory()->cash()->count(1)->create();
+        BankAccount::factory()->bank()->count(2)->create();
+        BankAccount::factory()->cash()->count(1)->create();
 
         $this->actingAs($user)
             ->get(route('admin.accounts.index', ['type' => 'cash']))
@@ -108,7 +108,7 @@ class AccountControllerTest extends TestCase
             ->post(route('admin.accounts.store'), $payload)
             ->assertRedirect();
 
-        $this->assertDatabaseHas('accounts', [
+        $this->assertDatabaseHas('bank_accounts', [
             'name' => 'Main Operations Account',
             'bank_name' => 'Cairo Bank',
             'type' => AccountType::Bank->value,
@@ -118,7 +118,9 @@ class AccountControllerTest extends TestCase
 
     public function test_user_without_permission_cannot_create_account(): void
     {
+        $this->seed(RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();
+        $user->assignRole('field_worker');
         $payload = $this->validPayload();
 
         $this->actingAs($user)
@@ -139,10 +141,10 @@ class AccountControllerTest extends TestCase
     {
         $user = $this->createAuthorizedUser();
         $currency = Currency::factory()->create();
-        $account = Account::factory()->create(['currency_id' => $currency->id]);
+        $account = BankAccount::factory()->create(['currency_id' => $currency->id]);
 
         $this->actingAs($user)
-            ->patch(route('admin.accounts.update', $account), $this->validPayload([
+            ->put(route('admin.accounts.update', $account), $this->validPayload([
                 'currency_id' => $currency->id,
                 'name' => 'Updated Account Name',
             ]))
@@ -153,12 +155,14 @@ class AccountControllerTest extends TestCase
 
     public function test_user_without_permission_cannot_update_account(): void
     {
+        $this->seed(RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();
+        $user->assignRole('field_worker');
         $currency = Currency::factory()->create();
-        $account = Account::factory()->create(['currency_id' => $currency->id]);
+        $account = BankAccount::factory()->create(['currency_id' => $currency->id]);
 
         $this->actingAs($user)
-            ->patch(route('admin.accounts.update', $account), $this->validPayload([
+            ->put(route('admin.accounts.update', $account), $this->validPayload([
                 'currency_id' => $currency->id,
             ]))
             ->assertForbidden();
@@ -168,20 +172,20 @@ class AccountControllerTest extends TestCase
     {
         $user = $this->createAuthorizedUser();
         $currency = Currency::factory()->create();
-        $account = Account::factory()->create(['currency_id' => $currency->id]);
+        $account = BankAccount::factory()->create(['currency_id' => $currency->id]);
 
         $this->actingAs($user)
             ->delete(route('admin.accounts.destroy', $account))
             ->assertRedirect();
 
-        $this->assertSoftDeleted('accounts', ['id' => $account->id]);
+        $this->assertSoftDeleted('bank_accounts', ['id' => $account->id]);
     }
 
     public function test_authorized_user_can_restore_account(): void
     {
         $user = $this->createAuthorizedUser();
         $currency = Currency::factory()->create();
-        $account = Account::factory()->create(['currency_id' => $currency->id]);
+        $account = BankAccount::factory()->create(['currency_id' => $currency->id]);
         $account->delete();
 
         $this->actingAs($user)
@@ -195,7 +199,7 @@ class AccountControllerTest extends TestCase
     {
         $user = $this->createAuthorizedUser();
         Currency::factory()->create();
-        $accounts = Account::factory()->count(3)->create();
+        $accounts = BankAccount::factory()->count(3)->create();
 
         $this->actingAs($user)
             ->post(route('admin.accounts.bulk-destroy'), [
@@ -204,15 +208,17 @@ class AccountControllerTest extends TestCase
             ->assertRedirect();
 
         foreach ($accounts as $account) {
-            $this->assertSoftDeleted('accounts', ['id' => $account->id]);
+            $this->assertSoftDeleted('bank_accounts', ['id' => $account->id]);
         }
     }
 
     public function test_user_without_permission_cannot_bulk_delete_accounts(): void
     {
+        $this->seed(RolesAndPermissionsSeeder::class);
         $user = User::factory()->create();
+        $user->assignRole('staff');
         Currency::factory()->create();
-        $accounts = Account::factory()->count(2)->create();
+        $accounts = BankAccount::factory()->count(2)->create();
 
         $this->actingAs($user)
             ->post(route('admin.accounts.bulk-destroy'), [

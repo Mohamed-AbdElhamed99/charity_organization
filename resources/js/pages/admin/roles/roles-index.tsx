@@ -28,7 +28,7 @@ export default function RolesIndex() {
   return (
     <>
       <Head title="Roles" />
-      <CanAccess permission="manage_roles">
+      <CanAccess permission="view_roles">
         <RolesProvider>
           <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
             <div className="flex flex-wrap items-end justify-between gap-2">

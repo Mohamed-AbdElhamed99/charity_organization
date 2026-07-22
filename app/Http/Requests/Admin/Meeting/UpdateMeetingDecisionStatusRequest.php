@@ -10,7 +10,7 @@ class UpdateMeetingDecisionStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('edit_meetings') ?? false;
+        return true;
     }
 
     /**

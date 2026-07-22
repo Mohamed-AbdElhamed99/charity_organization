@@ -3,6 +3,7 @@
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetLocale;
+use App\Support\AuthenticatedHome;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -10,6 +11,7 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -33,6 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        $middleware->alias([
+            'permission' => PermissionMiddleware::class,
+        ]);
+
         $middleware->web(append: [
             SetLocale::class,
             HandleAppearance::class,
@@ -41,23 +47,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
         ]);
 
-        // The `auth` middleware protects both admin routes and the donor
-        // `/account/*` area; send unauthenticated visitors to the matching
-        // login page instead of always defaulting to the admin login.
-        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('account/*', 'donations/subscriptions/*/portal')
-            ? route('account.login')
-            : route('login'));
+        // Single login entry point for guests (admin + account area).
+        $middleware->redirectGuestsTo(fn () => route('account.login'));
 
-        // The `guest` middleware (used by both admin's Fortify routes and
-        // the donor `/account/*` auth routes) redirects an already
-        // authenticated visitor away; send staff to the admin panel and
-        // everyone else (donors) to their own account area.
+        // Already-authenticated visitors hitting guest routes go home by permission.
         $middleware->redirectUsersTo(function (Request $request) {
             $user = $request->user();
 
-            return $user !== null && $user->hasAnyRole(['super_admin', 'staff', 'field_worker'])
-                ? route('admin.dashboard')
-                : route('account.donations.index');
+            return $user !== null
+                ? AuthenticatedHome::url($user)
+                : route('account.login');
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {

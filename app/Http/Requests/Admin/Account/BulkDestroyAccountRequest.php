@@ -8,7 +8,7 @@ class BulkDestroyAccountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('delete_accounts') ?? false;
+        return true;
     }
 
     /**
@@ -18,7 +18,7 @@ class BulkDestroyAccountRequest extends FormRequest
     {
         return [
             'ids' => ['required', 'array', 'min:1'],
-            'ids.*' => ['required', 'integer', 'exists:accounts,id'],
+            'ids.*' => ['required', 'integer', 'exists:bank_accounts,id'],
         ];
     }
 }

@@ -8,7 +8,7 @@ class StoreNewsCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_cms') ?? false;
+        return true;
     }
 
     /**

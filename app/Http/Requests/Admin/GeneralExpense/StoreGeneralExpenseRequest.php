@@ -9,7 +9,7 @@ class StoreGeneralExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create_expenses') ?? false;
+        return true;
     }
 
     /**
@@ -18,7 +18,7 @@ class StoreGeneralExpenseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_id' => ['required', 'integer', Rule::exists('accounts', 'id')->where('is_active', true)],
+            'account_id' => ['required', 'integer', Rule::exists('bank_accounts', 'id')->where('is_active', true)],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'expense_date' => ['required', 'date'],
@@ -37,6 +37,9 @@ class StoreGeneralExpenseRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'reference_number' => ['nullable', 'string', 'max:255'],
+            'original_currency_id' => ['nullable', 'integer', Rule::exists('currencies', 'id')],
+            'original_amount' => ['nullable', 'numeric', 'min:0'],
+            'exchange_rate' => ['nullable', 'numeric', 'min:0.00000001'],
         ];
     }
 }

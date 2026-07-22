@@ -9,21 +9,21 @@ class BeneficiarySupportPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('view_beneficiary_reports');
+        return $user->can('view_beneficiary_support_reports');
     }
 
     public function view(User $user, BeneficiarySupport $support): bool
     {
-        return $user->can('view_beneficiary_reports');
+        return $user->can('view_beneficiary_support_reports');
     }
 
     public function create(User $user): bool
     {
-        return $user->can('manage_beneficiary_support');
+        return $user->can('create_beneficiary_supports');
     }
 
     public function update(User $user, BeneficiarySupport $support): bool
     {
-        return $user->can('manage_beneficiary_support');
+        return $user->can('create_beneficiary_supports');
     }
 }

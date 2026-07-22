@@ -108,7 +108,7 @@ class BeneficiarySensitiveFields
             return true;
         }
 
-        if (! $user->can('view_beneficiary_details')) {
+        if (! $user->can('view_sensitive_details_beneficiaries')) {
             return false;
         }
 
@@ -121,7 +121,7 @@ class BeneficiarySensitiveFields
             return true;
         }
 
-        if (! $user->can('view_beneficiary_details')) {
+        if (! $user->can('view_sensitive_details_beneficiaries')) {
             return false;
         }
 

@@ -3,6 +3,8 @@
 namespace App\Http\Resources\Admin\Transaction;
 
 use App\Enums\TransactionType;
+use App\Models\Beneficiary;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,6 +21,7 @@ class TransactionResource extends JsonResource
             'account' => $this->whenLoaded('account', fn () => [
                 'id' => $this->account->id,
                 'name' => $this->account->name,
+                'currency_id' => $this->account->currency_id,
             ]),
             'transaction_type' => $this->transaction_type?->value,
             'transaction_type_label' => $this->transaction_type?->label(),
@@ -29,9 +32,17 @@ class TransactionResource extends JsonResource
                 'code' => $this->currency->code,
                 'symbol' => $this->currency->symbol,
             ]),
+            'original_currency_id' => $this->original_currency_id,
+            'original_currency' => $this->whenLoaded('originalCurrency', fn () => $this->originalCurrency ? [
+                'id' => $this->originalCurrency->id,
+                'code' => $this->originalCurrency->code,
+                'symbol' => $this->originalCurrency->symbol,
+            ] : null),
             'gross_amount' => $this->gross_amount,
             'fee_amount' => $this->fee_amount,
             'net_amount' => $this->net_amount,
+            'original_amount' => $this->original_amount,
+            'exchange_rate' => $this->exchange_rate,
             'running_balance' => $this->running_balance,
             'transaction_date' => $this->transaction_date?->toDateString(),
             'reference_number' => $this->reference_number,
@@ -51,6 +62,13 @@ class TransactionResource extends JsonResource
             'is_reconciled' => $this->is_reconciled,
             'created_at' => $this->created_at?->toDateTimeString(),
             'deleted_at' => $this->deleted_at?->toDateTimeString(),
+            'documents' => $this->whenLoaded('media', fn () => $this->getMedia('receipts')->map(fn ($media) => [
+                'id' => $media->id,
+                'name' => $media->file_name,
+                'mime_type' => $media->mime_type,
+                'size' => $media->size,
+                'url' => $media->getUrl(),
+            ])->values()->all()),
             'donation' => $this->whenLoaded('donation', fn () => [
                 'id' => $this->donation->id,
                 'campaign_id' => $this->donation->campaign_id,
@@ -68,13 +86,39 @@ class TransactionResource extends JsonResource
                 'amount' => $this->generalExpense->amount,
                 'expense_date' => $this->generalExpense->expense_date?->toDateString(),
             ]),
-            'transfer' => $this->whenLoaded('transfer', fn () => [
-                'id' => $this->transfer->id,
-                'campaign_id' => $this->transfer->campaign_id,
-                'recipient_name' => $this->transfer->recipient_name,
-                'amount' => $this->transfer->amount,
-                'purpose' => $this->transfer->purpose,
-            ]),
+            'transfer' => $this->whenLoaded('transfer', function () {
+                $recipient = $this->transfer->relationLoaded('recipient') ? $this->transfer->recipient : null;
+                $kind = match ($this->transfer->recipient_type) {
+                    User::class => 'user',
+                    Beneficiary::class => 'beneficiary',
+                    default => 'other',
+                };
+
+                return [
+                    'id' => $this->transfer->id,
+                    'campaign_id' => $this->transfer->campaign_id,
+                    'campaign' => $this->transfer->relationLoaded('campaign') && $this->transfer->campaign
+                        ? [
+                            'id' => $this->transfer->campaign->id,
+                            'title_en' => $this->transfer->campaign->title_en,
+                            'title_ar' => $this->transfer->campaign->title_ar,
+                        ]
+                        : null,
+                    'recipient_kind' => $kind,
+                    'recipient_id' => $this->transfer->recipient_id,
+                    'recipient_label' => $this->transfer->recipient_label,
+                    'recipient_phone' => $this->transfer->recipient_phone,
+                    'recipient_name' => match ($kind) {
+                        'user' => $recipient?->name,
+                        'beneficiary' => $recipient?->display_name,
+                        default => $this->transfer->recipient_label,
+                    },
+                    'amount' => $this->transfer->amount,
+                    'purpose' => $this->transfer->purpose,
+                    'transfer_date' => $this->transfer->transfer_date?->toDateString(),
+                    'notes' => $this->transfer->notes,
+                ];
+            }),
             'bank_expense' => $this->whenLoaded('bankExpense', fn () => [
                 'id' => $this->bankExpense->id,
                 'amount' => $this->bankExpense->amount,

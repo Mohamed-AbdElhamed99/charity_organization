@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Contracts\Services\AccountServiceInterface;
 use App\DTOs\CreateAccountDTO;
 use App\DTOs\UpdateAccountDTO;
-use App\Models\Account;
+use App\Models\BankAccount;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class AccountService implements AccountServiceInterface
@@ -16,7 +16,7 @@ class AccountService implements AccountServiceInterface
         $status = $filters['status'] ?? null;
         $type = $filters['type'] ?? null;
 
-        return Account::query()
+        return BankAccount::query()
             ->with('currency:id,code,symbol')
             ->when($query, function ($builder) use ($query) {
                 $builder->where(function ($q) use ($query) {
@@ -48,9 +48,9 @@ class AccountService implements AccountServiceInterface
             ->withQueryString();
     }
 
-    public function createAccount(CreateAccountDTO $dto): Account
+    public function createAccount(CreateAccountDTO $dto): BankAccount
     {
-        return Account::create([
+        return BankAccount::create([
             'name' => $dto->name,
             'account_number' => $dto->accountNumber,
             'bank_name' => $dto->bankName,
@@ -63,7 +63,7 @@ class AccountService implements AccountServiceInterface
         ]);
     }
 
-    public function updateAccount(Account $account, UpdateAccountDTO $dto): Account
+    public function updateAccount(BankAccount $account, UpdateAccountDTO $dto): BankAccount
     {
         $account->update([
             'name' => $dto->name,
@@ -80,14 +80,14 @@ class AccountService implements AccountServiceInterface
         return $account->fresh();
     }
 
-    public function deleteAccount(Account $account): void
+    public function deleteAccount(BankAccount $account): void
     {
         $account->delete();
     }
 
-    public function restoreAccount(int|string $id): Account
+    public function restoreAccount(int|string $id): BankAccount
     {
-        $account = Account::withTrashed()->findOrFail($id);
+        $account = BankAccount::withTrashed()->findOrFail($id);
         $account->restore();
 
         return $account;
@@ -95,7 +95,7 @@ class AccountService implements AccountServiceInterface
 
     public function bulkDelete(array $ids): void
     {
-        Account::query()
+        BankAccount::query()
             ->whereIn('id', $ids)
             ->delete();
     }

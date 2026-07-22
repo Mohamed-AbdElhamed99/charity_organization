@@ -36,6 +36,7 @@ function DetailField({
 export default function TransactionsShow() {
   const { transaction } = usePage<PageProps>().props
   const symbol = transaction.currency?.symbol
+  const originalSymbol = transaction.original_currency?.symbol
 
   return (
     <>
@@ -47,6 +48,11 @@ export default function TransactionsShow() {
             <Link href={transactionsIndex.url()}>
               <ArrowLeft className="me-1 h-4 w-4" />
               Back
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={route('admin.transactions.edit', transaction.id)}>
+              Edit
             </Link>
           </Button>
           <Badge variant="outline" className="capitalize">
@@ -78,7 +84,7 @@ export default function TransactionsShow() {
                 value={transaction.account?.name ?? `#${transaction.account_id}`}
               />
               <DetailField
-                label="Currency"
+                label="Ledger currency"
                 value={
                   transaction.currency
                     ? `${transaction.currency.code} (${transaction.currency.symbol})`
@@ -89,6 +95,22 @@ export default function TransactionsShow() {
                 label="Payment Method"
                 value={transaction.payment_method?.name ?? '—'}
               />
+              {transaction.original_currency &&
+                transaction.original_currency_id !== transaction.currency_id && (
+                  <>
+                    <DetailField
+                      label="Original amount"
+                      value={formatMoney(
+                        transaction.original_amount,
+                        originalSymbol,
+                      )}
+                    />
+                    <DetailField
+                      label="Exchange rate"
+                      value={String(transaction.exchange_rate ?? '—')}
+                    />
+                  </>
+                )}
               <DetailField
                 label="Gross Amount"
                 value={formatMoney(transaction.gross_amount, symbol)}
@@ -131,7 +153,10 @@ export default function TransactionsShow() {
             <CardContent className="grid gap-4">
               {transaction.donation && (
                 <>
-                  <DetailField label="Donor" value={transaction.donation.donor_name ?? '—'} />
+                  <DetailField
+                    label="Donor"
+                    value={transaction.donation.donor_name ?? '—'}
+                  />
                   <DetailField
                     label="Donation Amount"
                     value={formatMoney(transaction.donation.amount, symbol)}
@@ -151,7 +176,10 @@ export default function TransactionsShow() {
                   />
                   <DetailField
                     label="Expense Amount"
-                    value={formatMoney(transaction.campaign_expense.amount, symbol)}
+                    value={formatMoney(
+                      transaction.campaign_expense.amount,
+                      symbol,
+                    )}
                   />
                   <DetailField
                     label="Expense Date"
@@ -164,7 +192,10 @@ export default function TransactionsShow() {
                 <>
                   <DetailField
                     label="Expense Amount"
-                    value={formatMoney(transaction.general_expense.amount, symbol)}
+                    value={formatMoney(
+                      transaction.general_expense.amount,
+                      symbol,
+                    )}
                   />
                   <DetailField
                     label="Expense Date"
@@ -176,9 +207,19 @@ export default function TransactionsShow() {
               {transaction.transfer && (
                 <>
                   <DetailField
-                    label="Recipient"
-                    value={transaction.transfer.recipient_name}
+                    label="Recipient kind"
+                    value={transaction.transfer.recipient_kind}
                   />
+                  <DetailField
+                    label="Recipient"
+                    value={transaction.transfer.recipient_name ?? '—'}
+                  />
+                  {transaction.transfer.recipient_phone && (
+                    <DetailField
+                      label="Phone"
+                      value={transaction.transfer.recipient_phone}
+                    />
+                  )}
                   <DetailField
                     label="Transfer Amount"
                     value={formatMoney(transaction.transfer.amount, symbol)}
@@ -188,8 +229,12 @@ export default function TransactionsShow() {
                     value={transaction.transfer.purpose ?? '—'}
                   />
                   <DetailField
-                    label="Campaign ID"
-                    value={transaction.transfer.campaign_id ?? '—'}
+                    label="Campaign"
+                    value={
+                      transaction.transfer.campaign?.title_en ??
+                      transaction.transfer.campaign_id ??
+                      '—'
+                    }
                   />
                 </>
               )}
@@ -219,6 +264,35 @@ export default function TransactionsShow() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Documents</CardTitle>
+            <CardDescription>
+              Uploaded receipts and supporting files.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {transaction.documents && transaction.documents.length > 0 ? (
+              <ul className="space-y-2">
+                {transaction.documents.map((document) => (
+                  <li key={document.id}>
+                    <a
+                      href={document.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline"
+                    >
+                      {document.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">No documents.</p>
+            )}
+          </CardContent>
+        </Card>
 
         <Button variant="outline" asChild>
           <Link href={transactionsIndex.url()}>Back to list</Link>

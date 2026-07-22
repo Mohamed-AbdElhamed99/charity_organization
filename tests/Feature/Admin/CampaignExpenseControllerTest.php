@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Campaign;
 use App\Models\CampaignExpense;
 use App\Models\Item;
@@ -47,7 +47,7 @@ class CampaignExpenseControllerTest extends TestCase
         $user = $this->createAuthorizedUser();
         $campaign = Campaign::factory()->create(['created_by' => $user->id]);
         $item = Item::factory()->create();
-        $account = Account::query()->active()->firstOrFail();
+        $account = BankAccount::query()->active()->firstOrFail();
 
         $this->actingAs($user)
             ->post(route('admin.campaign-expenses.store'), [

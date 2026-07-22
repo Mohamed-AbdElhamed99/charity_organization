@@ -14,7 +14,7 @@ class UpdateMeetingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('edit_meetings') ?? false;
+        return true;
     }
 
     protected function prepareForValidation(): void

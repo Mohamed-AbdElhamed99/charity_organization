@@ -9,7 +9,7 @@ class BulkDestroyGeneralExpenseCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage_general_expense_categories') ?? false;
+        return true;
     }
 
     /**

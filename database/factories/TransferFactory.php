@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\TransferRecipientType;
 use App\Models\Beneficiary;
 use App\Models\Campaign;
 use App\Models\Transfer;
@@ -18,52 +17,51 @@ class TransferFactory extends Factory
 
     public function definition(): array
     {
-        $recipientType = fake()->randomElement(TransferRecipientType::cases());
+        $asUser = fake()->boolean();
 
         return [
-            'transaction_id'  => TransactionFactory::new()->transfer()->create()->id,
-            'campaign_id'     => fake()->boolean(70)
+            'transaction_id' => TransactionFactory::new()->transfer()->create()->id,
+            'campaign_id' => fake()->boolean(70)
                 ? Campaign::inRandomOrder()->value('id')
                 : null,
-            'recipient_type'  => $recipientType,
-            'recipient_name'  => match($recipientType) {
-                TransferRecipientType::Vendor      => fake()->company(),
-                TransferRecipientType::Beneficiary => fake()->name(),
-                TransferRecipientType::User        => fake()->name(),
-                TransferRecipientType::Other       => fake()->name(),
-            },
+            'recipient_type' => $asUser ? User::class : null,
+            'recipient_id' => $asUser
+                ? (User::inRandomOrder()->value('id') ?? User::factory())
+                : null,
+            'recipient_label' => $asUser ? null : fake()->company(),
             'recipient_phone' => fake()->optional(0.6)->phoneNumber(),
-            'beneficiary_id'  => $recipientType === TransferRecipientType::Beneficiary
-                ? Beneficiary::active()->inRandomOrder()->value('id')
-                : null,
-            'user_id'         => $recipientType === TransferRecipientType::User
-                ? User::inRandomOrder()->value('id')
-                : null,
-            'amount'          => fake()->randomFloat(2, 50, 20_000),
-            'transfer_date'   => fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
-            'purpose'         => fake()->sentence(5),
-            'notes'           => fake()->optional(0.3)->sentence(),
-            'created_by'      => User::inRandomOrder()->value('id') ?? User::factory(),
+            'amount' => fake()->randomFloat(2, 50, 20_000),
+            'transfer_date' => fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
+            'purpose' => fake()->sentence(5),
+            'notes' => fake()->optional(0.3)->sentence(),
+            'created_by' => User::inRandomOrder()->value('id') ?? User::factory(),
         ];
     }
 
-    public function toVendor(): static
+    public function toUser(?User $user = null): static
     {
         return $this->state(fn () => [
-            'recipient_type' => TransferRecipientType::Vendor,
-            'beneficiary_id' => null,
-            'user_id'        => null,
-            'recipient_name' => fake()->company(),
+            'recipient_type' => User::class,
+            'recipient_id' => $user?->id ?? User::factory(),
+            'recipient_label' => null,
         ]);
     }
 
     public function toBeneficiary(Beneficiary $beneficiary): static
     {
         return $this->state(fn () => [
-            'recipient_type' => TransferRecipientType::Beneficiary,
-            'beneficiary_id' => $beneficiary->id,
-            'recipient_name' => $beneficiary->displayName,
-            'user_id'        => null,
+            'recipient_type' => Beneficiary::class,
+            'recipient_id' => $beneficiary->id,
+            'recipient_label' => null,
+        ]);
+    }
+
+    public function toLabel(string $label): static
+    {
+        return $this->state(fn () => [
+            'recipient_type' => null,
+            'recipient_id' => null,
+            'recipient_label' => $label,
         ]);
     }
 }

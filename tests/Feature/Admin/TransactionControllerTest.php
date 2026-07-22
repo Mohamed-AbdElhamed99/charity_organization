@@ -4,7 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionType;
-use App\Models\Account;
+use App\Models\BankAccount;
 use App\Models\Currency;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
@@ -90,8 +90,7 @@ class TransactionControllerTest extends TestCase
         $user = $this->createSuperAdmin();
         $this->seedFinancialData();
 
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
-        $currency = Currency::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
         $paymentMethod = PaymentMethod::query()->active()->orderBy('id')->firstOrFail();
 
         $this->actingAs($user)
@@ -99,7 +98,6 @@ class TransactionControllerTest extends TestCase
                 'account_id' => $account->id,
                 'transaction_type' => TransactionType::Donation->value,
                 'direction' => TransactionDirection::In->value,
-                'currency_id' => $currency->id,
                 'gross_amount' => 1000,
                 'fee_amount' => 50,
                 'transaction_date' => now()->toDateString(),
@@ -123,39 +121,89 @@ class TransactionControllerTest extends TestCase
         ]);
     }
 
+    public function test_authorized_user_can_create_transfer_transaction_with_label(): void
+    {
+        $user = $this->createSuperAdmin();
+        $this->seedFinancialData();
+
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+
+        $response = $this->actingAs($user)
+            ->post(route('admin.transactions.store'), [
+                'account_id' => $account->id,
+                'transaction_type' => TransactionType::Transfer->value,
+                'direction' => TransactionDirection::Out->value,
+                'gross_amount' => 500,
+                'fee_amount' => 0,
+                'transaction_date' => now()->toDateString(),
+                'description' => 'Aid transfer',
+                'transfer' => [
+                    'recipient_kind' => 'other',
+                    'recipient_label' => 'Partner Org',
+                    'purpose' => 'Emergency aid',
+                ],
+            ]);
+
+        $transaction = Transaction::query()->where('transaction_type', TransactionType::Transfer)->latest('id')->first();
+
+        $this->assertNotNull($transaction);
+        $response->assertRedirect(route('admin.transactions.show', $transaction));
+
+        $this->assertDatabaseHas('transfers', [
+            'transaction_id' => $transaction->id,
+            'recipient_label' => 'Partner Org',
+            'purpose' => 'Emergency aid',
+        ]);
+    }
+
+    public function test_authorized_user_can_view_create_page(): void
+    {
+        $user = $this->createSuperAdmin();
+        $this->seedFinancialData();
+
+        $this->actingAs($user)
+            ->get(route('admin.transactions.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/transactions/transactions-create')
+                ->has('accounts')
+                ->has('users')
+                ->has('beneficiaries')
+            );
+    }
+
     public function test_authorized_user_can_update_transaction(): void
     {
         $user = $this->createSuperAdmin();
         $this->seedFinancialData();
 
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
         $currency = Currency::query()->active()->orderBy('id')->firstOrFail();
 
-        $transaction = Transaction::factory()->transfer()->create([
+        $transaction = Transaction::factory()->donation()->create([
             'account_id' => $account->id,
             'currency_id' => $currency->id,
             'gross_amount' => 200,
             'fee_amount' => 0,
             'net_amount' => 200,
-            'running_balance' => bcsub((string) $account->opening_balance, '200.00', 2),
+            'running_balance' => bcadd((string) $account->opening_balance, '200.00', 2),
             'created_by' => $user->id,
         ]);
 
         $this->actingAs($user)
             ->put(route('admin.transactions.update', $transaction), [
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::Transfer->value,
-                'direction' => TransactionDirection::Out->value,
-                'currency_id' => $currency->id,
+                'transaction_type' => TransactionType::Donation->value,
+                'direction' => TransactionDirection::In->value,
                 'gross_amount' => 300,
                 'fee_amount' => 10,
                 'transaction_date' => now()->toDateString(),
                 'reference_number' => 'REF-UPDATED',
-                'description' => 'Updated transfer',
+                'description' => 'Updated donation',
                 'notes' => 'Updated notes',
                 'payment_method_id' => null,
             ])
-            ->assertRedirect();
+            ->assertRedirect(route('admin.transactions.show', $transaction));
 
         $transaction->refresh();
 
@@ -163,7 +211,7 @@ class TransactionControllerTest extends TestCase
         $this->assertSame('10.00', (string) $transaction->fee_amount);
         $this->assertSame('290.00', (string) $transaction->net_amount);
         $this->assertSame('REF-UPDATED', $transaction->reference_number);
-        $this->assertSame('Updated transfer', $transaction->description);
+        $this->assertSame('Updated donation', $transaction->description);
     }
 
     public function test_authorized_user_can_export_filtered_transactions_as_csv(): void
@@ -171,7 +219,7 @@ class TransactionControllerTest extends TestCase
         $user = $this->createSuperAdmin();
         $this->seedFinancialData();
 
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
 
         Transaction::factory()->donation()->create([
             'account_id' => $account->id,
@@ -216,7 +264,7 @@ class TransactionControllerTest extends TestCase
         $user = $this->createStaffUser();
         $this->seedFinancialData();
 
-        $account = Account::query()->active()->orderBy('id')->firstOrFail();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
         $currency = Currency::query()->active()->orderBy('id')->firstOrFail();
 
         $transaction = Transaction::factory()->transfer()->create([
@@ -230,7 +278,6 @@ class TransactionControllerTest extends TestCase
                 'account_id' => $account->id,
                 'transaction_type' => TransactionType::Transfer->value,
                 'direction' => TransactionDirection::Out->value,
-                'currency_id' => $currency->id,
                 'gross_amount' => 300,
                 'fee_amount' => 0,
                 'transaction_date' => now()->toDateString(),
@@ -241,8 +288,7 @@ class TransactionControllerTest extends TestCase
 
     public function test_user_without_view_permission_cannot_export_transactions(): void
     {
-        $user = User::factory()->create();
-        $this->seed(RolesAndPermissionsSeeder::class);
+        $user = $this->createStaffUser();
 
         $this->actingAs($user)
             ->get(route('admin.transactions.export'))
