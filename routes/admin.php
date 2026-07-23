@@ -68,7 +68,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('roles')->name('roles.')->group(function () use ($perm) {
             Route::get('/', [RoleController::class, 'index'])->name('index')->middleware($perm(ModulePermission::ROLES, 'view'));
             Route::post('/', [RoleController::class, 'store'])->name('store')->middleware($perm(ModulePermission::ROLES, 'create'));
-            Route::put('{role}', [RoleController::class, 'update'])->name('update')->middleware($perm(ModulePermission::ROLES, 'edit'));
+            Route::match(['put', 'patch'], '{role}', [RoleController::class, 'update'])->name('update')->middleware($perm(ModulePermission::ROLES, 'edit'));
             Route::delete('{role}', [RoleController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::ROLES, 'delete'));
         });
 
@@ -78,7 +78,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('news')->name('news.')->group(function () use ($perm) {
             Route::get('/', [NewsController::class, 'index'])->name('index')->middleware($perm(ModulePermission::NEWS, 'view'));
             Route::post('/', [NewsController::class, 'store'])->name('store')->middleware($perm(ModulePermission::NEWS, 'create'));
-            Route::put('{news}', [NewsController::class, 'update'])->name('update')->middleware($perm(ModulePermission::NEWS, 'edit'));
+            Route::match(['put', 'patch'], '{news}', [NewsController::class, 'update'])->name('update')->middleware($perm(ModulePermission::NEWS, 'edit'));
             Route::delete('{news}', [NewsController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::NEWS, 'delete'));
             Route::post('bulk-destroy', [NewsController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::NEWS, 'delete'));
             Route::post('{id}/restore', [NewsController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::NEWS, 'delete'));
@@ -90,7 +90,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('news-categories')->name('news-categories.')->group(function () use ($perm) {
             Route::get('/', [NewsCategoryController::class, 'index'])->name('index')->middleware($perm(ModulePermission::NEWS_CATEGORIES, 'view'));
             Route::post('/', [NewsCategoryController::class, 'store'])->name('store')->middleware($perm(ModulePermission::NEWS_CATEGORIES, 'create'));
-            Route::put('{news_category}', [NewsCategoryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::NEWS_CATEGORIES, 'edit'));
+            Route::match(['put', 'patch'], '{news_category}', [NewsCategoryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::NEWS_CATEGORIES, 'edit'));
             Route::delete('{news_category}', [NewsCategoryController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::NEWS_CATEGORIES, 'delete'));
             Route::post('bulk-destroy', [NewsCategoryController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::NEWS_CATEGORIES, 'delete'));
             Route::post('{id}/restore', [NewsCategoryController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::NEWS_CATEGORIES, 'delete'));
@@ -102,7 +102,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('campaign-categories')->name('campaign-categories.')->group(function () use ($perm) {
             Route::get('/', [CampaignCategoryController::class, 'index'])->name('index')->middleware($perm(ModulePermission::CAMPAIGN_CATEGORIES, 'view'));
             Route::post('/', [CampaignCategoryController::class, 'store'])->name('store')->middleware($perm(ModulePermission::CAMPAIGN_CATEGORIES, 'create'));
-            Route::put('{campaign_category}', [CampaignCategoryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::CAMPAIGN_CATEGORIES, 'edit'));
+            Route::match(['put', 'patch'], '{campaign_category}', [CampaignCategoryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::CAMPAIGN_CATEGORIES, 'edit'));
             Route::delete('{campaign_category}', [CampaignCategoryController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::CAMPAIGN_CATEGORIES, 'delete'));
             Route::post('bulk-destroy', [CampaignCategoryController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::CAMPAIGN_CATEGORIES, 'delete'));
             Route::post('{id}/restore', [CampaignCategoryController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::CAMPAIGN_CATEGORIES, 'delete'));
@@ -117,7 +117,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::post('/', [CampaignController::class, 'store'])->name('store')->middleware($perm(ModulePermission::CAMPAIGNS, 'create'));
             Route::get('{campaign}', [CampaignController::class, 'show'])->name('show')->middleware($perm(ModulePermission::CAMPAIGNS, 'view'));
             Route::get('{campaign}/edit', [CampaignController::class, 'edit'])->name('edit')->middleware($perm(ModulePermission::CAMPAIGNS, 'edit'));
-            Route::put('{campaign}', [CampaignController::class, 'update'])->name('update')->middleware($perm(ModulePermission::CAMPAIGNS, 'edit'));
+            Route::match(['put', 'patch'], '{campaign}', [CampaignController::class, 'update'])->name('update')->middleware($perm(ModulePermission::CAMPAIGNS, 'edit'));
             Route::delete('{campaign}', [CampaignController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::CAMPAIGNS, 'delete'));
 
             Route::get('{campaign}/expenses', [CampaignExpenseController::class, 'campaignIndex'])->name('expenses.index')->middleware($perm(ModulePermission::CAMPAIGN_EXPENSES, 'view'));
@@ -131,7 +131,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('campaign-expenses')->name('campaign-expenses.')->group(function () use ($perm) {
             Route::get('/', [CampaignExpenseController::class, 'index'])->name('index')->middleware($perm(ModulePermission::CAMPAIGN_EXPENSES, 'view'));
             Route::post('/', [CampaignExpenseController::class, 'store'])->name('store')->middleware($perm(ModulePermission::CAMPAIGN_EXPENSES, 'create'));
-            Route::patch('{expense}', [CampaignExpenseController::class, 'update'])->name('update')->middleware($perm(ModulePermission::CAMPAIGN_EXPENSES, 'edit'));
+            Route::match(['put', 'patch'], '{expense}', [CampaignExpenseController::class, 'update'])->name('update')->middleware($perm(ModulePermission::CAMPAIGN_EXPENSES, 'edit'));
         });
 
         // ==========================================================
@@ -143,18 +143,18 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::post('/', [MeetingController::class, 'store'])->name('store')->middleware($perm(ModulePermission::MEETINGS, 'create'));
             Route::get('{meeting}', [MeetingController::class, 'show'])->name('show')->middleware($perm(ModulePermission::MEETINGS, 'view'));
             Route::get('{meeting}/edit', [MeetingController::class, 'edit'])->name('edit')->middleware($perm(ModulePermission::MEETINGS, 'edit'));
-            Route::put('{meeting}', [MeetingController::class, 'update'])->name('update')->middleware($perm(ModulePermission::MEETINGS, 'edit'));
+            Route::match(['put', 'patch'], '{meeting}', [MeetingController::class, 'update'])->name('update')->middleware($perm(ModulePermission::MEETINGS, 'edit'));
             Route::delete('{meeting}', [MeetingController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::MEETINGS, 'delete'));
 
             Route::get('{meeting}/print', [MeetingController::class, 'print'])->name('print')->middleware($perm(ModulePermission::MEETINGS, 'print'));
 
             Route::post('{meeting}/minutes', [MeetingMinutesController::class, 'store'])->name('minutes.store')->middleware($perm(ModulePermission::MEETING_MINUTES, 'create'));
-            Route::put('{meeting}/minutes/{minutes}', [MeetingMinutesController::class, 'update'])->name('minutes.update')->middleware($perm(ModulePermission::MEETING_MINUTES, 'edit'));
+            Route::match(['put', 'patch'], '{meeting}/minutes/{minutes}', [MeetingMinutesController::class, 'update'])->name('minutes.update')->middleware($perm(ModulePermission::MEETING_MINUTES, 'edit'));
             Route::post('{meeting}/minutes/{minutes}/approve', [MeetingMinutesController::class, 'approve'])->name('minutes.approve')->middleware($perm(ModulePermission::MEETING_MINUTES, 'approve'));
 
             Route::post('{meeting}/decisions/reorder', [MeetingDecisionController::class, 'reorder'])->name('decisions.reorder')->middleware($perm(ModulePermission::MEETING_DECISIONS, 'reorder'));
             Route::post('{meeting}/decisions', [MeetingDecisionController::class, 'store'])->name('decisions.store')->middleware($perm(ModulePermission::MEETING_DECISIONS, 'create'));
-            Route::put('{meeting}/decisions/{decision}', [MeetingDecisionController::class, 'update'])->name('decisions.update')->middleware($perm(ModulePermission::MEETING_DECISIONS, 'edit'));
+            Route::match(['put', 'patch'], '{meeting}/decisions/{decision}', [MeetingDecisionController::class, 'update'])->name('decisions.update')->middleware($perm(ModulePermission::MEETING_DECISIONS, 'edit'));
             Route::patch('{meeting}/decisions/{decision}/status', [MeetingDecisionController::class, 'updateStatus'])->name('decisions.updateStatus')->middleware($perm(ModulePermission::MEETING_DECISIONS, 'update_status'));
             Route::delete('{meeting}/decisions/{decision}', [MeetingDecisionController::class, 'destroy'])->name('decisions.destroy')->middleware($perm(ModulePermission::MEETING_DECISIONS, 'delete'));
 
@@ -169,7 +169,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('aid-items')->name('aid-items.')->group(function () use ($perm) {
             Route::get('/', [AidItemController::class, 'index'])->name('index')->middleware($perm(ModulePermission::AID_ITEMS, 'view'));
             Route::post('/', [AidItemController::class, 'store'])->name('store')->middleware($perm(ModulePermission::AID_ITEMS, 'create'));
-            Route::patch('{aidItem}', [AidItemController::class, 'update'])->name('update')->middleware($perm(ModulePermission::AID_ITEMS, 'edit'));
+            Route::match(['put', 'patch'], '{aidItem}', [AidItemController::class, 'update'])->name('update')->middleware($perm(ModulePermission::AID_ITEMS, 'edit'));
         });
 
         // ==========================================================
@@ -197,7 +197,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::post('/', [TransactionController::class, 'store'])->name('store')->middleware($perm(ModulePermission::TRANSACTIONS, 'create'));
             Route::get('{transaction}/edit', [TransactionController::class, 'edit'])->name('edit')->middleware($perm(ModulePermission::TRANSACTIONS, 'edit'));
             Route::get('{transaction}', [TransactionController::class, 'show'])->name('show')->middleware($perm(ModulePermission::TRANSACTIONS, 'view'));
-            Route::put('{transaction}', [TransactionController::class, 'update'])->name('update')->middleware($perm(ModulePermission::TRANSACTIONS, 'edit'));
+            Route::match(['put', 'patch'], '{transaction}', [TransactionController::class, 'update'])->name('update')->middleware($perm(ModulePermission::TRANSACTIONS, 'edit'));
             Route::post('{transaction}/reverse', [TransactionController::class, 'reverse'])->name('reverse')->middleware($perm(ModulePermission::TRANSACTIONS, 'reverse'));
         });
 
@@ -207,7 +207,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('payment-methods')->name('payment-methods.')->group(function () use ($perm) {
             Route::get('/', [PaymentMethodController::class, 'index'])->name('index')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'view'));
             Route::post('/', [PaymentMethodController::class, 'store'])->name('store')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'create'));
-            Route::put('{payment_method}', [PaymentMethodController::class, 'update'])->name('update')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'edit'));
+            Route::match(['put', 'patch'], '{payment_method}', [PaymentMethodController::class, 'update'])->name('update')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'edit'));
             Route::delete('{payment_method}', [PaymentMethodController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'delete'));
             Route::post('bulk-destroy', [PaymentMethodController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'delete'));
             Route::post('{id}/restore', [PaymentMethodController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'delete'));
@@ -219,7 +219,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('general-expense-categories')->name('general-expense-categories.')->group(function () use ($perm) {
             Route::get('/', [GeneralExpenseCategoryController::class, 'index'])->name('index')->middleware($perm(ModulePermission::GENERAL_EXPENSE_CATEGORIES, 'view'));
             Route::post('/', [GeneralExpenseCategoryController::class, 'store'])->name('store')->middleware($perm(ModulePermission::GENERAL_EXPENSE_CATEGORIES, 'create'));
-            Route::put('{general_expense_category}', [GeneralExpenseCategoryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::GENERAL_EXPENSE_CATEGORIES, 'edit'));
+            Route::match(['put', 'patch'], '{general_expense_category}', [GeneralExpenseCategoryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::GENERAL_EXPENSE_CATEGORIES, 'edit'));
             Route::delete('{general_expense_category}', [GeneralExpenseCategoryController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::GENERAL_EXPENSE_CATEGORIES, 'delete'));
             Route::post('bulk-destroy', [GeneralExpenseCategoryController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::GENERAL_EXPENSE_CATEGORIES, 'delete'));
             Route::post('{id}/restore', [GeneralExpenseCategoryController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::GENERAL_EXPENSE_CATEGORIES, 'delete'));
@@ -231,7 +231,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('general-expenses')->name('general-expenses.')->group(function () use ($perm) {
             Route::get('/', [GeneralExpenseController::class, 'index'])->name('index')->middleware($perm(ModulePermission::GENERAL_EXPENSES, 'view'));
             Route::post('/', [GeneralExpenseController::class, 'store'])->name('store')->middleware($perm(ModulePermission::GENERAL_EXPENSES, 'create'));
-            Route::patch('{generalExpense}', [GeneralExpenseController::class, 'update'])->name('update')->middleware($perm(ModulePermission::GENERAL_EXPENSES, 'edit'));
+            Route::match(['put', 'patch'], '{generalExpense}', [GeneralExpenseController::class, 'update'])->name('update')->middleware($perm(ModulePermission::GENERAL_EXPENSES, 'edit'));
             Route::delete('{generalExpense}', [GeneralExpenseController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::GENERAL_EXPENSES, 'delete'));
         });
 
@@ -242,7 +242,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::get('/', [DonorProfileController::class, 'index'])->name('index')->middleware($perm(ModulePermission::DONOR_PROFILES, 'view'));
             Route::post('/', [DonorProfileController::class, 'store'])->name('store')->middleware($perm(ModulePermission::DONOR_PROFILES, 'create'));
             Route::get('{donor_profile}', [DonorProfileController::class, 'show'])->name('show')->middleware($perm(ModulePermission::DONOR_PROFILES, 'view'));
-            Route::put('{donor_profile}', [DonorProfileController::class, 'update'])->name('update')->middleware($perm(ModulePermission::DONOR_PROFILES, 'edit'));
+            Route::match(['put', 'patch'], '{donor_profile}', [DonorProfileController::class, 'update'])->name('update')->middleware($perm(ModulePermission::DONOR_PROFILES, 'edit'));
             Route::delete('{donor_profile}', [DonorProfileController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::DONOR_PROFILES, 'delete'));
             Route::post('{id}/restore', [DonorProfileController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::DONOR_PROFILES, 'delete'));
         });
@@ -254,7 +254,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::get('/', [BankAccountController::class, 'index'])->name('index')->middleware($perm(ModulePermission::ACCOUNTS, 'view'));
             Route::post('/', [BankAccountController::class, 'store'])->name('store')->middleware($perm(ModulePermission::ACCOUNTS, 'create'));
             Route::post('bulk-destroy', [BankAccountController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::ACCOUNTS, 'delete'));
-            Route::put('{account}', [BankAccountController::class, 'update'])->name('update')->middleware($perm(ModulePermission::ACCOUNTS, 'edit'));
+            Route::match(['put', 'patch'], '{account}', [BankAccountController::class, 'update'])->name('update')->middleware($perm(ModulePermission::ACCOUNTS, 'edit'));
             Route::delete('{account}', [BankAccountController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::ACCOUNTS, 'delete'));
             Route::post('{id}/restore', [BankAccountController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::ACCOUNTS, 'delete'));
         });
@@ -265,7 +265,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         Route::prefix('faqs')->name('faqs.')->group(function () use ($perm) {
             Route::get('/', [FaqController::class, 'index'])->name('index')->middleware($perm(ModulePermission::FAQS, 'view'));
             Route::post('/', [FaqController::class, 'store'])->name('store')->middleware($perm(ModulePermission::FAQS, 'create'));
-            Route::put('{faq}', [FaqController::class, 'update'])->name('update')->middleware($perm(ModulePermission::FAQS, 'edit'));
+            Route::match(['put', 'patch'], '{faq}', [FaqController::class, 'update'])->name('update')->middleware($perm(ModulePermission::FAQS, 'edit'));
             Route::delete('{faq}', [FaqController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::FAQS, 'delete'));
             Route::post('bulk-destroy', [FaqController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::FAQS, 'delete'));
             Route::post('{id}/restore', [FaqController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::FAQS, 'delete'));
@@ -301,7 +301,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::post('/', [BeneficiaryController::class, 'store'])->name('store')->middleware($perm(ModulePermission::BENEFICIARIES, 'create'));
             Route::get('{beneficiary}', [BeneficiaryController::class, 'show'])->name('show')->middleware($perm(ModulePermission::BENEFICIARIES, 'view'));
             Route::get('{beneficiary}/edit', [BeneficiaryController::class, 'edit'])->name('edit')->middleware($perm(ModulePermission::BENEFICIARIES, 'edit'));
-            Route::put('{beneficiary}', [BeneficiaryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::BENEFICIARIES, 'edit'));
+            Route::match(['put', 'patch'], '{beneficiary}', [BeneficiaryController::class, 'update'])->name('update')->middleware($perm(ModulePermission::BENEFICIARIES, 'edit'));
             Route::delete('{beneficiary}', [BeneficiaryController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::BENEFICIARIES, 'delete'));
 
             Route::patch('{beneficiary}/status', [BeneficiaryController::class, 'updateStatus'])->name('status')->middleware($perm(ModulePermission::BENEFICIARIES, 'update_status'));
@@ -311,7 +311,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
 
             // Beneficiary Assessments (nested)
             Route::post('{beneficiary}/assessments', [BeneficiaryAssessmentController::class, 'store'])->name('assessments.store')->middleware($perm(ModulePermission::BENEFICIARY_ASSESSMENTS, 'create'));
-            Route::put('{beneficiary}/assessments/{assessment}', [BeneficiaryAssessmentController::class, 'update'])->name('assessments.update')->middleware($perm(ModulePermission::BENEFICIARY_ASSESSMENTS, 'edit'));
+            Route::match(['put', 'patch'], '{beneficiary}/assessments/{assessment}', [BeneficiaryAssessmentController::class, 'update'])->name('assessments.update')->middleware($perm(ModulePermission::BENEFICIARY_ASSESSMENTS, 'edit'));
         });
     });
 });
