@@ -138,9 +138,11 @@ class StripeGateway implements PaymentGateway
             'payment_behavior' => 'default_incomplete',
             'payment_settings' => [
                 'save_default_payment_method' => 'on_subscription',
-                // Keep recurring donations to card-based wallets and Link,
-                // same as one-off donations (see createPaymentIntent()).
-                'automatic_payment_methods' => ['enabled' => true],
+                // Subscriptions do not accept `automatic_payment_methods`
+                // (that is a PaymentIntent/SetupIntent param). Restrict to
+                // card-based wallets (Apple Pay / Google Pay ride on `card`)
+                // and Link via payment_method_types instead.
+                'payment_method_types' => ['card', 'link'],
             ],
             // `confirmation_secret` is itself an expandable field on the
             // invoice, so it must be expanded via the nested path below;
