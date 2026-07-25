@@ -9,6 +9,7 @@ use App\Http\Controllers\Site\Auth\DonorPasswordResetLinkController;
 use App\Http\Controllers\Site\Auth\NewDonorPasswordController;
 use App\Http\Controllers\Site\Auth\RegisteredDonorController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController as FortifyAuthenticatedSessionController;
 
 Route::prefix('account')->name('account.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -17,6 +18,10 @@ Route::prefix('account')->name('account.')->group(function () {
             ->middleware('throttle:5,1');
 
         Route::get('login', [AuthenticatedDonorSessionController::class, 'create'])->name('login');
+        Route::post('login', [FortifyAuthenticatedSessionController::class, 'store'])
+            ->middleware(array_filter([
+                config('fortify.limiters.login') ? 'throttle:'.config('fortify.limiters.login') : null,
+            ]));
 
         Route::get('forgot-password', [DonorPasswordResetLinkController::class, 'create'])->name('password.request');
         Route::post('forgot-password', [DonorPasswordResetLinkController::class, 'store'])

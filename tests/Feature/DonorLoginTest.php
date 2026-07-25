@@ -29,7 +29,7 @@ class DonorLoginTest extends TestCase
     {
         $user = User::factory()->donor()->create(['password' => bcrypt('password123')]);
 
-        $response = $this->post(route('login.store'), [
+        $response = $this->post(route('account.login'), [
             'email' => $user->email,
             'password' => 'password123',
         ]);
@@ -42,7 +42,7 @@ class DonorLoginTest extends TestCase
     {
         $user = User::factory()->staff()->create(['password' => bcrypt('password123')]);
 
-        $response = $this->post(route('login.store'), [
+        $response = $this->post(route('account.login'), [
             'email' => $user->email,
             'password' => 'password123',
         ]);
@@ -55,7 +55,7 @@ class DonorLoginTest extends TestCase
     {
         $user = User::factory()->donor()->create(['password' => bcrypt('password123')]);
 
-        $response = $this->post(route('login.store'), [
+        $response = $this->post(route('account.login'), [
             'email' => $user->email,
             'password' => 'wrong-password',
         ]);

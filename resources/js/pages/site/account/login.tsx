@@ -17,7 +17,7 @@ export default function AccountLogin({ status }: { status?: string }) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    form.post(route("login.store"));
+    form.post(route("account.login"));
   };
 
   return (
