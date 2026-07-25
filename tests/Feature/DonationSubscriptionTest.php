@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Contracts\PaymentGateway;
+use App\Enums\DonationStatus;
 use App\Enums\DonationSubscriptionStatus;
 use App\Enums\RecurrenceFrequency;
 use App\Models\Campaign;
+use App\Models\Donation;
 use App\Models\DonationSubscription;
 use App\Models\DonorProfile;
 use Database\Seeders\FinancialFoundationSeeder;
@@ -99,6 +101,14 @@ class DonationSubscriptionTest extends TestCase
         $this->assertSame($campaign->id, $subscription->allocations->first()->campaign_id);
         $this->assertFalse($subscription->allocations->first()->is_general);
 
+        $pendingDonations = Donation::query()
+            ->where('donation_subscription_id', $subscription->id)
+            ->get();
+        $this->assertCount(1, $pendingDonations);
+        $this->assertSame(DonationStatus::Pending, $pendingDonations->first()->status);
+        $this->assertTrue($pendingDonations->first()->is_recurring);
+        $this->assertSame($response->json('paymentIntentId'), $pendingDonations->first()->stripe_payment_intent_id);
+
         $profile = DonorProfile::query()->where('user_id', $subscription->donor_id)->firstOrFail();
         $this->assertNotNull($profile->stripe_customer_id);
         $this->assertSame($subscription->stripe_customer_id, $profile->stripe_customer_id);
@@ -170,6 +180,12 @@ class DonationSubscriptionTest extends TestCase
         $this->assertTrue($subscription->allocations->contains(fn ($a) => $a->campaign_id === $campaignOne->id && $a->amount_cents === 3000));
         $this->assertTrue($subscription->allocations->contains(fn ($a) => $a->campaign_id === $campaignTwo->id && $a->amount_cents === 4000));
         $this->assertTrue($subscription->allocations->contains(fn ($a) => $a->is_general && $a->amount_cents === 3000));
+
+        $pendingDonations = Donation::query()->where('donation_subscription_id', $subscription->id)->get();
+        $this->assertCount(3, $pendingDonations);
+        $this->assertTrue($pendingDonations->every(fn (Donation $donation) => $donation->status === DonationStatus::Pending));
+        $this->assertSame(1, $pendingDonations->where('stripe_payment_intent_id', $response->json('paymentIntentId'))->count());
+        $this->assertSame(2, $pendingDonations->whereNull('stripe_payment_intent_id')->count());
     }
 
     public function test_subscribe_falls_back_to_general_when_an_allocations_campaign_is_unavailable(): void

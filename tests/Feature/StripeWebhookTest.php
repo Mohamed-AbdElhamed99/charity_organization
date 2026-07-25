@@ -396,4 +396,119 @@ class StripeWebhookTest extends TestCase
         $subscription->refresh();
         $this->assertSame(DonationSubscriptionStatus::Canceled, $subscription->status);
     }
+
+    public function test_payment_intent_succeeded_for_subscription_invoice_finalizes_pending_donations(): void
+    {
+        $campaign = Campaign::factory()->create([
+            'status' => 'active',
+            'is_public' => true,
+            'open_donation_form' => true,
+            'collected_amount' => 0,
+        ]);
+
+        $subscription = DonationSubscription::factory()->forCampaign($campaign)->create([
+            'amount_cents' => 5000,
+            'stripe_subscription_id' => 'sub_pi_invoice_1',
+        ]);
+
+        $pending = Donation::factory()->pending()->create([
+            'donor_id' => $subscription->donor_id,
+            'campaign_id' => $campaign->id,
+            'donation_subscription_id' => $subscription->id,
+            'amount' => 5000,
+            'is_recurring' => true,
+            'stripe_payment_intent_id' => 'pi_sub_first_1',
+            'stripe_invoice_id' => null,
+        ]);
+
+        $eventPayload = [
+            'id' => 'evt_pi_sub_succeeded_1',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => 'pi_sub_first_1',
+                    'object' => 'payment_intent',
+                    'amount_received' => 5000,
+                    'latest_charge' => 'ch_sub_first_1',
+                    'invoice' => 'in_sub_first_1',
+                    'metadata' => [],
+                    'description' => 'Subscription creation',
+                ],
+            ],
+        ];
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom($eventPayload));
+
+        $pending->refresh();
+        $this->assertSame(DonationStatus::Succeeded, $pending->status);
+        $this->assertSame('in_sub_first_1', $pending->stripe_invoice_id);
+        $this->assertNotNull($pending->transaction_id);
+
+        $campaign->refresh();
+        $this->assertSame(5000, $campaign->collected_amount);
+
+        $this->getJson(route('donations.status', 'pi_sub_first_1'))
+            ->assertOk()
+            ->assertJsonPath('status', 'succeeded')
+            ->assertJsonPath('is_recurring', true);
+    }
+
+    public function test_subscription_payment_intent_then_invoice_paid_does_not_double_record(): void
+    {
+        $subscription = DonationSubscription::factory()->create([
+            'amount_cents' => 4000,
+            'stripe_subscription_id' => 'sub_pi_then_invoice',
+        ]);
+
+        Donation::factory()->pending()->create([
+            'donor_id' => $subscription->donor_id,
+            'donation_subscription_id' => $subscription->id,
+            'campaign_id' => null,
+            'is_general' => true,
+            'amount' => 4000,
+            'is_recurring' => true,
+            'stripe_payment_intent_id' => 'pi_then_invoice_1',
+            'stripe_invoice_id' => null,
+        ]);
+
+        $service = app(DonationWebhookService::class);
+
+        $service->handle(Event::constructFrom([
+            'id' => 'evt_pi_then_invoice_1',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => 'pi_then_invoice_1',
+                    'object' => 'payment_intent',
+                    'amount_received' => 4000,
+                    'latest_charge' => 'ch_then_invoice_1',
+                    'invoice' => 'in_then_invoice_1',
+                    'metadata' => [],
+                ],
+            ],
+        ]));
+
+        $service->handle(Event::constructFrom([
+            'id' => 'evt_invoice_after_pi_1',
+            'type' => 'invoice.paid',
+            'data' => [
+                'object' => [
+                    'object' => 'invoice',
+                    'id' => 'in_then_invoice_1',
+                    'amount_paid' => 4000,
+                    'parent' => [
+                        'subscription_details' => [
+                            'subscription' => 'sub_pi_then_invoice',
+                        ],
+                    ],
+                ],
+            ],
+        ]));
+
+        $this->assertSame(
+            1,
+            Donation::query()->where('donation_subscription_id', $subscription->id)->count()
+        );
+        $this->assertSame(1, Transaction::query()->where('transaction_type', 'donation')->count());
+    }
 }

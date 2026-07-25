@@ -39,6 +39,13 @@ class FakePaymentGateway implements PaymentGateway
     public array $canceledSubscriptions = [];
 
     /**
+     * Optional per-invoice overrides for resolveInvoicePaymentDetails().
+     *
+     * @var array<string, array{paymentIntentId?: string|null, chargeId?: string|null, subscriptionId?: string|null, amountPaid?: int|null}>
+     */
+    public array $invoicePaymentDetailsById = [];
+
+    /**
      * Captured arguments of each createSubscription() call, for tests to
      * assert the correct frequency/interval was requested.
      *
@@ -129,9 +136,13 @@ class FakePaymentGateway implements PaymentGateway
 
     public function resolveInvoicePaymentDetails(string $invoiceId): array
     {
+        $override = $this->invoicePaymentDetailsById[$invoiceId] ?? [];
+
         return [
-            'paymentIntentId' => 'pi_test_invoice_'.$invoiceId,
-            'chargeId' => 'ch_test_invoice_'.$invoiceId,
+            'paymentIntentId' => $override['paymentIntentId'] ?? 'pi_test_invoice_'.$invoiceId,
+            'chargeId' => $override['chargeId'] ?? 'ch_test_invoice_'.$invoiceId,
+            'subscriptionId' => $override['subscriptionId'] ?? null,
+            'amountPaid' => $override['amountPaid'] ?? null,
         ];
     }
 

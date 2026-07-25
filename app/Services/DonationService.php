@@ -10,6 +10,7 @@ use App\Enums\CampaignStatus;
 use App\Enums\DonationStatus;
 use App\Enums\DonationSubscriptionStatus;
 use App\Enums\StripeStatus;
+use App\Mail\DonationReceiptMail;
 use App\Models\Campaign;
 use App\Models\Currency;
 use App\Models\Donation;
@@ -19,7 +20,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\DonationReceiptMail;
+
 class DonationService
 {
     public function __construct(
@@ -40,7 +41,7 @@ class DonationService
             $dto->phone,
             $dto->countryId,
         );
-        
+
         [$isGeneral, $campaignId] = $this->resolveCampaignAssignment($dto->isGeneral, $dto->campaignId);
 
         $chargeCents = $dto->donorCoversFee
@@ -82,7 +83,8 @@ class DonationService
                 ],
             ]);
         });
-Mail::to($donor->email)->send(new DonationReceiptMail($donation));
+        Mail::to($donor->email)->send(new DonationReceiptMail($donation));
+
         return [
             'clientSecret' => $paymentIntent->clientSecret,
             'publishableKey' => config('services.stripe.key'),
@@ -97,15 +99,17 @@ Mail::to($donor->email)->send(new DonationReceiptMail($donation));
     }
 
     /**
-     * Creates a monthly recurring donation. The first invoice's PaymentIntent
-     * is confirmed client-side exactly like a one-time gift; subsequent
-     * monthly charges are billed automatically by Stripe and reconciled via
-     * the `invoice.paid` webhook (see DonationWebhookService).
+     * Creates a recurring donation. Pending Donation rows are created up front
+     * (one per allocation) keyed to the first invoice's PaymentIntent so the
+     * thank-you page can poll donation status. Those rows are finalized by
+     * `payment_intent.succeeded` (when the PI references an invoice) or
+     * `invoice.paid`. Later renewals create additional Donation rows via the
+     * same webhook reconciliation.
      *
      * Note: recurring donations are not gross-ed up for fee-cover the same
      * way one-time gifts are, since the actual processing fee can vary
      * slightly cycle to cycle; the donor's chosen amount is charged as-is
-     * each month and `donor_covers_fee` is recorded for reporting only.
+     * each cycle and `donor_covers_fee` is recorded for reporting only.
      *
      * @return array<string, mixed>
      */
@@ -172,11 +176,32 @@ Mail::to($donor->email)->send(new DonationReceiptMail($donation));
                 ],
             ]);
 
-            foreach ($resolvedAllocations as $allocation) {
-                $subscription->allocations()->create([
+            foreach ($resolvedAllocations as $index => $allocation) {
+                $allocationModel = $subscription->allocations()->create([
                     'campaign_id' => $allocation['campaignId'],
                     'is_general' => $allocation['isGeneral'],
                     'amount_cents' => $allocation['amountCents'],
+                ]);
+
+                // Pending rows let the thank-you page poll donation status by
+                // the first invoice's PaymentIntent, matching one-time gifts.
+                // Only the first allocation stores the PI (unique column);
+                // siblings share the subscription/invoice for reconciliation.
+                Donation::create([
+                    'transaction_id' => null,
+                    'donor_id' => $donor->id,
+                    'campaign_id' => $allocation['campaignId'],
+                    'donation_subscription_id' => $subscription->id,
+                    'is_general' => $allocation['isGeneral'],
+                    'amount' => $allocation['amountCents'],
+                    'status' => DonationStatus::Pending,
+                    'stripe_status' => StripeStatus::Pending,
+                    'stripe_payment_intent_id' => $index === 0 ? $subscriptionIntent->paymentIntentId : null,
+                    'donor_covers_fee' => $dto->donorCoversFee,
+                    'is_anonymous' => $dto->isAnonymous,
+                    'is_recurring' => true,
+                    'donor_message' => $dto->donorMessage,
+                    'metadata' => ['allocation_id' => $allocationModel->id],
                 ]);
             }
 

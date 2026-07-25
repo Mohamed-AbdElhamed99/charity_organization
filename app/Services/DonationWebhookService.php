@@ -63,10 +63,26 @@ class DonationWebhookService
         /** @var PaymentIntent $paymentIntent */
         $paymentIntent = $event->data->object;
 
-        // Subscription invoices are reconciled via the invoice.paid handler
-        // below to avoid double-recording the same charge.
-        if (($paymentIntent->metadata->is_recurring ?? '0') === '1') {
-            $webhookEvent->update(['processed_at' => now()]);
+        $invoiceId = $this->resolveInvoiceIdFromPaymentIntent($paymentIntent);
+
+        // Subscription invoice PaymentIntents have empty metadata and no local
+        // one-time donation row until reconcile creates/finalizes them. Prefer
+        // the invoice path so fee splits and renewals stay consistent.
+        if ($invoiceId !== null) {
+            $chargeId = $this->resolveChargeId($paymentIntent);
+
+            if ($chargeId === null) {
+                return;
+            }
+
+            $this->reconcilePaidSubscriptionInvoice(
+                invoiceId: $invoiceId,
+                stripeSubscriptionId: null,
+                paymentIntentId: $paymentIntent->id,
+                chargeId: $chargeId,
+                amountPaidCents: (int) $paymentIntent->amount_received,
+                webhookEvent: $webhookEvent,
+            );
 
             return;
         }
@@ -107,11 +123,12 @@ class DonationWebhookService
         /** @var PaymentIntent $paymentIntent */
         $paymentIntent = $event->data->object;
 
-        $donation = Donation::query()
+        $donations = Donation::query()
             ->where('stripe_payment_intent_id', $paymentIntent->id)
-            ->first();
+            ->where('status', '!=', DonationStatus::Succeeded)
+            ->get();
 
-        if ($donation !== null && $donation->status !== DonationStatus::Succeeded) {
+        foreach ($donations as $donation) {
             $donation->update([
                 'status' => DonationStatus::Failed,
                 'stripe_status' => StripeStatus::Failed,
@@ -133,15 +150,74 @@ class DonationWebhookService
         $invoice = $event->data->object;
 
         $subscriptionId = $this->resolveSubscriptionIdFromInvoice($invoice);
+        $paymentDetails = $this->gateway->resolveInvoicePaymentDetails($invoice->id);
+        $chargeId = $paymentDetails['chargeId'] ?? null;
 
-        if ($subscriptionId === null) {
+        if ($chargeId === null) {
+            return;
+        }
+
+        $this->reconcilePaidSubscriptionInvoice(
+            invoiceId: $invoice->id,
+            stripeSubscriptionId: $subscriptionId ?? ($paymentDetails['subscriptionId'] ?? null),
+            paymentIntentId: $paymentDetails['paymentIntentId'] ?? null,
+            chargeId: $chargeId,
+            amountPaidCents: (int) ($invoice->amount_paid ?? $paymentDetails['amountPaid'] ?? 0),
+            webhookEvent: $webhookEvent,
+        );
+    }
+
+    /**
+     * Idempotently record one Donation per subscription allocation for a paid
+     * invoice. Finalizes pending first-cycle rows (created at checkout for
+     * thank-you polling) or creates renewal rows.
+     */
+    private function reconcilePaidSubscriptionInvoice(
+        string $invoiceId,
+        ?string $stripeSubscriptionId,
+        ?string $paymentIntentId,
+        string $chargeId,
+        int $amountPaidCents,
+        WebhookEvent $webhookEvent,
+    ): void {
+        if (Donation::query()->where('stripe_invoice_id', $invoiceId)->where('status', DonationStatus::Succeeded)->exists()) {
+            $webhookEvent->update(['processed_at' => now()]);
+
+            return;
+        }
+
+        if ($stripeSubscriptionId === null && $paymentIntentId !== null) {
+            $stripeSubscriptionId = Donation::query()
+                ->where('stripe_payment_intent_id', $paymentIntentId)
+                ->whereNotNull('donation_subscription_id')
+                ->with('donationSubscription')
+                ->first()
+                ?->donationSubscription
+                ?->stripe_subscription_id;
+        }
+
+        if ($stripeSubscriptionId === null) {
+            $paymentDetails = $this->gateway->resolveInvoicePaymentDetails($invoiceId);
+            $stripeSubscriptionId = $paymentDetails['subscriptionId'] ?? null;
+            $paymentIntentId ??= $paymentDetails['paymentIntentId'] ?? null;
+
+            if (($paymentDetails['chargeId'] ?? null) !== null) {
+                $chargeId = $paymentDetails['chargeId'];
+            }
+
+            if (($paymentDetails['amountPaid'] ?? null) !== null && $amountPaidCents === 0) {
+                $amountPaidCents = (int) $paymentDetails['amountPaid'];
+            }
+        }
+
+        if ($stripeSubscriptionId === null) {
             $webhookEvent->update(['processed_at' => now()]);
 
             return;
         }
 
         $subscription = DonationSubscription::query()
-            ->where('stripe_subscription_id', $subscriptionId)
+            ->where('stripe_subscription_id', $stripeSubscriptionId)
             ->with('allocations')
             ->first();
 
@@ -151,60 +227,78 @@ class DonationWebhookService
             return;
         }
 
-        $alreadyRecorded = Donation::query()->where('stripe_invoice_id', $invoice->id)->exists();
+        $pendingDonations = Donation::query()
+            ->where('donation_subscription_id', $subscription->id)
+            ->where('status', DonationStatus::Pending)
+            ->where(function ($query) use ($invoiceId, $paymentIntentId) {
+                $query->whereNull('stripe_invoice_id')
+                    ->orWhere('stripe_invoice_id', $invoiceId);
 
-        if ($alreadyRecorded) {
-            $webhookEvent->update(['processed_at' => now()]);
+                if ($paymentIntentId !== null) {
+                    $query->orWhere('stripe_payment_intent_id', $paymentIntentId);
+                }
+            })
+            ->orderBy('id')
+            ->get();
 
-            return;
-        }
-
-        $paymentDetails = $this->gateway->resolveInvoicePaymentDetails($invoice->id);
-        $chargeId = $paymentDetails['chargeId'] ?? null;
-
-        if ($chargeId === null) {
-            return;
-        }
-
-        $totalGrossCents = (int) $invoice->amount_paid;
+        $totalGrossCents = $amountPaidCents > 0 ? $amountPaidCents : $subscription->amount_cents;
         $totalFeeCents = $this->gateway->actualFeeFor($chargeId)
             ?? (int) round(((float) config('services.stripe.fee_percent') / 100) * $totalGrossCents);
 
         $metadata = $subscription->metadata ?? [];
-        $allocations = $subscription->allocations;
-        $allocationCount = $allocations->count();
-        $assignedFeeCents = 0;
 
-        // Each allocation gets its own Donation + Transaction row, with the
-        // invoice's total actual fee apportioned proportionally to each
-        // allocation's share of the total charge. The last allocation
-        // absorbs any rounding remainder so the parts always sum to the
-        // invoice's real total fee.
-        foreach ($allocations as $index => $allocation) {
-            $feeCents = $index === $allocationCount - 1
-                ? $totalFeeCents - $assignedFeeCents
-                : (int) round($totalFeeCents * $allocation->amount_cents / max($totalGrossCents, 1));
-            $assignedFeeCents += $feeCents;
+        if ($pendingDonations->isNotEmpty()) {
+            $donationCount = $pendingDonations->count();
+            $assignedFeeCents = 0;
 
-            $donation = Donation::create([
-                'transaction_id' => null,
-                'donor_id' => $subscription->donor_id,
-                'campaign_id' => $allocation->campaign_id,
-                'donation_subscription_id' => $subscription->id,
-                'is_general' => $allocation->is_general,
-                'amount' => $allocation->amount_cents,
-                'status' => DonationStatus::Pending,
-                'stripe_status' => StripeStatus::Pending,
-                'stripe_payment_intent_id' => $paymentDetails['paymentIntentId'] ?? null,
-                'stripe_invoice_id' => $invoice->id,
-                'donor_covers_fee' => $subscription->donor_covers_fee,
-                'is_anonymous' => (bool) ($metadata['is_anonymous'] ?? false),
-                'is_recurring' => true,
-                'donor_message' => $metadata['donor_message'] ?? null,
-                'metadata' => ['stripe_invoice_id' => $invoice->id, 'allocation_id' => $allocation->id],
-            ]);
+            foreach ($pendingDonations as $index => $donation) {
+                $feeCents = $index === $donationCount - 1
+                    ? $totalFeeCents - $assignedFeeCents
+                    : (int) round($totalFeeCents * $donation->amount / max($totalGrossCents, 1));
+                $assignedFeeCents += $feeCents;
 
-            $this->recordSucceededDonation($donation, $chargeId, $allocation->amount_cents, $feeCents);
+                $donation->update([
+                    'stripe_invoice_id' => $invoiceId,
+                    // Keep the unique payment_intent column on a single row.
+                    'stripe_payment_intent_id' => $index === 0
+                        ? ($paymentIntentId ?? $donation->stripe_payment_intent_id)
+                        : $donation->stripe_payment_intent_id,
+                    'metadata' => array_merge($donation->metadata ?? [], ['stripe_invoice_id' => $invoiceId]),
+                ]);
+
+                $this->recordSucceededDonation($donation->fresh(), $chargeId, $donation->amount, $feeCents);
+            }
+        } else {
+            $allocations = $subscription->allocations;
+            $allocationCount = $allocations->count();
+            $assignedFeeCents = 0;
+
+            foreach ($allocations as $index => $allocation) {
+                $feeCents = $index === $allocationCount - 1
+                    ? $totalFeeCents - $assignedFeeCents
+                    : (int) round($totalFeeCents * $allocation->amount_cents / max($totalGrossCents, 1));
+                $assignedFeeCents += $feeCents;
+
+                $donation = Donation::create([
+                    'transaction_id' => null,
+                    'donor_id' => $subscription->donor_id,
+                    'campaign_id' => $allocation->campaign_id,
+                    'donation_subscription_id' => $subscription->id,
+                    'is_general' => $allocation->is_general,
+                    'amount' => $allocation->amount_cents,
+                    'status' => DonationStatus::Pending,
+                    'stripe_status' => StripeStatus::Pending,
+                    'stripe_payment_intent_id' => $index === 0 ? $paymentIntentId : null,
+                    'stripe_invoice_id' => $invoiceId,
+                    'donor_covers_fee' => $subscription->donor_covers_fee,
+                    'is_anonymous' => (bool) ($metadata['is_anonymous'] ?? false),
+                    'is_recurring' => true,
+                    'donor_message' => $metadata['donor_message'] ?? null,
+                    'metadata' => ['stripe_invoice_id' => $invoiceId, 'allocation_id' => $allocation->id],
+                ]);
+
+                $this->recordSucceededDonation($donation, $chargeId, $allocation->amount_cents, $feeCents);
+            }
         }
 
         if ($subscription->status !== DonationSubscriptionStatus::Active) {
@@ -361,6 +455,17 @@ class DonationWebhookService
         }
 
         return null;
+    }
+
+    private function resolveInvoiceIdFromPaymentIntent(StripeObject $paymentIntent): ?string
+    {
+        if (($paymentIntent->invoice ?? null) === null) {
+            return null;
+        }
+
+        return is_string($paymentIntent->invoice)
+            ? $paymentIntent->invoice
+            : $paymentIntent->invoice->id;
     }
 
     /**

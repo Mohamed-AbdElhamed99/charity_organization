@@ -17,7 +17,7 @@ interface PaymentGateway
 
     public function createPaymentIntent(int $chargeCents, string $currency, array $metadata): PaymentIntentData;
 
-    public function actualFeeFor(string $chargeId):  int|null;
+    public function actualFeeFor(string $chargeId): ?int;
 
     public function constructWebhookEvent(string $payload, string $sigHeader): Event;
 
@@ -40,10 +40,15 @@ interface PaymentGateway
     public function createBillingPortalSession(string $customerId, string $returnUrl): string;
 
     /**
-     * Resolve the PaymentIntent and Charge IDs for a paid invoice, used to
+     * Resolve payment + subscription identifiers for a paid invoice, used to
      * reconcile a subscription's recurring donation into the ledger.
      *
-     * @return array{paymentIntentId: string|null, chargeId: string|null}
+     * @return array{
+     *     paymentIntentId: string|null,
+     *     chargeId: string|null,
+     *     subscriptionId: string|null,
+     *     amountPaid: int|null
+     * }
      */
     public function resolveInvoicePaymentDetails(string $invoiceId): array;
 

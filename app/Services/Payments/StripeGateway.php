@@ -193,8 +193,18 @@ class StripeGateway implements PaymentGateway
         $payment = $invoice->payments?->data[0]->payment ?? null;
         $paymentIntent = $payment?->payment_intent;
 
+        $subscription = $invoice->parent?->subscription_details?->subscription ?? null;
+        $subscriptionId = $subscription === null
+            ? null
+            : (is_string($subscription) ? $subscription : $subscription->id);
+
         if ($paymentIntent === null) {
-            return ['paymentIntentId' => null, 'chargeId' => null];
+            return [
+                'paymentIntentId' => null,
+                'chargeId' => null,
+                'subscriptionId' => $subscriptionId,
+                'amountPaid' => isset($invoice->amount_paid) ? (int) $invoice->amount_paid : null,
+            ];
         }
 
         $chargeId = $paymentIntent->latest_charge !== null
@@ -204,6 +214,8 @@ class StripeGateway implements PaymentGateway
         return [
             'paymentIntentId' => $paymentIntent->id,
             'chargeId' => $chargeId,
+            'subscriptionId' => $subscriptionId,
+            'amountPaid' => isset($invoice->amount_paid) ? (int) $invoice->amount_paid : null,
         ];
     }
 
