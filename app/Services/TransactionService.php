@@ -6,14 +6,15 @@ use App\Contracts\Services\TransactionServiceInterface;
 use App\DTOs\CreateTransactionDTO;
 use App\DTOs\UpdateTransactionDTO;
 use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use App\Models\BankAccount;
 use App\Models\Beneficiary;
 use App\Models\CampaignExpense;
 use App\Models\GeneralExpense;
 use App\Models\Transaction;
+use App\Models\TransactionType;
 use App\Models\Transfer;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -26,9 +27,15 @@ class TransactionService implements TransactionServiceInterface
 {
     public function getPaginatedTransactions(array $filters): LengthAwarePaginator
     {
-        return $this->buildFilteredQuery($filters)
-            ->orderByDesc('transaction_date')
-            ->orderByDesc('id')
+        $query = $this->buildFilteredQuery($filters);
+
+        if (($filters['view'] ?? null) === 'calendar') {
+            $query->orderBy('transaction_date')->orderBy('id');
+        } else {
+            $query->orderByDesc('transaction_date')->orderByDesc('id');
+        }
+
+        return $query
             ->paginate($filters['per_page'] ?? 20)
             ->withQueryString();
     }
@@ -57,18 +64,21 @@ class TransactionService implements TransactionServiceInterface
                 $dto->exchangeRate,
             );
 
-            $direction = $dto->transactionType === TransactionType::Transfer
+            $transactionType = TransactionType::query()->findOrFail($dto->transactionTypeId);
+            $isTransfer = $transactionType->isTransfer();
+
+            $direction = $isTransfer
                 ? TransactionDirection::Out
                 : $dto->direction;
 
             $description = $dto->description;
-            if ($dto->transactionType === TransactionType::Transfer && $dto->transfer !== null) {
+            if ($isTransfer && $dto->transfer !== null) {
                 $description = $this->buildTransferDescription($dto->transfer, $description);
             }
 
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => $dto->transactionType,
+                'transaction_type_id' => $transactionType->id,
                 'direction' => $direction,
                 'currency_id' => $account->currency_id,
                 'original_currency_id' => $fx['original_currency_id'],
@@ -77,6 +87,7 @@ class TransactionService implements TransactionServiceInterface
                 'net_amount' => $fx['net_amount'],
                 'original_amount' => $fx['original_amount'],
                 'exchange_rate' => $fx['exchange_rate'],
+                'currency_equivalents' => $this->normalizeCurrencyEquivalents($dto->currencyEquivalents),
                 'transaction_date' => $dto->transactionDate,
                 'reference_number' => $dto->referenceNumber,
                 'description' => $description ?? '',
@@ -85,11 +96,24 @@ class TransactionService implements TransactionServiceInterface
                 'created_by' => $dto->createdBy,
             ]);
 
-            $this->applyRunningBalance($account, $transaction);
+            $this->applyBalances(
+                $account,
+                $transaction,
+                $dto->balanceBefore,
+                $dto->runningBalance,
+            );
 
-            if ($dto->transactionType === TransactionType::Transfer && $dto->transfer !== null) {
+            if ($isTransfer && $dto->transfer !== null) {
                 $this->syncTransferDetail($transaction, $dto->transfer, $fx['net_amount']);
             }
+
+            $this->syncTransactionLinks(
+                $transaction,
+                $dto->beneficiaryIds,
+                $dto->campaignIds,
+                $dto->meetingIds,
+                $dto->generalExpenseIds,
+            );
 
             $this->attachDocuments($transaction, $dto->documents ?? []);
 
@@ -99,7 +123,12 @@ class TransactionService implements TransactionServiceInterface
                 'originalCurrency',
                 'paymentMethod',
                 'creator',
+                'transactionType',
                 'transfer.recipient',
+                'beneficiaries',
+                'campaigns',
+                'meetings',
+                'generalExpenses',
                 'media',
             ]);
         });
@@ -123,18 +152,21 @@ class TransactionService implements TransactionServiceInterface
                 $dto->exchangeRate,
             );
 
-            $direction = $dto->transactionType === TransactionType::Transfer
+            $transactionType = TransactionType::query()->findOrFail($dto->transactionTypeId);
+            $isTransfer = $transactionType->isTransfer();
+
+            $direction = $isTransfer
                 ? TransactionDirection::Out
                 : $dto->direction;
 
             $description = $dto->description;
-            if ($dto->transactionType === TransactionType::Transfer && $dto->transfer !== null) {
+            if ($isTransfer && $dto->transfer !== null) {
                 $description = $this->buildTransferDescription($dto->transfer, $description);
             }
 
             $transaction->update([
                 'account_id' => $dto->accountId,
-                'transaction_type' => $dto->transactionType,
+                'transaction_type_id' => $transactionType->id,
                 'direction' => $direction,
                 'currency_id' => $account->currency_id,
                 'original_currency_id' => $fx['original_currency_id'],
@@ -143,6 +175,7 @@ class TransactionService implements TransactionServiceInterface
                 'net_amount' => $fx['net_amount'],
                 'original_amount' => $fx['original_amount'],
                 'exchange_rate' => $fx['exchange_rate'],
+                'currency_equivalents' => $this->normalizeCurrencyEquivalents($dto->currencyEquivalents),
                 'transaction_date' => $dto->transactionDate,
                 'reference_number' => $dto->referenceNumber,
                 'description' => $description ?? '',
@@ -150,7 +183,7 @@ class TransactionService implements TransactionServiceInterface
                 'payment_method_id' => $dto->paymentMethodId,
             ]);
 
-            if ($dto->transactionType === TransactionType::Transfer) {
+            if ($isTransfer) {
                 if ($dto->transfer !== null) {
                     $this->syncTransferDetail($transaction, $dto->transfer, $fx['net_amount']);
                 }
@@ -169,13 +202,34 @@ class TransactionService implements TransactionServiceInterface
                 );
             }
 
+            if ($dto->balanceBefore !== null || $dto->runningBalance !== null) {
+                $this->applyBalanceOverrides(
+                    $transaction->fresh(),
+                    $dto->balanceBefore,
+                    $dto->runningBalance,
+                );
+            }
+
+            $this->syncTransactionLinks(
+                $transaction,
+                $dto->beneficiaryIds,
+                $dto->campaignIds,
+                $dto->meetingIds,
+                $dto->generalExpenseIds,
+            );
+
             return $transaction->fresh([
                 'account',
                 'currency',
                 'originalCurrency',
                 'paymentMethod',
                 'creator',
+                'transactionType',
                 'transfer.recipient',
+                'beneficiaries',
+                'campaigns',
+                'meetings',
+                'generalExpenses',
                 'media',
             ]);
         });
@@ -201,7 +255,7 @@ class TransactionService implements TransactionServiceInterface
 
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::CampaignExpense,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_CAMPAIGN_EXPENSE),
                 'direction' => TransactionDirection::Out,
                 'currency_id' => $account->currency_id,
                 'original_currency_id' => $fx['original_currency_id'],
@@ -261,7 +315,7 @@ class TransactionService implements TransactionServiceInterface
 
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::GeneralExpense,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_GENERAL_EXPENSE),
                 'direction' => TransactionDirection::Out,
                 'currency_id' => $account->currency_id,
                 'original_currency_id' => $fx['original_currency_id'],
@@ -280,8 +334,7 @@ class TransactionService implements TransactionServiceInterface
 
             $this->applyRunningBalance($account, $transaction);
 
-            GeneralExpense::create([
-                'transaction_id' => $transaction->id,
+            $expense = GeneralExpense::create([
                 'category_id' => $data['category_id'] ?? null,
                 'name' => $data['name'],
                 'amount' => $fx['net_amount'],
@@ -292,7 +345,15 @@ class TransactionService implements TransactionServiceInterface
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            return $transaction->fresh(['account', 'currency', 'originalCurrency', 'paymentMethod', 'generalExpense']);
+            $transaction->generalExpenses()->attach($expense->id);
+
+            return $transaction->fresh([
+                'account',
+                'currency',
+                'originalCurrency',
+                'paymentMethod',
+                'generalExpenses',
+            ]);
         });
     }
 
@@ -316,7 +377,7 @@ class TransactionService implements TransactionServiceInterface
 
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::Transfer,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_TRANSFER),
                 'direction' => TransactionDirection::Out,
                 'currency_id' => $account->currency_id,
                 'original_currency_id' => $fx['original_currency_id'],
@@ -341,7 +402,9 @@ class TransactionService implements TransactionServiceInterface
 
     public function reverseTransaction(Transaction $transaction, int $userId): Transaction
     {
-        if ($transaction->transaction_type === TransactionType::Adjustment) {
+        $transaction->loadMissing('transactionType');
+
+        if ($transaction->transactionType?->isAdjustment()) {
             throw new InvalidArgumentException('Adjustment transactions cannot be reversed.');
         }
 
@@ -356,7 +419,7 @@ class TransactionService implements TransactionServiceInterface
 
             $reversal = Transaction::create([
                 'account_id' => $transaction->account_id,
-                'transaction_type' => TransactionType::Adjustment,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_ADJUSTMENT),
                 'direction' => $oppositeDirection,
                 'currency_id' => $transaction->currency_id,
                 'original_currency_id' => $transaction->original_currency_id,
@@ -375,11 +438,11 @@ class TransactionService implements TransactionServiceInterface
 
             $this->applyRunningBalance($account, $reversal);
 
-            if ($transaction->transaction_type === TransactionType::Transfer) {
+            if ($transaction->transactionType?->isTransfer()) {
                 $transaction->transfer?->delete();
             }
 
-            return $reversal->fresh(['account', 'currency', 'originalCurrency']);
+            return $reversal->fresh(['account', 'currency', 'originalCurrency', 'transactionType']);
         });
     }
 
@@ -396,8 +459,16 @@ class TransactionService implements TransactionServiceInterface
         $campaignId = $filters['campaign_id'] ?? null;
 
         return Transaction::query()
-            ->with(['account', 'currency', 'originalCurrency', 'paymentMethod', 'creator'])
-            ->when($type, fn ($query) => $query->where('transaction_type', $type))
+            ->with(['account', 'currency', 'originalCurrency', 'paymentMethod', 'creator', 'transactionType'])
+            ->when($type, function ($query) use ($type) {
+                if (is_numeric($type)) {
+                    $query->where('transaction_type_id', (int) $type);
+
+                    return;
+                }
+
+                $query->ofType((string) $type);
+            })
             ->when($direction, fn ($query) => $query->where('direction', $direction))
             ->when($dateFrom && $dateTo, fn ($query) => $query->inDateRange($dateFrom, $dateTo))
             ->when($dateFrom && ! $dateTo, fn ($query) => $query->where('transaction_date', '>=', $dateFrom))
@@ -407,7 +478,7 @@ class TransactionService implements TransactionServiceInterface
                 $query->where(function ($builder) use ($campaignId) {
                     $builder
                         ->whereHas('campaignExpense', fn ($q) => $q->where('campaign_id', $campaignId))
-                        ->orWhereHas('transfer', fn ($q) => $q->where('campaign_id', $campaignId))
+                        ->orWhereHas('campaigns', fn ($q) => $q->where('campaigns.id', $campaignId))
                         ->orWhereHas('donation', fn ($q) => $q->where('campaign_id', $campaignId));
                 });
             });
@@ -423,6 +494,43 @@ class TransactionService implements TransactionServiceInterface
      *     net_amount: float
      * }
      */
+    /**
+     * @param  array<int, array{currency_code?: mixed, equivalent?: mixed}>|null  $rows
+     * @return array<int, array{currency_code: string, equivalent: float}>|null
+     */
+    private function normalizeCurrencyEquivalents(?array $rows): ?array
+    {
+        if ($rows === null || $rows === []) {
+            return null;
+        }
+
+        $normalized = [];
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $code = strtoupper(trim((string) ($row['currency_code'] ?? '')));
+            $equivalent = $row['equivalent'] ?? null;
+
+            if ($code === '' || ! is_numeric($equivalent) || (float) $equivalent <= 0) {
+                continue;
+            }
+
+            $normalized[$code] = [
+                'currency_code' => $code,
+                'equivalent' => round((float) $equivalent, 8),
+            ];
+        }
+
+        if ($normalized === []) {
+            return null;
+        }
+
+        return array_values($normalized);
+    }
+
     private function resolveFxAmounts(
         BankAccount $account,
         float $grossAmount,
@@ -469,7 +577,6 @@ class TransactionService implements TransactionServiceInterface
         [$recipientType, $recipientId, $recipientLabel] = $this->resolveRecipient($transfer);
 
         $payload = [
-            'campaign_id' => $transfer['campaign_id'] ?? null,
             'recipient_type' => $recipientType,
             'recipient_id' => $recipientId,
             'recipient_label' => $recipientLabel,
@@ -514,6 +621,25 @@ class TransactionService implements TransactionServiceInterface
     }
 
     /**
+     * @param  array<int, int>  $beneficiaryIds
+     * @param  array<int, int>  $campaignIds
+     * @param  array<int, int>  $meetingIds
+     * @param  array<int, int>  $generalExpenseIds
+     */
+    private function syncTransactionLinks(
+        Transaction $transaction,
+        array $beneficiaryIds,
+        array $campaignIds,
+        array $meetingIds,
+        array $generalExpenseIds,
+    ): void {
+        $transaction->beneficiaries()->sync(array_values(array_unique(array_map('intval', $beneficiaryIds))));
+        $transaction->campaigns()->sync(array_values(array_unique(array_map('intval', $campaignIds))));
+        $transaction->meetings()->sync(array_values(array_unique(array_map('intval', $meetingIds))));
+        $transaction->generalExpenses()->sync(array_values(array_unique(array_map('intval', $generalExpenseIds))));
+    }
+
+    /**
      * @param  array<string, mixed>  $transfer
      */
     private function buildTransferDescription(array $transfer, ?string $fallback): string
@@ -554,16 +680,100 @@ class TransactionService implements TransactionServiceInterface
         }
     }
 
+    private function applyBalances(
+        BankAccount $account,
+        Transaction $transaction,
+        ?float $balanceBefore,
+        ?float $runningBalance,
+    ): void {
+        $computedBefore = $this->resolveBalanceBefore($account, $transaction->id);
+        $before = $balanceBefore !== null
+            ? round($balanceBefore, 2)
+            : (float) $computedBefore;
+
+        $after = $runningBalance !== null
+            ? round($runningBalance, 2)
+            : (float) ($transaction->direction === TransactionDirection::In
+                ? bcadd((string) $before, (string) $transaction->net_amount, 2)
+                : bcsub((string) $before, (string) $transaction->net_amount, 2));
+
+        $transaction->update([
+            'balance_before' => $before,
+            'running_balance' => $after,
+        ]);
+    }
+
+    private function applyBalanceOverrides(
+        Transaction $transaction,
+        ?float $balanceBefore,
+        ?float $runningBalance,
+    ): void {
+        $attributes = [];
+
+        if ($balanceBefore !== null) {
+            $attributes['balance_before'] = round($balanceBefore, 2);
+        }
+
+        if ($runningBalance !== null) {
+            $attributes['running_balance'] = round($runningBalance, 2);
+        }
+
+        if ($attributes !== []) {
+            $transaction->update($attributes);
+        }
+    }
+
     private function applyRunningBalance(BankAccount $account, Transaction $transaction): void
     {
-        $runningBalance = $this->computeRunningBalance(
-            $account,
-            $transaction->direction,
-            (string) $transaction->net_amount,
-            $transaction->id,
-        );
+        $this->applyBalances($account, $transaction, null, null);
+    }
 
-        $transaction->update(['running_balance' => $runningBalance]);
+    public function calculateMonthBalances(string $month): void
+    {
+        $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+
+        DB::transaction(function () use ($start, $end) {
+            $transactions = Transaction::query()
+                ->whereBetween('transaction_date', [$start->toDateString(), $end->toDateString()])
+                ->orderBy('account_id')
+                ->orderBy('transaction_date')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->groupBy('account_id');
+
+            foreach ($transactions as $accountTransactions) {
+                /** @var Collection<int, Transaction> $accountTransactions */
+                $first = $accountTransactions->first();
+
+                if ($first === null) {
+                    continue;
+                }
+
+                if ($first->running_balance === null) {
+                    $date = $first->transaction_date?->toDateString() ?? (string) $first->transaction_date;
+
+                    throw new InvalidArgumentException(
+                        "Set {$date} balance to calculate based on it",
+                    );
+                }
+
+                $balance = (string) $first->running_balance;
+
+                foreach ($accountTransactions->slice(1) as $transaction) {
+                    $before = $balance;
+                    $balance = $transaction->direction === TransactionDirection::In
+                        ? bcadd($balance, (string) $transaction->net_amount, 2)
+                        : bcsub($balance, (string) $transaction->net_amount, 2);
+
+                    $transaction->update([
+                        'balance_before' => $before,
+                        'running_balance' => $balance,
+                    ]);
+                }
+            }
+        });
     }
 
     private function recalculateAccountBalances(BankAccount $account): void
@@ -577,20 +787,20 @@ class TransactionService implements TransactionServiceInterface
             ->get();
 
         foreach ($transactions as $transaction) {
+            $before = $balance;
             $balance = $transaction->direction === TransactionDirection::In
                 ? bcadd($balance, (string) $transaction->net_amount, 2)
                 : bcsub($balance, (string) $transaction->net_amount, 2);
 
-            $transaction->update(['running_balance' => $balance]);
+            $transaction->update([
+                'balance_before' => $before,
+                'running_balance' => $balance,
+            ]);
         }
     }
 
-    private function computeRunningBalance(
-        BankAccount $account,
-        TransactionDirection $direction,
-        string $netAmount,
-        ?int $excludeTransactionId = null,
-    ): string {
+    private function resolveBalanceBefore(BankAccount $account, ?int $excludeTransactionId = null): string
+    {
         $lastBalance = Transaction::query()
             ->where('account_id', $account->id)
             ->when($excludeTransactionId, fn ($query) => $query->where('id', '!=', $excludeTransactionId))
@@ -599,7 +809,16 @@ class TransactionService implements TransactionServiceInterface
             ->orderByDesc('id')
             ->value('running_balance');
 
-        $balance = (string) ($lastBalance ?? $account->opening_balance);
+        return (string) ($lastBalance ?? $account->opening_balance);
+    }
+
+    private function computeRunningBalance(
+        BankAccount $account,
+        TransactionDirection $direction,
+        string $netAmount,
+        ?int $excludeTransactionId = null,
+    ): string {
+        $balance = $this->resolveBalanceBefore($account, $excludeTransactionId);
 
         return $direction === TransactionDirection::In
             ? bcadd($balance, $netAmount, 2)

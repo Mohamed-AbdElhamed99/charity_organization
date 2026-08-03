@@ -3,19 +3,23 @@
 namespace App\DTOs;
 
 use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use Illuminate\Http\UploadedFile;
 
 readonly class UpdateTransactionDTO
 {
     /**
+     * @param  array<int, array{currency_code: string, equivalent: float|int|string}>|null  $currencyEquivalents
      * @param  array<string, mixed>|null  $transfer
      * @param  array<int, UploadedFile>|null  $documents
      * @param  array<int, int>|null  $removeDocumentIds
+     * @param  array<int, int>  $beneficiaryIds
+     * @param  array<int, int>  $campaignIds
+     * @param  array<int, int>  $meetingIds
+     * @param  array<int, int>  $generalExpenseIds
      */
     public function __construct(
         public int $accountId,
-        public TransactionType $transactionType,
+        public int $transactionTypeId,
         public TransactionDirection $direction,
         public float $grossAmount,
         public float $feeAmount,
@@ -27,8 +31,15 @@ readonly class UpdateTransactionDTO
         public ?int $originalCurrencyId = null,
         public ?float $originalAmount = null,
         public ?float $exchangeRate = null,
+        public ?array $currencyEquivalents = null,
+        public ?float $balanceBefore = null,
+        public ?float $runningBalance = null,
         public ?array $transfer = null,
         public ?array $documents = null,
         public ?array $removeDocumentIds = null,
+        public array $beneficiaryIds = [],
+        public array $campaignIds = [],
+        public array $meetingIds = [],
+        public array $generalExpenseIds = [],
     ) {}
 }

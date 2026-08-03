@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\Transaction;
+use App\Models\TransactionType;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -51,20 +51,20 @@ class DashboardController extends Controller
         $lastMonthStart = $now->copy()->subMonthNoOverflow()->startOfMonth()->toDateString();
         $lastMonthEnd = $now->copy()->subMonthNoOverflow()->endOfMonth()->toDateString();
 
-        $donationType = TransactionType::Donation->value;
+        $donationTypeId = TransactionType::idForCode(TransactionType::CODE_DONATION);
         $directionIn = TransactionDirection::In->value;
-        $campaignExpenseType = TransactionType::CampaignExpense->value;
-        $generalExpenseType = TransactionType::GeneralExpense->value;
+        $campaignExpenseTypeId = TransactionType::idForCode(TransactionType::CODE_CAMPAIGN_EXPENSE);
+        $generalExpenseTypeId = TransactionType::idForCode(TransactionType::CODE_GENERAL_EXPENSE);
         $directionOut = TransactionDirection::Out->value;
 
         $thisMonthDonations = Transaction::query()
-            ->where('transaction_type', $donationType)
+            ->where('transaction_type_id', $donationTypeId)
             ->where('direction', $directionIn)
             ->whereBetween('transaction_date', [$thisMonthStart, $thisMonthEnd])
             ->sum('net_amount');
 
         $lastMonthDonations = Transaction::query()
-            ->where('transaction_type', $donationType)
+            ->where('transaction_type_id', $donationTypeId)
             ->where('direction', $directionIn)
             ->whereBetween('transaction_date', [$lastMonthStart, $lastMonthEnd])
             ->sum('net_amount');
@@ -84,7 +84,14 @@ class DashboardController extends Controller
             'cents' => Money::decimalToCents((float) ($latestRunningBalance ?? 0)),
         ];
 
-        $monthlySummary = $this->buildMonthlySummary($now, $donationType, $directionIn, $campaignExpenseType, $generalExpenseType, $directionOut);
+        $monthlySummary = $this->buildMonthlySummary(
+            $now,
+            $donationTypeId,
+            $directionIn,
+            $campaignExpenseTypeId,
+            $generalExpenseTypeId,
+            $directionOut,
+        );
 
         return [$stats, $monthlySummary];
     }
@@ -96,10 +103,10 @@ class DashboardController extends Controller
      */
     private function buildMonthlySummary(
         Carbon $now,
-        string $donationType,
+        int $donationTypeId,
         string $directionIn,
-        string $campaignExpenseType,
-        string $generalExpenseType,
+        int $campaignExpenseTypeId,
+        int $generalExpenseTypeId,
         string $directionOut,
     ): array {
         $twelveMonthsAgo = $now->copy()->subMonths(11)->startOfMonth()->toDateString();
@@ -113,19 +120,18 @@ class DashboardController extends Controller
             ->where('transaction_date', '>=', $twelveMonthsAgo)
             ->selectRaw("{$monthExpr} as month")
             ->selectRaw(
-                'SUM(CASE WHEN transaction_type = ? AND direction = ? THEN net_amount ELSE 0 END) as donations_decimal',
-                [$donationType, $directionIn],
+                'SUM(CASE WHEN transaction_type_id = ? AND direction = ? THEN net_amount ELSE 0 END) as donations_decimal',
+                [$donationTypeId, $directionIn],
             )
             ->selectRaw(
-                'SUM(CASE WHEN transaction_type IN (?, ?) AND direction = ? THEN net_amount ELSE 0 END) as expenses_decimal',
-                [$campaignExpenseType, $generalExpenseType, $directionOut],
+                'SUM(CASE WHEN transaction_type_id IN (?, ?) AND direction = ? THEN net_amount ELSE 0 END) as expenses_decimal',
+                [$campaignExpenseTypeId, $generalExpenseTypeId, $directionOut],
             )
             ->groupBy('month')
             ->orderBy('month')
             ->get()
             ->keyBy('month');
 
-        // Build the full 12-month range so months with no transactions still appear.
         return collect(range(0, 11))
             ->map(function (int $offset) use ($now, $rows): array {
                 $month = $now->copy()->subMonths(11 - $offset)->format('Y-m');

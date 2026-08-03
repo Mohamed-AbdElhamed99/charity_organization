@@ -44,6 +44,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_general_expenses', 'create_general_expenses', 'edit_general_expenses', 'delete_general_expenses',
             'view_campaign_expenses', 'create_campaign_expenses', 'edit_campaign_expenses',
             'view_payment_methods', 'create_payment_methods', 'edit_payment_methods', 'delete_payment_methods',
+            'view_currencies', 'create_currencies', 'edit_currencies', 'delete_currencies',
             'view_general_expense_categories', 'create_general_expense_categories', 'edit_general_expense_categories', 'delete_general_expense_categories',
             'view_donor_profiles', 'create_donor_profiles', 'edit_donor_profiles', 'delete_donor_profiles',
             'view_transfers', 'create_transfers',

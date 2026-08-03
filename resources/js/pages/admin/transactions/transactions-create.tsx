@@ -9,10 +9,13 @@ import type {
   BeneficiaryOption,
   CampaignOption,
   CurrencyOption,
+  GeneralExpenseOption,
+  MeetingOption,
   PaymentMethodOption,
   SelectOption,
   UserOption,
 } from '@/types/models/transaction'
+import type { TransactionTypeOption } from '@/types/models/transaction-type'
 
 type PageProps = {
   accounts: AccountOption[]
@@ -21,9 +24,11 @@ type PageProps = {
   campaigns: CampaignOption[]
   users: UserOption[]
   beneficiaries: BeneficiaryOption[]
-  transactionTypes: SelectOption[]
+  meetings: MeetingOption[]
+  generalExpenses: GeneralExpenseOption[]
+  transactionTypes: TransactionTypeOption[]
   directions: SelectOption[]
-  defaultType?: string | null
+  defaultTypeId?: number | null
 }
 
 export default function TransactionsCreate() {

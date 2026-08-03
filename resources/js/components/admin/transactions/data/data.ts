@@ -1,16 +1,12 @@
-import type { TransactionDirection, TransactionType } from '@/types/enums'
+import type { TransactionDirection } from '@/types/enums'
 
-export const transactionTypeOptions: {
-  label: string
-  value: TransactionType
-}[] = [
-  { label: 'Donation', value: 'donation' },
-  { label: 'Campaign Expense', value: 'campaign_expense' },
-  { label: 'General Expense', value: 'general_expense' },
-  { label: 'Transfer', value: 'transfer' },
-  { label: 'Bank Transfer', value: 'bank_transfer' },
-  { label: 'Adjustment', value: 'adjustment' },
-]
+export type TransactionTypeCode =
+  | 'donation'
+  | 'campaign_expense'
+  | 'general_expense'
+  | 'transfer'
+  | 'bank_transfer'
+  | 'adjustment'
 
 export const transactionDirectionOptions: {
   label: string

@@ -27,11 +27,6 @@ class Transfer extends Model
         return $this->belongsTo(Transaction::class);
     }
 
-    public function campaign(): BelongsTo
-    {
-        return $this->belongsTo(Campaign::class);
-    }
-
     public function recipient(): MorphTo
     {
         return $this->morphTo();
@@ -40,11 +35,6 @@ class Transfer extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function scopeForCampaign($query, int $campaignId)
-    {
-        return $query->where('campaign_id', $campaignId);
     }
 
     public function scopeInDateRange($query, string $from, string $to)

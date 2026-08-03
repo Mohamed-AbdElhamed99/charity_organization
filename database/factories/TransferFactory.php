@@ -21,9 +21,6 @@ class TransferFactory extends Factory
 
         return [
             'transaction_id' => TransactionFactory::new()->transfer()->create()->id,
-            'campaign_id' => fake()->boolean(70)
-                ? Campaign::inRandomOrder()->value('id')
-                : null,
             'recipient_type' => $asUser ? User::class : null,
             'recipient_id' => $asUser
                 ? (User::inRandomOrder()->value('id') ?? User::factory())
@@ -36,6 +33,23 @@ class TransferFactory extends Factory
             'notes' => fake()->optional(0.3)->sentence(),
             'created_by' => User::inRandomOrder()->value('id') ?? User::factory(),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Transfer $transfer): void {
+            if (! fake()->boolean(70)) {
+                return;
+            }
+
+            $campaignId = Campaign::query()->inRandomOrder()->value('id');
+
+            if ($campaignId === null) {
+                return;
+            }
+
+            $transfer->transaction?->campaigns()->syncWithoutDetaching([$campaignId]);
+        });
     }
 
     public function toUser(?User $user = null): static

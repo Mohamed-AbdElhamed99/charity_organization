@@ -13,30 +13,33 @@ class TransferResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $campaigns = $this->whenLoaded('transaction', function () {
+            if (! $this->transaction?->relationLoaded('campaigns')) {
+                return [];
+            }
+
+            return $this->transaction->campaigns->map(fn ($campaign) => [
+                'id' => $campaign->id,
+                'title_en' => $campaign->title_en,
+                'title_ar' => $campaign->title_ar,
+            ])->values()->all();
+        });
+
         return [
             'id' => $this->id,
             'transaction_id' => $this->transaction_id,
             'transaction' => new TransactionResource($this->whenLoaded('transaction')),
-            'campaign_id' => $this->campaign_id,
-            'campaign' => $this->whenLoaded('campaign', fn () => [
-                'id' => $this->campaign->id,
-                'title_en' => $this->campaign->title_en,
-                'title_ar' => $this->campaign->title_ar,
-            ]),
-            'recipient_type' => $this->recipient_type?->value,
-            'recipient_type_label' => $this->recipient_type?->label(),
-            'recipient_name' => $this->recipient_name,
+            'campaigns' => $campaigns,
+            'campaign_id' => $this->whenLoaded('transaction', function () {
+                return $this->transaction?->relationLoaded('campaigns')
+                    ? $this->transaction->campaigns->first()?->id
+                    : null;
+            }),
+            'recipient_type' => $this->recipient_type,
+            'recipient_label' => $this->recipient_label,
             'recipient_phone' => $this->recipient_phone,
-            'beneficiary_id' => $this->beneficiary_id,
-            'beneficiary' => $this->whenLoaded('beneficiary', fn () => [
-                'id' => $this->beneficiary->id,
-                'display_name' => $this->beneficiary->displayName ?? null,
-            ]),
-            'user_id' => $this->user_id,
-            'user' => $this->whenLoaded('user', fn () => [
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-            ]),
+            'recipient_id' => $this->recipient_id,
+            'recipient' => $this->whenLoaded('recipient'),
             'amount' => $this->amount,
             'transfer_date' => $this->transfer_date?->toDateString(),
             'purpose' => $this->purpose,

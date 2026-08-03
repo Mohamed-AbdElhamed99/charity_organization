@@ -31,17 +31,36 @@ import { Label } from '@/components/ui/label'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { createTransactionsColumns } from './transactions-columns'
 import { TransactionsReverseDialog } from './transactions-reverse-dialog'
-import {
-  transactionDirectionOptions,
-  transactionTypeOptions,
-} from './data/data'
+import { transactionDirectionOptions } from './data/data'
 import type { AccountOption, Transaction } from '@/types/models/transaction'
+import type { TransactionTypeOption } from '@/types/models/transaction-type'
 import type { Paginated } from '@/types/pagination'
 
 type TransactionsTableProps = {
   transactions: Paginated<Transaction>
   accounts: AccountOption[]
+  transactionTypes: TransactionTypeOption[]
   search: Record<string, unknown>
+  mode?: 'list' | 'calendar'
+}
+
+function toDateInputValue(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function monthRange(offsetMonths: number): { from: string; to: string } {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth() + offsetMonths, 1)
+  const end = new Date(now.getFullYear(), now.getMonth() + offsetMonths + 1, 0)
+
+  return {
+    from: toDateInputValue(start),
+    to: toDateInputValue(end),
+  }
 }
 
 function buildExportUrl(search: Record<string, unknown>): string {
@@ -69,8 +88,11 @@ function buildExportUrl(search: Record<string, unknown>): string {
 export function TransactionsTable({
   transactions,
   accounts,
+  transactionTypes,
   search,
+  mode = 'list',
 }: TransactionsTableProps) {
+  const isCalendarMode = mode === 'calendar'
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     type: false,
     direction: false,
@@ -138,6 +160,23 @@ export function TransactionsTable({
       ],
     })
 
+  const applyDateRange = useCallback(
+    (from: string, to: string) => {
+      onColumnFiltersChange((previous) => {
+        const withoutDates = previous.filter(
+          (filter) => filter.id !== 'date_from' && filter.id !== 'date_to',
+        )
+
+        return [
+          ...withoutDates,
+          { id: 'date_from', value: from },
+          { id: 'date_to', value: to },
+        ]
+      })
+    },
+    [onColumnFiltersChange],
+  )
+
   const columns = useMemo(
     () =>
       createTransactionsColumns({
@@ -181,6 +220,14 @@ export function TransactionsTable({
     (table.getColumn('date_from')?.getFilterValue() as string) ?? ''
   const dateTo = (table.getColumn('date_to')?.getFilterValue() as string) ?? ''
 
+  const thisMonthRange = useMemo(() => monthRange(0), [])
+  const lastMonthRange = useMemo(() => monthRange(-1), [])
+
+  const isThisMonthActive =
+    dateFrom === thisMonthRange.from && dateTo === thisMonthRange.to
+  const isLastMonthActive =
+    dateFrom === lastMonthRange.from && dateTo === lastMonthRange.to
+
   useEffect(() => {
     ensurePageInRange(transactions.last_page)
   }, [transactions.last_page, ensurePageInRange])
@@ -205,9 +252,9 @@ export function TransactionsTable({
                 {
                   columnId: 'type',
                   title: 'Type',
-                  options: transactionTypeOptions.map((option) => ({
-                    label: option.label,
-                    value: option.value,
+                  options: transactionTypes.map((option) => ({
+                    label: option.name,
+                    value: option.code,
                   })),
                 },
                 {
@@ -226,36 +273,72 @@ export function TransactionsTable({
               ]}
             />
 
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="date_from" className="text-xs text-muted-foreground">
-                  From date
-                </Label>
-                <Input
-                  id="date_from"
-                  type="date"
-                  value={dateFrom}
-                  onChange={(event) =>
-                    table.getColumn('date_from')?.setFilterValue(event.target.value)
-                  }
-                  className="h-8 w-40"
-                />
+            {!isCalendarMode && (
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="grid gap-1.5">
+                  <Label
+                    htmlFor="date_from"
+                    className="text-xs text-muted-foreground"
+                  >
+                    From date
+                  </Label>
+                  <Input
+                    id="date_from"
+                    type="date"
+                    value={dateFrom}
+                    onChange={(event) =>
+                      table
+                        .getColumn('date_from')
+                        ?.setFilterValue(event.target.value)
+                    }
+                    className="h-8 w-40"
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label
+                    htmlFor="date_to"
+                    className="text-xs text-muted-foreground"
+                  >
+                    To date
+                  </Label>
+                  <Input
+                    id="date_to"
+                    type="date"
+                    value={dateTo}
+                    onChange={(event) =>
+                      table
+                        .getColumn('date_to')
+                        ?.setFilterValue(event.target.value)
+                    }
+                    className="h-8 w-40"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={isThisMonthActive ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8"
+                    onClick={() =>
+                      applyDateRange(thisMonthRange.from, thisMonthRange.to)
+                    }
+                  >
+                    This month
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={isLastMonthActive ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8"
+                    onClick={() =>
+                      applyDateRange(lastMonthRange.from, lastMonthRange.to)
+                    }
+                  >
+                    Last month
+                  </Button>
+                </div>
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="date_to" className="text-xs text-muted-foreground">
-                  To date
-                </Label>
-                <Input
-                  id="date_to"
-                  type="date"
-                  value={dateTo}
-                  onChange={(event) =>
-                    table.getColumn('date_to')?.setFilterValue(event.target.value)
-                  }
-                  className="h-8 w-40"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           <Button

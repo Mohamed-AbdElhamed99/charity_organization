@@ -25,16 +25,34 @@ class GeneralExpenseFactory extends Factory
         $vendor = fake()->randomElement(static::VENDORS);
 
         return [
-            'transaction_id' => TransactionFactory::new()->generalExpense()->create()->id,
-            'category_id'    => GeneralExpenseCategory::inRandomOrder()->value('id'),
-            'name'           => $vendor . ' ' . fake()->randomElement(['Monthly Subscription', 'Annual Plan', 'Pro Plan', 'License']),
-            'amount'         => fake()->randomFloat(2, 10, 2_000),
-            'expense_date'   => fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
-            'vendor_name'    => $vendor,
-            'is_recurring'   => fake()->boolean(60),
-            'created_by'     => User::inRandomOrder()->value('id') ?? User::factory(),
-            'notes'          => fake()->optional(0.2)->sentence(),
+            'category_id' => GeneralExpenseCategory::inRandomOrder()->value('id'),
+            'name' => $vendor.' '.fake()->randomElement(['Monthly Subscription', 'Annual Plan', 'Pro Plan', 'License']),
+            'amount' => fake()->randomFloat(2, 10, 2_000),
+            'expense_date' => fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
+            'vendor_name' => $vendor,
+            'is_recurring' => fake()->boolean(60),
+            'created_by' => User::inRandomOrder()->value('id') ?? User::factory(),
+            'notes' => fake()->optional(0.2)->sentence(),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (GeneralExpense $expense): void {
+            if ($expense->transactions()->exists()) {
+                return;
+            }
+
+            $transaction = TransactionFactory::new()->generalExpense()->create([
+                'gross_amount' => $expense->amount,
+                'net_amount' => $expense->amount,
+                'transaction_date' => $expense->expense_date,
+                'description' => $expense->name,
+                'created_by' => $expense->created_by,
+            ]);
+
+            $expense->transactions()->attach($transaction->id);
+        });
     }
 
     public function recurring(): static

@@ -41,4 +41,12 @@ interface TransactionServiceInterface
     public function createForGeneralExpense(array $data): Transaction;
 
     public function reverseTransaction(Transaction $transaction, int $userId): Transaction;
+
+    /**
+     * Recalculate running balances for all accounts within the given calendar month (Y-m).
+     * Uses each account's first transaction running_balance as the starter; leaves that row unchanged.
+     *
+     * @throws \InvalidArgumentException When an account's first month transaction has no running_balance.
+     */
+    public function calculateMonthBalances(string $month): void;
 }

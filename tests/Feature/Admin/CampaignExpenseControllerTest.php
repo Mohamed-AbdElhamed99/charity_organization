@@ -6,6 +6,7 @@ use App\Models\BankAccount;
 use App\Models\Campaign;
 use App\Models\CampaignExpense;
 use App\Models\Item;
+use App\Models\TransactionType;
 use App\Models\User;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -69,7 +70,7 @@ class CampaignExpenseControllerTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('transactions', [
-            'transaction_type' => 'campaign_expense',
+            'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_CAMPAIGN_EXPENSE),
             'direction' => 'out',
             'net_amount' => 500,
         ]);

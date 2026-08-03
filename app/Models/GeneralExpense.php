@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GeneralExpense extends Model
@@ -17,17 +18,31 @@ class GeneralExpense extends Model
     protected function casts(): array
     {
         return [
-            'expense_date'  => 'date',
-            'amount'        => 'decimal:2',
-            'is_recurring'  => 'boolean',
+            'expense_date' => 'date',
+            'amount' => 'decimal:2',
+            'is_recurring' => 'boolean',
         ];
     }
 
     // ─── Relationships ────────────────────────────────────────────────────────
 
-    public function transaction(): BelongsTo
+    public function transactions(): MorphToMany
     {
-        return $this->belongsTo(Transaction::class);
+        return $this->morphToMany(Transaction::class, 'transactionable');
+    }
+
+    /**
+     * Primary linked ledger transaction (first morph relation).
+     */
+    protected function transaction(): Attribute
+    {
+        return Attribute::get(function (): ?Transaction {
+            if ($this->relationLoaded('transactions')) {
+                return $this->transactions->first();
+            }
+
+            return $this->transactions()->first();
+        });
     }
 
     public function category(): BelongsTo

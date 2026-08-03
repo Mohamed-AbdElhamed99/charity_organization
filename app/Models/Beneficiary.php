@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -105,10 +106,17 @@ class Beneficiary extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    /** Ledger transactions linked to this beneficiary */
+    public function transactions(): MorphToMany
+    {
+        return $this->morphToMany(Transaction::class, 'transactionable');
+    }
+
     /** Transfers sent directly to this beneficiary */
     public function transfers(): HasMany
     {
-        return $this->hasMany(Transfer::class);
+        return $this->hasMany(Transfer::class, 'recipient_id')
+            ->where('recipient_type', Beneficiary::class);
     }
 
     // ─── Scopes ──────────────────────────────────────────────────────────────

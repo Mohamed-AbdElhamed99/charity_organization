@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { useForm } from '@inertiajs/react'
+import { useEffect, useState } from 'react'
+import { router, useForm } from '@inertiajs/react'
 import { route } from 'ziggy-js'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -14,20 +14,24 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/input-error'
+import { slugify } from '@/lib/utils'
 import { type PaymentMethod } from '@/types/models/payment-method'
 
 type PaymentMethodsActionDialogProps = {
-  currentRow?: PaymentMethod
+  currentRow?: PaymentMethod | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onSuccess?: (method: PaymentMethod) => void
 }
 
 export function PaymentMethodsActionDialog({
   currentRow,
   open,
   onOpenChange,
+  onSuccess,
 }: PaymentMethodsActionDialogProps) {
   const isEdit = !!currentRow
+  const [codeTouched, setCodeTouched] = useState(false)
 
   const form = useForm({
     name: currentRow?.name ?? '',
@@ -40,6 +44,7 @@ export function PaymentMethodsActionDialog({
       return
     }
 
+    setCodeTouched(false)
     form.clearErrors()
     form.setData({
       name: currentRow?.name ?? '',
@@ -51,9 +56,24 @@ export function PaymentMethodsActionDialog({
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
+    const removeFlashListener = router.on('flash', (event) => {
+      const flash = (event as CustomEvent).detail?.flash as
+        | { paymentMethod?: PaymentMethod }
+        | undefined
+      const method = flash?.paymentMethod
+
+      if (method) {
+        onSuccess?.(method)
+      }
+
+      removeFlashListener()
+    })
+
     const options = {
       preserveScroll: true,
       onSuccess: () => onOpenChange(false),
+      onError: () => removeFlashListener(),
+      onCancel: () => removeFlashListener(),
     }
 
     if (isEdit && currentRow) {
@@ -97,7 +117,18 @@ export function PaymentMethodsActionDialog({
             <Input
               id="name"
               value={form.data.name}
-              onChange={(event) => form.setData('name', event.target.value)}
+              onChange={(event) => {
+                const name = event.target.value
+                if (!isEdit && !codeTouched) {
+                  form.setData({
+                    ...form.data,
+                    name,
+                    code: slugify(name).slice(0, 50),
+                  })
+                  return
+                }
+                form.setData('name', name)
+              }}
               required
             />
             <InputError message={form.errors.name} />
@@ -108,7 +139,10 @@ export function PaymentMethodsActionDialog({
             <Input
               id="code"
               value={form.data.code}
-              onChange={(event) => form.setData('code', event.target.value)}
+              onChange={(event) => {
+                setCodeTouched(true)
+                form.setData('code', event.target.value)
+              }}
               required
             />
             <InputError message={form.errors.code} />

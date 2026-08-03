@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources\Admin\Transaction;
 
-use App\Enums\TransactionType;
 use App\Models\Beneficiary;
+use App\Models\TransactionType;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -15,6 +15,10 @@ class TransactionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $type = $this->relationLoaded('transactionType')
+            ? $this->transactionType
+            : $this->transactionType()->first();
+
         return [
             'id' => $this->id,
             'account_id' => $this->account_id,
@@ -23,8 +27,15 @@ class TransactionResource extends JsonResource
                 'name' => $this->account->name,
                 'currency_id' => $this->account->currency_id,
             ]),
-            'transaction_type' => $this->transaction_type?->value,
-            'transaction_type_label' => $this->transaction_type?->label(),
+            'transaction_type_id' => $this->transaction_type_id,
+            'transaction_type' => $type?->code,
+            'transaction_type_label' => $type?->name,
+            'transaction_type_record' => $type ? [
+                'id' => $type->id,
+                'name' => $type->name,
+                'code' => $type->code,
+                'is_system' => $type->is_system,
+            ] : null,
             'direction' => $this->direction?->value,
             'currency_id' => $this->currency_id,
             'currency' => $this->whenLoaded('currency', fn () => [
@@ -41,8 +52,11 @@ class TransactionResource extends JsonResource
             'gross_amount' => $this->gross_amount,
             'fee_amount' => $this->fee_amount,
             'net_amount' => $this->net_amount,
+            'balance_before' => $this->balance_before,
             'original_amount' => $this->original_amount,
             'exchange_rate' => $this->exchange_rate,
+            'currency_equivalents' => $this->currency_equivalents,
+            'currency_equivalent_amounts' => $this->currency_equivalent_amounts,
             'running_balance' => $this->running_balance,
             'transaction_date' => $this->transaction_date?->toDateString(),
             'reference_number' => $this->reference_number,
@@ -81,11 +95,20 @@ class TransactionResource extends JsonResource
                 'amount' => $this->campaignExpense->amount,
                 'expense_date' => $this->campaignExpense->expense_date?->toDateString(),
             ]),
-            'general_expense' => $this->whenLoaded('generalExpense', fn () => [
-                'id' => $this->generalExpense->id,
-                'amount' => $this->generalExpense->amount,
-                'expense_date' => $this->generalExpense->expense_date?->toDateString(),
-            ]),
+            'general_expense' => $this->whenLoaded('generalExpenses', function () {
+                $expense = $this->generalExpenses->first();
+
+                if ($expense === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => $expense->id,
+                    'name' => $expense->name,
+                    'amount' => $expense->amount,
+                    'expense_date' => $expense->expense_date?->toDateString(),
+                ];
+            }),
             'transfer' => $this->whenLoaded('transfer', function () {
                 $recipient = $this->transfer->relationLoaded('recipient') ? $this->transfer->recipient : null;
                 $kind = match ($this->transfer->recipient_type) {
@@ -96,14 +119,6 @@ class TransactionResource extends JsonResource
 
                 return [
                     'id' => $this->transfer->id,
-                    'campaign_id' => $this->transfer->campaign_id,
-                    'campaign' => $this->transfer->relationLoaded('campaign') && $this->transfer->campaign
-                        ? [
-                            'id' => $this->transfer->campaign->id,
-                            'title_en' => $this->transfer->campaign->title_en,
-                            'title_ar' => $this->transfer->campaign->title_ar,
-                        ]
-                        : null,
                     'recipient_kind' => $kind,
                     'recipient_id' => $this->transfer->recipient_id,
                     'recipient_label' => $this->transfer->recipient_label,
@@ -124,25 +139,61 @@ class TransactionResource extends JsonResource
                 'amount' => $this->bankExpense->amount,
                 'expense_date' => $this->bankExpense->expense_date?->toDateString(),
             ]),
-            'export_expenses' => $this->exportAmountForTypes([
-                TransactionType::CampaignExpense,
-                TransactionType::GeneralExpense,
-            ]),
-            'export_donations' => $this->exportAmountForTypes([TransactionType::Donation]),
-            'export_transfer' => $this->exportAmountForTypes([
-                TransactionType::Transfer,
-                TransactionType::BankTransfer,
-            ]),
+            'links' => [
+                'beneficiaries' => $this->whenLoaded('beneficiaries', fn () => $this->beneficiaries->map(fn ($item) => [
+                    'id' => $item->id,
+                    'label' => $item->display_name,
+                ])->values()->all()),
+                'campaigns' => $this->whenLoaded('campaigns', fn () => $this->campaigns->map(fn ($item) => [
+                    'id' => $item->id,
+                    'label' => $item->title_en,
+                ])->values()->all()),
+                'meetings' => $this->whenLoaded('meetings', fn () => $this->meetings->map(fn ($item) => [
+                    'id' => $item->id,
+                    'label' => trim(($item->meeting_number ? "{$item->meeting_number} — " : '').($item->title ?? '')),
+                ])->values()->all()),
+                'general_expenses' => $this->whenLoaded('generalExpenses', fn () => $this->generalExpenses->map(fn ($item) => [
+                    'id' => $item->id,
+                    'label' => $item->name,
+                    'amount' => $item->amount,
+                    'expense_date' => $item->expense_date?->toDateString(),
+                ])->values()->all()),
+            ],
+            'beneficiary_ids' => $this->whenLoaded(
+                'beneficiaries',
+                fn () => $this->beneficiaries->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
+            ),
+            'campaign_ids' => $this->whenLoaded(
+                'campaigns',
+                fn () => $this->campaigns->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
+            ),
+            'meeting_ids' => $this->whenLoaded(
+                'meetings',
+                fn () => $this->meetings->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
+            ),
+            'general_expense_ids' => $this->whenLoaded(
+                'generalExpenses',
+                fn () => $this->generalExpenses->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
+            ),
+            'export_expenses' => $this->exportAmountForCodes([
+                TransactionType::CODE_CAMPAIGN_EXPENSE,
+                TransactionType::CODE_GENERAL_EXPENSE,
+            ], $type),
+            'export_donations' => $this->exportAmountForCodes([TransactionType::CODE_DONATION], $type),
+            'export_transfer' => $this->exportAmountForCodes([
+                TransactionType::CODE_TRANSFER,
+                TransactionType::CODE_BANK_TRANSFER,
+            ], $type),
             'export_details' => $this->exportDetails(),
         ];
     }
 
     /**
-     * @param  array<int, TransactionType>  $types
+     * @param  array<int, string>  $codes
      */
-    private function exportAmountForTypes(array $types): ?string
+    private function exportAmountForCodes(array $codes, ?TransactionType $type): ?string
     {
-        if (! in_array($this->transaction_type, $types, true)) {
+        if ($type === null || ! in_array($type->code, $codes, true)) {
             return null;
         }
 

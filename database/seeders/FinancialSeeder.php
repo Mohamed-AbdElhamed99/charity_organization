@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use App\Models\BankAccount;
 use App\Models\BankExpense;
 use App\Models\Beneficiary;
@@ -16,6 +15,7 @@ use App\Models\GeneralExpenseCategory;
 use App\Models\Item;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
+use App\Models\TransactionType;
 use App\Models\Transfer;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -108,7 +108,7 @@ class FinancialSeeder extends Seeder
             // Create unified ledger entry first
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::Donation,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_DONATION),
                 'direction' => TransactionDirection::In,
                 'currency_id' => $usd->id,
                 'gross_amount' => $gross,
@@ -155,7 +155,7 @@ class FinancialSeeder extends Seeder
 
                     $transaction = Transaction::create([
                         'account_id' => $account->id,
-                        'transaction_type' => TransactionType::CampaignExpense,
+                        'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_CAMPAIGN_EXPENSE),
                         'direction' => TransactionDirection::Out,
                         'currency_id' => $usd->id,
                         'gross_amount' => $amount,
@@ -212,7 +212,7 @@ class FinancialSeeder extends Seeder
         foreach ($orgExpenses as $expense) {
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::GeneralExpense,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_GENERAL_EXPENSE),
                 'direction' => TransactionDirection::Out,
                 'currency_id' => $usd->id,
                 'gross_amount' => $expense['amount'],
@@ -242,7 +242,7 @@ class FinancialSeeder extends Seeder
             $amount = fake()->randomFloat(2, 20, 1_000);
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::GeneralExpense,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_GENERAL_EXPENSE),
                 'direction' => TransactionDirection::Out,
                 'currency_id' => $usd->id,
                 'gross_amount' => $amount,
@@ -255,7 +255,6 @@ class FinancialSeeder extends Seeder
             ]);
 
             GeneralExpense::create([
-                'transaction_id' => $transaction->id,
                 'category_id' => $genCategories->isNotEmpty() ? $genCategories->random()->id : null,
                 'name' => fake()->sentence(3),
                 'amount' => $amount,
@@ -263,7 +262,7 @@ class FinancialSeeder extends Seeder
                 'vendor_name' => fake()->company(),
                 'is_recurring' => fake()->boolean(30),
                 'created_by' => $staffUser->id,
-            ]);
+            ])->transactions()->attach($transaction->id);
         }
 
         // ─── Transfers ────────────────────────────────────────────────────────
@@ -280,7 +279,7 @@ class FinancialSeeder extends Seeder
 
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::Transfer,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_TRANSFER),
                 'direction' => TransactionDirection::Out,
                 'currency_id' => $usd->id,
                 'gross_amount' => $amount,
@@ -294,7 +293,6 @@ class FinancialSeeder extends Seeder
 
             Transfer::create([
                 'transaction_id' => $transaction->id,
-                'campaign_id' => $campaign?->id,
                 'recipient_type' => $isBeneficiary ? Beneficiary::class : null,
                 'recipient_id' => $isBeneficiary ? $beneficiary->id : null,
                 'recipient_label' => $isBeneficiary ? null : fake()->name(),
@@ -304,6 +302,10 @@ class FinancialSeeder extends Seeder
                 'purpose' => fake()->sentence(5),
                 'created_by' => $staffUser->id,
             ]);
+
+            if ($campaign) {
+                $transaction->campaigns()->attach($campaign->id);
+            }
         }
 
         // ─── Bank Expenses ────────────────────────────────────────────────────
@@ -322,7 +324,7 @@ class FinancialSeeder extends Seeder
             foreach (range(1, 3) as $month) {
                 $transaction = Transaction::create([
                     'account_id' => $account->id,
-                    'transaction_type' => TransactionType::BankTransfer,
+                    'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_BANK_TRANSFER),
                     'direction' => TransactionDirection::Out,
                     'currency_id' => $usd->id,
                     'gross_amount' => $fee['amount'],

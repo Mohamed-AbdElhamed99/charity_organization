@@ -6,10 +6,11 @@ use App\Contracts\Services\TransactionServiceInterface;
 use App\DTOs\CreateTransactionDTO;
 use App\DTOs\UpdateTransactionDTO;
 use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use App\Models\BankAccount;
 use App\Models\Currency;
+use App\Models\GeneralExpense;
 use App\Models\Transaction;
+use App\Models\TransactionType;
 use App\Models\Transfer;
 use App\Models\User;
 use Database\Seeders\FinancialFoundationSeeder;
@@ -71,7 +72,7 @@ class TransactionServiceTest extends TestCase
 
         $this->assertDatabaseHas('transactions', [
             'id' => $reversal->id,
-            'transaction_type' => TransactionType::Adjustment->value,
+            'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_ADJUSTMENT),
             'direction' => TransactionDirection::In->value,
             'account_id' => $account->id,
             'net_amount' => '500.00',
@@ -94,7 +95,7 @@ class TransactionServiceTest extends TestCase
         $adjustment = Transaction::factory()->create([
             'account_id' => $account->id,
             'currency_id' => $account->currency_id,
-            'transaction_type' => TransactionType::Adjustment,
+            'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_ADJUSTMENT),
             'direction' => TransactionDirection::In,
             'gross_amount' => 100.00,
             'fee_amount' => 0,
@@ -117,7 +118,7 @@ class TransactionServiceTest extends TestCase
 
         $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
             accountId: $account->id,
-            transactionType: TransactionType::Transfer,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_TRANSFER),
             direction: TransactionDirection::Out,
             grossAmount: 1250.50,
             feeAmount: 0,
@@ -148,7 +149,7 @@ class TransactionServiceTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'id' => $transaction->id,
             'account_id' => $account->id,
-            'transaction_type' => TransactionType::Transfer->value,
+            'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_TRANSFER),
             'direction' => TransactionDirection::Out->value,
             'currency_id' => $account->currency_id,
             'net_amount' => '1250.50',
@@ -168,7 +169,7 @@ class TransactionServiceTest extends TestCase
 
         $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
             accountId: $account->id,
-            transactionType: TransactionType::Transfer,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_TRANSFER),
             direction: TransactionDirection::Out,
             grossAmount: 300,
             feeAmount: 0,
@@ -206,7 +207,7 @@ class TransactionServiceTest extends TestCase
 
         $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
             accountId: $account->id,
-            transactionType: TransactionType::Transfer,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_TRANSFER),
             direction: TransactionDirection::Out,
             grossAmount: 1000,
             feeAmount: 0,
@@ -245,7 +246,7 @@ class TransactionServiceTest extends TestCase
 
         $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
             accountId: $account->id,
-            transactionType: TransactionType::Donation,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
             direction: TransactionDirection::In,
             grossAmount: 100,
             feeAmount: 0,
@@ -263,6 +264,33 @@ class TransactionServiceTest extends TestCase
         $this->assertCount(1, $transaction->getMedia('receipts'));
     }
 
+    public function test_create_transaction_accepts_balance_before_and_after(): void
+    {
+        $user = $this->createStaffUser();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+
+        $this->actingAs($user);
+
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
+            direction: TransactionDirection::In,
+            grossAmount: 100.00,
+            feeAmount: 0,
+            transactionDate: now()->toDateString(),
+            referenceNumber: null,
+            description: 'Balance entry',
+            notes: null,
+            paymentMethodId: null,
+            createdBy: $user->id,
+            balanceBefore: 1000.00,
+            runningBalance: 1100.00,
+        ));
+
+        $this->assertSame('1000.00', (string) $transaction->balance_before);
+        $this->assertSame('1100.00', (string) $transaction->running_balance);
+    }
+
     public function test_create_transaction_records_entry_with_running_balance(): void
     {
         $user = $this->createStaffUser();
@@ -272,7 +300,7 @@ class TransactionServiceTest extends TestCase
 
         $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
             accountId: $account->id,
-            transactionType: TransactionType::Donation,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
             direction: TransactionDirection::In,
             grossAmount: 750.00,
             feeAmount: 25.00,
@@ -286,7 +314,7 @@ class TransactionServiceTest extends TestCase
 
         $this->assertDatabaseHas('transactions', [
             'id' => $transaction->id,
-            'transaction_type' => TransactionType::Donation->value,
+            'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_DONATION),
             'direction' => TransactionDirection::In->value,
             'net_amount' => '725.00',
             'created_by' => $user->id,
@@ -327,7 +355,7 @@ class TransactionServiceTest extends TestCase
 
         $this->transactionService->updateTransaction($first, new UpdateTransactionDTO(
             accountId: $account->id,
-            transactionType: TransactionType::Donation,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
             direction: TransactionDirection::In,
             grossAmount: 200.00,
             feeAmount: 0,
@@ -370,6 +398,141 @@ class TransactionServiceTest extends TestCase
 
         $this->assertSame('52000.00', (string) $transaction->net_amount);
         $this->assertSame($egp->id, $transaction->currency_id);
-        $this->assertSame('52000.00', (string) $transaction->generalExpense->amount);
+        $this->assertSame('52000.00', (string) $transaction->generalExpenses->first()->amount);
+        $this->assertDatabaseHas('transactionables', [
+            'transaction_id' => $transaction->id,
+            'transactionable_type' => GeneralExpense::class,
+            'transactionable_id' => $transaction->generalExpenses->first()->id,
+        ]);
+    }
+
+    public function test_create_transaction_stores_currency_equivalents_and_computes_amounts(): void
+    {
+        $user = $this->createStaffUser();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+        $usd = Currency::query()->where('code', 'USD')->firstOrFail();
+        $egp = Currency::query()->where('code', 'EGP')->firstOrFail();
+        $account->update(['currency_id' => $usd->id]);
+
+        $this->actingAs($user);
+
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
+            direction: TransactionDirection::In,
+            grossAmount: 1000,
+            feeAmount: 0,
+            transactionDate: now()->toDateString(),
+            referenceNumber: null,
+            description: 'Multi currency donation',
+            notes: null,
+            paymentMethodId: null,
+            createdBy: $user->id,
+            currencyEquivalents: [
+                ['currency_code' => 'egp', 'equivalent' => 52],
+            ],
+        ));
+
+        $this->assertEquals([
+            ['currency_code' => 'EGP', 'equivalent' => 52],
+        ], $transaction->currency_equivalents);
+
+        $this->assertEquals([
+            [
+                'currency_code' => 'EGP',
+                'equivalent' => 52.0,
+                'amount' => 52000.0,
+            ],
+        ], $transaction->currency_equivalent_amounts);
+        $this->assertSame($usd->id, $transaction->currency_id);
+        $this->assertNotSame($egp->id, $transaction->currency_id);
+    }
+
+    public function test_update_transaction_can_clear_currency_equivalents(): void
+    {
+        $user = $this->createStaffUser();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+        $usd = Currency::query()->where('code', 'USD')->firstOrFail();
+        $account->update(['currency_id' => $usd->id]);
+
+        $this->actingAs($user);
+
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
+            direction: TransactionDirection::In,
+            grossAmount: 100,
+            feeAmount: 0,
+            transactionDate: now()->toDateString(),
+            referenceNumber: null,
+            description: 'With equivalents',
+            notes: null,
+            paymentMethodId: null,
+            createdBy: $user->id,
+            currencyEquivalents: [
+                ['currency_code' => 'EGP', 'equivalent' => 50],
+            ],
+        ));
+
+        $updated = $this->transactionService->updateTransaction($transaction, new UpdateTransactionDTO(
+            accountId: $account->id,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
+            direction: TransactionDirection::In,
+            grossAmount: 100,
+            feeAmount: 0,
+            transactionDate: $transaction->transaction_date->toDateString(),
+            referenceNumber: null,
+            description: 'Cleared equivalents',
+            notes: null,
+            paymentMethodId: null,
+            currencyEquivalents: [],
+        ));
+
+        $this->assertNull($updated->currency_equivalents);
+        $this->assertSame([], $updated->currency_equivalent_amounts);
+    }
+
+    public function test_create_transaction_keeps_inbound_fx_with_currency_equivalents(): void
+    {
+        $user = $this->createStaffUser();
+        $account = BankAccount::query()->active()->orderBy('id')->firstOrFail();
+        $usd = Currency::query()->where('code', 'USD')->firstOrFail();
+        $egp = Currency::query()->where('code', 'EGP')->firstOrFail();
+        $eur = Currency::query()->where('code', 'EUR')->firstOrFail();
+        $account->update(['currency_id' => $egp->id]);
+
+        $this->actingAs($user);
+
+        $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
+            accountId: $account->id,
+            transactionTypeId: TransactionType::idForCode(TransactionType::CODE_DONATION),
+            direction: TransactionDirection::In,
+            grossAmount: 1000,
+            feeAmount: 0,
+            transactionDate: now()->toDateString(),
+            referenceNumber: null,
+            description: 'FX plus equivalents',
+            notes: null,
+            paymentMethodId: null,
+            createdBy: $user->id,
+            originalCurrencyId: $usd->id,
+            originalAmount: 1000,
+            exchangeRate: 52,
+            currencyEquivalents: [
+                ['currency_code' => 'EUR', 'equivalent' => 0.02],
+            ],
+        ));
+
+        $this->assertSame('52000.00', (string) $transaction->net_amount);
+        $this->assertSame($usd->id, $transaction->original_currency_id);
+        $this->assertSame($egp->id, $transaction->currency_id);
+        $this->assertEquals([
+            [
+                'currency_code' => 'EUR',
+                'equivalent' => 0.02,
+                'amount' => 1040.0,
+            ],
+        ], $transaction->currency_equivalent_amounts);
+        $this->assertSame($eur->code, $transaction->currency_equivalent_amounts[0]['currency_code']);
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -109,10 +110,10 @@ class Campaign extends Model implements HasMedia
         return $this->hasMany(Donation::class);
     }
 
-    /** Transfers linked to this campaign */
-    public function transfers(): HasMany
+    /** Ledger transactions linked to this campaign */
+    public function transactions(): MorphToMany
     {
-        return $this->hasMany(Transfer::class);
+        return $this->morphToMany(Transaction::class, 'transactionable');
     }
 
     /** Meetings linked to this campaign */

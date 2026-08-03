@@ -93,7 +93,7 @@ class StripeWebhookTest extends TestCase
         $service->handle($event);
         $service->handle($event);
 
-        $this->assertSame(1, Transaction::query()->where('transaction_type', 'donation')->count());
+        $this->assertSame(1, Transaction::query()->ofType('donation')->count());
         $donation->refresh();
         $this->assertSame(DonationStatus::Succeeded, $donation->status);
         $this->assertNotNull($donation->transaction_id);
@@ -509,6 +509,6 @@ class StripeWebhookTest extends TestCase
             1,
             Donation::query()->where('donation_subscription_id', $subscription->id)->count()
         );
-        $this->assertSame(1, Transaction::query()->where('transaction_type', 'donation')->count());
+        $this->assertSame(1, Transaction::query()->ofType('donation')->count());
     }
 }

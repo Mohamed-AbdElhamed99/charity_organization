@@ -7,7 +7,6 @@ use App\Enums\DonationStatus;
 use App\Enums\DonationSubscriptionStatus;
 use App\Enums\StripeStatus;
 use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use App\Jobs\SendDonationReceipt;
 use App\Models\BankAccount;
 use App\Models\Campaign;
@@ -16,6 +15,7 @@ use App\Models\Donation;
 use App\Models\DonationSubscription;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
+use App\Models\TransactionType;
 use App\Models\WebhookEvent;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -370,7 +370,7 @@ class DonationWebhookService
 
             $transaction = Transaction::create([
                 'account_id' => $account->id,
-                'transaction_type' => TransactionType::Donation,
+                'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_DONATION),
                 'direction' => TransactionDirection::In,
                 'currency_id' => $currency->id,
                 'gross_amount' => Money::centsToDecimal($grossCents),

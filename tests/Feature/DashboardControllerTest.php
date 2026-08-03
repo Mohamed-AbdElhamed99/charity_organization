@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use App\Models\Campaign;
 use App\Models\Transaction;
 use App\Models\User;
@@ -92,10 +90,10 @@ class DashboardControllerTest extends TestCase
         Transaction::factory()
             ->donation()
             ->create([
-                'net_amount'       => 500.00, // EGP 500.00 → 50000 cents
-                'running_balance'  => 500.00,
+                'net_amount' => 500.00, // EGP 500.00 → 50000 cents
+                'running_balance' => 500.00,
                 'transaction_date' => now()->toDateString(),
-                'created_by'       => $user->id,
+                'created_by' => $user->id,
             ]);
 
         $response = $this->actingAs($user)
@@ -118,15 +116,15 @@ class DashboardControllerTest extends TestCase
         $user->assignRole('staff');
 
         Transaction::factory()->create([
-            'running_balance'  => 1250.75,
+            'running_balance' => 1250.75,
             'transaction_date' => now()->subDay()->toDateString(),
-            'created_by'       => $user->id,
+            'created_by' => $user->id,
         ]);
 
         Transaction::factory()->create([
-            'running_balance'  => 2000.50,
+            'running_balance' => 2000.50,
             'transaction_date' => now()->toDateString(),
-            'created_by'       => $user->id,
+            'created_by' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -167,19 +165,19 @@ class DashboardControllerTest extends TestCase
         Transaction::factory()
             ->donation()
             ->create([
-                'net_amount'       => 300.00,
-                'running_balance'  => 300.00,
+                'net_amount' => 300.00,
+                'running_balance' => 300.00,
                 'transaction_date' => now()->toDateString(),
-                'created_by'       => $user->id,
+                'created_by' => $user->id,
             ]);
 
         Transaction::factory()
             ->campaignExpense()
             ->create([
-                'net_amount'       => 100.00,
-                'running_balance'  => 200.00,
+                'net_amount' => 100.00,
+                'running_balance' => 200.00,
                 'transaction_date' => now()->toDateString(),
-                'created_by'       => $user->id,
+                'created_by' => $user->id,
             ]);
 
         $response = $this->actingAs($user)

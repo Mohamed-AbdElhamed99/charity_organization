@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CampaignCategoryController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignExpenseController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DonationController;
 use App\Http\Controllers\Admin\DonorProfileController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Admin\NewsController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\TransactionTypeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\EnsureUserIsStaff;
 use Illuminate\Support\Facades\Route;
@@ -194,6 +196,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::get('/', [TransactionController::class, 'index'])->name('index')->middleware($perm(ModulePermission::TRANSACTIONS, 'view'));
             Route::get('create', [TransactionController::class, 'create'])->name('create')->middleware($perm(ModulePermission::TRANSACTIONS, 'create'));
             Route::get('export', [TransactionController::class, 'export'])->name('export')->middleware($perm(ModulePermission::TRANSACTIONS, 'export'));
+            Route::post('calculate-balance', [TransactionController::class, 'calculateBalance'])->name('calculate-balance')->middleware($perm(ModulePermission::TRANSACTIONS, 'edit'));
             Route::post('/', [TransactionController::class, 'store'])->name('store')->middleware($perm(ModulePermission::TRANSACTIONS, 'create'));
             Route::get('{transaction}/edit', [TransactionController::class, 'edit'])->name('edit')->middleware($perm(ModulePermission::TRANSACTIONS, 'edit'));
             Route::get('{transaction}', [TransactionController::class, 'show'])->name('show')->middleware($perm(ModulePermission::TRANSACTIONS, 'view'));
@@ -211,6 +214,28 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::delete('{payment_method}', [PaymentMethodController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'delete'));
             Route::post('bulk-destroy', [PaymentMethodController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'delete'));
             Route::post('{id}/restore', [PaymentMethodController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::PAYMENT_METHODS, 'delete'));
+        });
+
+        // ==========================================================
+        // Currencies
+        // ==========================================================
+        Route::prefix('currencies')->name('currencies.')->group(function () use ($perm) {
+            Route::get('/', [CurrencyController::class, 'index'])->name('index')->middleware($perm(ModulePermission::CURRENCIES, 'view'));
+            Route::post('/', [CurrencyController::class, 'store'])->name('store')->middleware($perm(ModulePermission::CURRENCIES, 'create'));
+            Route::match(['put', 'patch'], '{currency}', [CurrencyController::class, 'update'])->name('update')->middleware($perm(ModulePermission::CURRENCIES, 'edit'));
+            Route::delete('{currency}', [CurrencyController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::CURRENCIES, 'delete'));
+        });
+
+        // ==========================================================
+        // Transaction Types
+        // ==========================================================
+        Route::prefix('transaction-types')->name('transaction-types.')->group(function () use ($perm) {
+            Route::get('/', [TransactionTypeController::class, 'index'])->name('index')->middleware($perm(ModulePermission::TRANSACTION_TYPES, 'view'));
+            Route::post('/', [TransactionTypeController::class, 'store'])->name('store')->middleware($perm(ModulePermission::TRANSACTION_TYPES, 'create'));
+            Route::match(['put', 'patch'], '{transaction_type}', [TransactionTypeController::class, 'update'])->name('update')->middleware($perm(ModulePermission::TRANSACTION_TYPES, 'edit'));
+            Route::delete('{transaction_type}', [TransactionTypeController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::TRANSACTION_TYPES, 'delete'));
+            Route::post('bulk-destroy', [TransactionTypeController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::TRANSACTION_TYPES, 'delete'));
+            Route::post('{id}/restore', [TransactionTypeController::class, 'restore'])->name('restore')->middleware($perm(ModulePermission::TRANSACTION_TYPES, 'delete'));
         });
 
         // ==========================================================

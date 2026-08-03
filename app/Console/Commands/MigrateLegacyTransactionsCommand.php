@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\GeneralExpense;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -75,6 +76,9 @@ class MigrateLegacyTransactionsCommand extends Command
     private array $paymentByKeyword = []; // keyword => payment_method id
 
     private ?int $defaultCurrencyId = null;
+
+    /** @var array<string, int> */
+    private array $transactionTypeIds = [];
 
     /** Detail-table indexes keyed by legacy transaction_id. */
     private array $deposits = [];
@@ -353,6 +357,7 @@ class MigrateLegacyTransactionsCommand extends Command
     {
         $this->userIds = DB::table('users')->pluck('id')->flip()->all();
         $this->itemIds = DB::table('items')->pluck('id')->flip()->all();
+        $this->transactionTypeIds = DB::table('transaction_types')->pluck('id', 'code')->all();
 
         // Map legacy payment_type enum strings to a migrated payment_methods row.
         foreach (DB::table('payment_methods')->get(['id', 'name']) as $pm) {
@@ -438,7 +443,7 @@ class MigrateLegacyTransactionsCommand extends Command
         DB::table('transactions')->insert([
             'id' => $t->id,
             'account_id' => $accId, // preserved id or NULL (relaxed)
-            'transaction_type' => $type,
+            'transaction_type_id' => $this->transactionTypeIds[$type] ?? null,
             'direction' => $direction,
             'currency_id' => $this->defaultCurrencyId,
             'gross_amount' => $gross,
@@ -547,7 +552,7 @@ class MigrateLegacyTransactionsCommand extends Command
         DB::table('transactions')->insert([
             'id' => $idOffset + (int) $b->id,
             'account_id' => $accountId,
-            'transaction_type' => 'bank_transfer',
+            'transaction_type_id' => $this->transactionTypeIds['bank_transfer'] ?? null,
             'direction' => $direction,
             'currency_id' => $this->defaultCurrencyId,
             'gross_amount' => $amount,
@@ -678,8 +683,7 @@ class MigrateLegacyTransactionsCommand extends Command
 
     private function writeGeneralExpense($t, string $name, $g): void
     {
-        DB::table('general_expenses')->insert([
-            'transaction_id' => $t->id,
+        $expenseId = DB::table('general_expenses')->insertGetId([
             'category_id' => null,
             'name' => $this->truncate($name, 255),
             'amount' => $this->num($t->amount),
@@ -692,6 +696,15 @@ class MigrateLegacyTransactionsCommand extends Command
             'updated_at' => $g->updated_at ?? $t->updated_at ?? now(),
             'deleted_at' => $g->deleted_at ?? null,
         ]);
+
+        DB::table('transactionables')->insert([
+            'transaction_id' => $t->id,
+            'transactionable_type' => GeneralExpense::class,
+            'transactionable_id' => $expenseId,
+            'created_at' => $g->created_at ?? $t->created_at ?? now(),
+            'updated_at' => $g->updated_at ?? $t->updated_at ?? now(),
+        ]);
+
         $this->stats['general_expenses']++;
     }
 

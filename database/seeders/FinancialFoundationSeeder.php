@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\BankAccount;
 use App\Models\Currency;
 use App\Models\PaymentMethod;
+use App\Models\TransactionType;
 use Illuminate\Database\Seeder;
 
 /**
@@ -103,10 +104,17 @@ class FinancialFoundationSeeder extends Seeder
             PaymentMethod::firstOrCreate(['code' => $data['code']], $data);
         }
 
-        $this->command->info('✅ Financial foundation seeded ('.
+        // ─── Transaction Types ────────────────────────────────────────────────
+
+        foreach (TransactionType::systemDefinitions() as $definition) {
+            TransactionType::firstOrCreate(['code' => $definition['code']], $definition);
+        }
+
+        $this->command?->info('✅ Financial foundation seeded ('.
             Currency::count().' currencies, '.
             BankAccount::count().' accounts, '.
-            PaymentMethod::count().' payment methods).'
+            PaymentMethod::count().' payment methods, '.
+            TransactionType::count().' transaction types).'
         );
     }
 }

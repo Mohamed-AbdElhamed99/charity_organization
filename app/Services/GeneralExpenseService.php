@@ -26,15 +26,15 @@ class GeneralExpenseService implements GeneralExpenseServiceInterface
             ->with([
                 'category',
                 'creator',
-                'transaction.account',
-                'transaction.paymentMethod',
-                'transaction.currency',
+                'transactions.account',
+                'transactions.paymentMethod',
+                'transactions.currency',
             ])
             ->when($query, function ($builder) use ($query) {
                 $builder->where(function ($q) use ($query) {
                     $q->where('name', 'like', "%{$query}%")
                         ->orWhere('vendor_name', 'like', "%{$query}%")
-                        ->orWhereHas('transaction', function ($tq) use ($query) {
+                        ->orWhereHas('transactions', function ($tq) use ($query) {
                             $tq->where('description', 'like', "%{$query}%");
                         });
                 });
@@ -68,7 +68,7 @@ class GeneralExpenseService implements GeneralExpenseServiceInterface
             'exchange_rate' => $dto->exchangeRate,
         ]);
 
-        return $transaction->generalExpense;
+        return $transaction->generalExpenses()->firstOrFail();
     }
 
     public function updateExpense(GeneralExpense $expense, UpdateGeneralExpenseDTO $dto): GeneralExpense
@@ -84,14 +84,20 @@ class GeneralExpenseService implements GeneralExpenseServiceInterface
         return $expense->fresh([
             'category',
             'creator',
-            'transaction.account',
-            'transaction.paymentMethod',
-            'transaction.currency',
+            'transactions.account',
+            'transactions.paymentMethod',
+            'transactions.currency',
         ]);
     }
 
     public function reverseExpense(GeneralExpense $expense, int $userId): void
     {
-        $this->transactionService->reverseTransaction($expense->transaction, $userId);
+        $transaction = $expense->transactions()->first();
+
+        if ($transaction === null) {
+            return;
+        }
+
+        $this->transactionService->reverseTransaction($transaction, $userId);
     }
 }

@@ -1,4 +1,4 @@
-import type { TransactionDirection, TransactionType } from '@/types/enums'
+import type { TransactionDirection } from '@/types/enums'
 
 export interface TransactionAccount {
   id: number
@@ -10,6 +10,17 @@ export interface TransactionCurrency {
   id: number
   code: string
   symbol: string
+}
+
+export interface CurrencyEquivalentRate {
+  currency_code: string
+  equivalent: number | string
+}
+
+export interface CurrencyEquivalentAmount {
+  currency_code: string
+  equivalent: number | string
+  amount: number | string
 }
 
 export interface TransactionPaymentMethod {
@@ -47,14 +58,13 @@ export interface TransactionCampaignExpense {
 
 export interface TransactionGeneralExpense {
   id: number
+  name?: string | null
   amount: number | string
   expense_date: string | null
 }
 
 export interface TransactionTransfer {
   id: number
-  campaign_id: number | null
-  campaign?: { id: number; title_en: string; title_ar: string } | null
   recipient_kind: 'user' | 'beneficiary' | 'other'
   recipient_id: number | null
   recipient_label: string | null
@@ -64,6 +74,20 @@ export interface TransactionTransfer {
   purpose: string | null
   transfer_date: string | null
   notes: string | null
+}
+
+export interface TransactionLinkItem {
+  id: number
+  label: string
+  amount?: number | string
+  expense_date?: string | null
+}
+
+export interface TransactionLinks {
+  beneficiaries?: TransactionLinkItem[]
+  campaigns?: TransactionLinkItem[]
+  meetings?: TransactionLinkItem[]
+  general_expenses?: TransactionLinkItem[]
 }
 
 export interface TransactionBankExpense {
@@ -76,8 +100,15 @@ export interface Transaction {
   id: number
   account_id: number
   account?: TransactionAccount
-  transaction_type: TransactionType | null
+  transaction_type_id: number | null
+  transaction_type: string | null
   transaction_type_label: string | null
+  transaction_type_record?: {
+    id: number
+    name: string
+    code: string
+    is_system: boolean
+  } | null
   direction: TransactionDirection | null
   currency_id: number
   currency?: TransactionCurrency
@@ -86,8 +117,11 @@ export interface Transaction {
   gross_amount: number | string
   fee_amount: number | string
   net_amount: number | string
+  balance_before?: number | string | null
   original_amount?: number | string | null
   exchange_rate?: number | string | null
+  currency_equivalents?: CurrencyEquivalentRate[] | null
+  currency_equivalent_amounts?: CurrencyEquivalentAmount[] | null
   running_balance: number | string | null
   transaction_date: string | null
   reference_number: string | null
@@ -106,18 +140,26 @@ export interface Transaction {
   general_expense?: TransactionGeneralExpense | null
   transfer?: TransactionTransfer | null
   bank_expense?: TransactionBankExpense | null
+  links?: TransactionLinks
+  beneficiary_ids?: number[]
+  campaign_ids?: number[]
+  meeting_ids?: number[]
+  general_expense_ids?: number[]
 }
 
 export interface AccountOption {
   id: number
   name: string
   currency_id?: number
+  opening_balance?: number | string
+  current_balance?: number | string
 }
 
 export interface CurrencyOption {
   id: number
   code: string
   symbol: string
+  name?: string
 }
 
 export interface PaymentMethodOption {
@@ -138,6 +180,16 @@ export interface CampaignOption {
 }
 
 export interface UserOption {
+  id: number
+  name: string
+}
+
+export interface MeetingOption {
+  id: number
+  label: string
+}
+
+export interface GeneralExpenseOption {
   id: number
   name: string
 }

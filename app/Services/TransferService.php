@@ -7,9 +7,9 @@ use App\Contracts\Services\TransferServiceInterface;
 use App\DTOs\CreateTransactionDTO;
 use App\DTOs\CreateTransferDTO;
 use App\Enums\TransactionDirection;
-use App\Enums\TransactionType;
 use App\Enums\TransferRecipientType;
 use App\Models\BankAccount;
+use App\Models\TransactionType;
 use App\Models\Transfer;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -34,14 +34,17 @@ class TransferService implements TransferServiceInterface
         $query = $filters['query'] ?? null;
 
         return Transfer::query()
-            ->with(['transaction.account', 'transaction.currency', 'campaign', 'recipient', 'creator'])
+            ->with(['transaction.account', 'transaction.currency', 'transaction.campaigns', 'recipient', 'creator'])
             ->when($recipientType === 'user', fn ($builder) => $builder->where('recipient_type', User::class))
             ->when($recipientType === 'beneficiary', fn ($builder) => $builder->toBeneficiaries())
             ->when($recipientType === 'other', fn ($builder) => $builder->whereNull('recipient_type')->whereNotNull('recipient_label'))
             ->when($dateFrom && $dateTo, fn ($builder) => $builder->inDateRange($dateFrom, $dateTo))
             ->when($dateFrom && ! $dateTo, fn ($builder) => $builder->where('transfer_date', '>=', $dateFrom))
             ->when($dateTo && ! $dateFrom, fn ($builder) => $builder->where('transfer_date', '<=', $dateTo))
-            ->when($campaignId, fn ($builder) => $builder->forCampaign((int) $campaignId))
+            ->when($campaignId, fn ($builder) => $builder->whereHas(
+                'transaction.campaigns',
+                fn ($q) => $q->where('campaigns.id', (int) $campaignId),
+            ))
             ->when($query, function ($builder) use ($query) {
                 $builder->where(function ($q) use ($query) {
                     $q->where('recipient_label', 'like', "%{$query}%")
@@ -68,7 +71,7 @@ class TransferService implements TransferServiceInterface
 
             $transaction = $this->transactionService->createTransaction(new CreateTransactionDTO(
                 accountId: $account->id,
-                transactionType: TransactionType::Transfer,
+                transactionTypeId: TransactionType::idForCode(TransactionType::CODE_TRANSFER),
                 direction: TransactionDirection::Out,
                 grossAmount: $amount,
                 feeAmount: 0,
@@ -84,13 +87,13 @@ class TransferService implements TransferServiceInterface
                     'recipient_label' => $recipientKind === 'other' ? $dto->recipientName : null,
                     'recipient_phone' => $dto->recipientPhone,
                     'purpose' => $dto->purpose,
-                    'campaign_id' => $dto->campaignId,
                     'transfer_date' => $dto->transferDate,
                     'notes' => $dto->notes,
                 ],
+                campaignIds: $dto->campaignId !== null ? [$dto->campaignId] : [],
             ));
 
-            return $transaction->transfer->fresh(['transaction', 'campaign', 'recipient']);
+            return $transaction->transfer->fresh(['transaction.campaigns', 'recipient']);
         });
     }
 

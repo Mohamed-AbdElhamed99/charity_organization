@@ -39,9 +39,11 @@ enum ModulePermission: string
     // ─── Financial ───────────────────────────────────────────────────────
     case DONATIONS = 'donations';
     case TRANSACTIONS = 'transactions';
+    case TRANSACTION_TYPES = 'transaction_types';
     case TRANSFERS = 'transfers';
     case ACCOUNTS = 'accounts';
     case PAYMENT_METHODS = 'payment_methods';
+    case CURRENCIES = 'currencies';
     case GENERAL_EXPENSES = 'general_expenses';
     case GENERAL_EXPENSE_CATEGORIES = 'general_expense_categories';
     case DONOR_PROFILES = 'donor_profiles';

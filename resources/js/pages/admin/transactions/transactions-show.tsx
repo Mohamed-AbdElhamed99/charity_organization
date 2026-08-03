@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { index as transactionsIndex } from '@/routes/admin/transactions'
-import type { Transaction } from '@/types/models/transaction'
+import type { Transaction, TransactionLinkItem } from '@/types/models/transaction'
 
 type PageProps = {
   transaction: Transaction
@@ -29,6 +29,35 @@ function DetailField({
     <div>
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="font-medium">{value}</p>
+    </div>
+  )
+}
+
+function RelatedGroup({
+  title,
+  items,
+  hrefFor,
+}: {
+  title: string
+  items?: TransactionLinkItem[]
+  hrefFor: (id: number) => string
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">{title}</p>
+      {!items || items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">None</p>
+      ) : (
+        <ul className="space-y-1">
+          {items.map((item) => (
+            <li key={item.id}>
+              <Link href={hrefFor(item.id)} className="underline">
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -123,8 +152,31 @@ export default function TransactionsShow() {
                 label="Net Amount"
                 value={formatMoney(transaction.net_amount, symbol)}
               />
+              {(transaction.currency_equivalent_amounts?.length ?? 0) > 0 && (
+                <div className="sm:col-span-2">
+                  <p className="text-sm text-muted-foreground">
+                    Currency equivalents
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {transaction.currency_equivalent_amounts?.map((row) => (
+                      <li key={row.currency_code} className="font-medium">
+                        {formatMoney(transaction.net_amount, symbol)} ={' '}
+                        {formatMoney(row.amount, row.currency_code)}{' '}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          (1 {transaction.currency?.code} = {row.equivalent}{' '}
+                          {row.currency_code})
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <DetailField
-                label="Running Balance"
+                label="Balance Before"
+                value={formatMoney(transaction.balance_before, symbol)}
+              />
+              <DetailField
+                label="Balance After"
                 value={formatMoney(transaction.running_balance, symbol)}
               />
               <DetailField
@@ -190,6 +242,12 @@ export default function TransactionsShow() {
 
               {transaction.general_expense && (
                 <>
+                  {transaction.general_expense.name && (
+                    <DetailField
+                      label="Expense name"
+                      value={transaction.general_expense.name}
+                    />
+                  )}
                   <DetailField
                     label="Expense Amount"
                     value={formatMoney(
@@ -228,14 +286,6 @@ export default function TransactionsShow() {
                     label="Purpose"
                     value={transaction.transfer.purpose ?? '—'}
                   />
-                  <DetailField
-                    label="Campaign"
-                    value={
-                      transaction.transfer.campaign?.title_en ??
-                      transaction.transfer.campaign_id ??
-                      '—'
-                    }
-                  />
                 </>
               )}
 
@@ -264,6 +314,37 @@ export default function TransactionsShow() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Related records</CardTitle>
+            <CardDescription>
+              Polymorphic links attached to this ledger entry.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 sm:grid-cols-2">
+            <RelatedGroup
+              title="Beneficiaries"
+              items={transaction.links?.beneficiaries}
+              hrefFor={(id) => route('admin.beneficiaries.show', id)}
+            />
+            <RelatedGroup
+              title="Campaigns"
+              items={transaction.links?.campaigns}
+              hrefFor={(id) => route('admin.campaigns.show', id)}
+            />
+            <RelatedGroup
+              title="Meetings"
+              items={transaction.links?.meetings}
+              hrefFor={(id) => route('admin.meetings.show', id)}
+            />
+            <RelatedGroup
+              title="General expenses"
+              items={transaction.links?.general_expenses}
+              hrefFor={() => route('admin.general-expenses.index')}
+            />
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

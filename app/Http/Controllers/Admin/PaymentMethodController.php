@@ -41,13 +41,16 @@ class PaymentMethodController extends Controller
     {
         $validated = $request->validated();
 
-        $this->paymentMethodService->createPaymentMethod(new CreatePaymentMethodDTO(
+        $paymentMethod = $this->paymentMethodService->createPaymentMethod(new CreatePaymentMethodDTO(
             name: $validated['name'],
             code: $validated['code'],
             isActive: (bool) $validated['is_active'],
         ));
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment method created successfully.')]);
+        Inertia::flash([
+            'toast' => ['type' => 'success', 'message' => __('Payment method created successfully.')],
+            'paymentMethod' => (new PaymentMethodResource($paymentMethod))->resolve(),
+        ]);
 
         return back();
     }
@@ -56,13 +59,16 @@ class PaymentMethodController extends Controller
     {
         $validated = $request->validated();
 
-        $this->paymentMethodService->updatePaymentMethod($paymentMethod, new UpdatePaymentMethodDTO(
+        $paymentMethod = $this->paymentMethodService->updatePaymentMethod($paymentMethod, new UpdatePaymentMethodDTO(
             name: $validated['name'],
             code: $validated['code'],
             isActive: (bool) $validated['is_active'],
         ));
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment method updated successfully.')]);
+        Inertia::flash([
+            'toast' => ['type' => 'success', 'message' => __('Payment method updated successfully.')],
+            'paymentMethod' => (new PaymentMethodResource($paymentMethod))->resolve(),
+        ]);
 
         return back();
     }

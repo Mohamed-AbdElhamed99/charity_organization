@@ -67,6 +67,30 @@ class PaymentMethodControllerTest extends TestCase
         ]);
     }
 
+    public function test_creating_payment_method_flashes_the_created_record(): void
+    {
+        $user = $this->createAuthorizedUser();
+
+        $response = $this->actingAs($user)
+            ->from(route('admin.payment-methods.index'))
+            ->post(route('admin.payment-methods.store'), [
+                'name' => 'Quick Add Method',
+                'code' => 'quick_add_method',
+                'is_active' => true,
+            ]);
+
+        $response->assertRedirect();
+        $response->assertInertiaFlash('paymentMethod');
+
+        $method = PaymentMethod::query()->where('code', 'quick_add_method')->firstOrFail();
+        $flash = session('inertia.flash_data');
+
+        $this->assertIsArray($flash);
+        $this->assertSame($method->id, $flash['paymentMethod']['id']);
+        $this->assertSame('Quick Add Method', $flash['paymentMethod']['name']);
+        $this->assertSame('quick_add_method', $flash['paymentMethod']['code']);
+    }
+
     public function test_referenced_payment_method_is_deactivated_not_deleted(): void
     {
         $user = $this->createAuthorizedUser();

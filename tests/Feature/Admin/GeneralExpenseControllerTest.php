@@ -6,6 +6,7 @@ use App\Models\BankAccount;
 use App\Models\GeneralExpense;
 use App\Models\GeneralExpenseCategory;
 use App\Models\PaymentMethod;
+use App\Models\TransactionType;
 use App\Models\User;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -65,7 +66,7 @@ class GeneralExpenseControllerTest extends TestCase
             ->assertRedirect();
 
         $this->assertDatabaseHas('transactions', [
-            'transaction_type' => 'general_expense',
+            'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_GENERAL_EXPENSE),
             'direction' => 'out',
             'net_amount' => 149.99,
             'payment_method_id' => $paymentMethod->id,
@@ -111,7 +112,7 @@ class GeneralExpenseControllerTest extends TestCase
             ->assertRedirect();
 
         $this->assertDatabaseHas('transactions', [
-            'transaction_type' => 'adjustment',
+            'transaction_type_id' => TransactionType::idForCode(TransactionType::CODE_ADJUSTMENT),
             'description' => "Reversal of transaction #{$transaction->id}",
         ]);
     }
