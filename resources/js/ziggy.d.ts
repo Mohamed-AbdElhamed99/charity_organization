@@ -14,8 +14,6 @@ declare module 'ziggy-js' {
     ],
     "password.email": [],
     "password.update": [],
-    "register": [],
-    "register.store": [],
     "verification.notice": [],
     "verification.verify": [
         {
@@ -53,17 +51,117 @@ declare module 'ziggy-js' {
             "binding": "id"
         }
     ],
+    "webhooks.stripe": [],
     "home": [],
-    "dashboard": [],
-    "admin.users.bulk-destroy": [],
-    "admin.users.restore": [
+    "lang.switch": [
         {
-            "name": "id",
+            "name": "locale",
             "required": true
         }
     ],
+    "news.index": [],
+    "news.show": [
+        {
+            "name": "news",
+            "required": true,
+            "binding": "slug"
+        }
+    ],
+    "campaigns.index": [],
+    "campaigns.show": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "slug"
+        }
+    ],
+    "donations.index": [],
+    "donations.campaigns-list": [],
+    "donations.saved-payment-methods": [],
+    "campaigns.donate": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "slug"
+        }
+    ],
+    "donate.general": [],
+    "donations.intent": [],
+    "donations.subscribe": [],
+    "donations.thank-you": [
+        {
+            "name": "paymentIntentId",
+            "required": true
+        }
+    ],
+    "donations.status": [
+        {
+            "name": "paymentIntentId",
+            "required": true
+        }
+    ],
+    "donations.subscriptions.portal": [
+        {
+            "name": "stripeSubscriptionId",
+            "required": true
+        }
+    ],
+    "faqs.index": [],
+    "terms": [],
+    "privacy": [],
+    "contact": [],
+    "contact.store": [],
+    "account.register": [],
+    "account.": [],
+    "account.login": [],
+    "account.password.request": [],
+    "account.password.email": [],
+    "account.password.reset": [
+        {
+            "name": "token",
+            "required": true
+        }
+    ],
+    "account.password.update": [],
+    "account.logout": [],
+    "account.profile.edit": [],
+    "account.profile.update": [],
+    "account.payment-methods.index": [],
+    "account.payment-methods.setup-intent": [],
+    "account.payment-methods.store": [],
+    "account.payment-methods.destroy": [
+        {
+            "name": "paymentMethod",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "account.payment-methods.default": [
+        {
+            "name": "paymentMethod",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "account.donations.index": [],
+    "account.subscriptions.cancel": [
+        {
+            "name": "subscription",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.": [],
+    "admin.dashboard": [],
     "admin.users.index": [],
     "admin.users.store": [],
+    "admin.users.show": [
+        {
+            "name": "user",
+            "required": true,
+            "binding": "id"
+        }
+    ],
     "admin.users.update": [
         {
             "name": "user",
@@ -74,6 +172,616 @@ declare module 'ziggy-js' {
     "admin.users.destroy": [
         {
             "name": "user",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.users.bulk-destroy": [],
+    "admin.users.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.roles.index": [],
+    "admin.roles.store": [],
+    "admin.roles.update": [
+        {
+            "name": "role",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.roles.destroy": [
+        {
+            "name": "role",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.news.index": [],
+    "admin.news.store": [],
+    "admin.news.update": [
+        {
+            "name": "news",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.news.destroy": [
+        {
+            "name": "news",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.news.bulk-destroy": [],
+    "admin.news.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.news-categories.index": [],
+    "admin.news-categories.store": [],
+    "admin.news-categories.update": [
+        {
+            "name": "news_category",
+            "required": true
+        }
+    ],
+    "admin.news-categories.destroy": [
+        {
+            "name": "news_category",
+            "required": true
+        }
+    ],
+    "admin.news-categories.bulk-destroy": [],
+    "admin.news-categories.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.campaign-categories.index": [],
+    "admin.campaign-categories.store": [],
+    "admin.campaign-categories.update": [
+        {
+            "name": "campaign_category",
+            "required": true
+        }
+    ],
+    "admin.campaign-categories.destroy": [
+        {
+            "name": "campaign_category",
+            "required": true
+        }
+    ],
+    "admin.campaign-categories.bulk-destroy": [],
+    "admin.campaign-categories.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.campaigns.index": [],
+    "admin.campaigns.create": [],
+    "admin.campaigns.store": [],
+    "admin.campaigns.show": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.edit": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.update": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.destroy": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.expenses.index": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.beneficiary-report": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.beneficiary-supports.create": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaign-expenses.index": [],
+    "admin.campaign-expenses.store": [],
+    "admin.campaign-expenses.update": [
+        {
+            "name": "expense",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.index": [],
+    "admin.meetings.create": [],
+    "admin.meetings.store": [],
+    "admin.meetings.show": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.edit": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.update": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.destroy": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.print": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.minutes.store": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.minutes.update": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "minutes",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.minutes.approve": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "minutes",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.decisions.reorder": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.decisions.store": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.decisions.update": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "decision",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.decisions.updateStatus": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "decision",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.decisions.destroy": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "decision",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.attachments.store": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.attachments.download": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "attachment",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.meetings.attachments.destroy": [
+        {
+            "name": "meeting",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "attachment",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.aid-items.index": [],
+    "admin.aid-items.store": [],
+    "admin.aid-items.update": [
+        {
+            "name": "aidItem",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiary-supports.store": [],
+    "admin.donations.index": [],
+    "admin.donations.export": [],
+    "admin.transactions.index": [],
+    "admin.transactions.create": [],
+    "admin.transactions.export": [],
+    "admin.transactions.calculate-balance": [],
+    "admin.transactions.store": [],
+    "admin.transactions.edit": [
+        {
+            "name": "transaction",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.transactions.show": [
+        {
+            "name": "transaction",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.transactions.update": [
+        {
+            "name": "transaction",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.transactions.reverse": [
+        {
+            "name": "transaction",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.payment-methods.index": [],
+    "admin.payment-methods.store": [],
+    "admin.payment-methods.update": [
+        {
+            "name": "payment_method",
+            "required": true
+        }
+    ],
+    "admin.payment-methods.destroy": [
+        {
+            "name": "payment_method",
+            "required": true
+        }
+    ],
+    "admin.payment-methods.bulk-destroy": [],
+    "admin.payment-methods.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.currencies.index": [],
+    "admin.currencies.store": [],
+    "admin.currencies.update": [
+        {
+            "name": "currency",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.currencies.destroy": [
+        {
+            "name": "currency",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.transaction-types.index": [],
+    "admin.transaction-types.store": [],
+    "admin.transaction-types.update": [
+        {
+            "name": "transaction_type",
+            "required": true
+        }
+    ],
+    "admin.transaction-types.destroy": [
+        {
+            "name": "transaction_type",
+            "required": true
+        }
+    ],
+    "admin.transaction-types.bulk-destroy": [],
+    "admin.transaction-types.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.general-expense-categories.index": [],
+    "admin.general-expense-categories.store": [],
+    "admin.general-expense-categories.update": [
+        {
+            "name": "general_expense_category",
+            "required": true
+        }
+    ],
+    "admin.general-expense-categories.destroy": [
+        {
+            "name": "general_expense_category",
+            "required": true
+        }
+    ],
+    "admin.general-expense-categories.bulk-destroy": [],
+    "admin.general-expense-categories.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.general-expenses.index": [],
+    "admin.general-expenses.store": [],
+    "admin.general-expenses.update": [
+        {
+            "name": "generalExpense",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.general-expenses.destroy": [
+        {
+            "name": "generalExpense",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.donor-profiles.index": [],
+    "admin.donor-profiles.store": [],
+    "admin.donor-profiles.show": [
+        {
+            "name": "donor_profile",
+            "required": true
+        }
+    ],
+    "admin.donor-profiles.update": [
+        {
+            "name": "donor_profile",
+            "required": true
+        }
+    ],
+    "admin.donor-profiles.destroy": [
+        {
+            "name": "donor_profile",
+            "required": true
+        }
+    ],
+    "admin.donor-profiles.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.accounts.index": [],
+    "admin.accounts.store": [],
+    "admin.accounts.bulk-destroy": [],
+    "admin.accounts.update": [
+        {
+            "name": "account",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.accounts.destroy": [
+        {
+            "name": "account",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.accounts.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.faqs.index": [],
+    "admin.faqs.store": [],
+    "admin.faqs.update": [
+        {
+            "name": "faq",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.faqs.destroy": [
+        {
+            "name": "faq",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.faqs.bulk-destroy": [],
+    "admin.faqs.restore": [
+        {
+            "name": "id",
+            "required": true
+        }
+    ],
+    "admin.legal.terms.edit": [],
+    "admin.legal.terms.update": [],
+    "admin.legal.privacy.edit": [],
+    "admin.legal.privacy.update": [],
+    "admin.contact-messages.index": [],
+    "admin.contact-messages.show": [
+        {
+            "name": "contactMessage",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.contact-messages.destroy": [
+        {
+            "name": "contactMessage",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.contact-messages.bulk-destroy": [],
+    "admin.contact-messages.mark-reviewed": [
+        {
+            "name": "contactMessage",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.index": [],
+    "admin.beneficiaries.create": [],
+    "admin.beneficiaries.store": [],
+    "admin.beneficiaries.show": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.edit": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.update": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.destroy": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.status": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.beneficiary-supports.create": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.support-report": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.bulk-destroy": [],
+    "admin.beneficiaries.assessments.store": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.beneficiaries.assessments.update": [
+        {
+            "name": "beneficiary",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "assessment",
             "required": true,
             "binding": "id"
         }

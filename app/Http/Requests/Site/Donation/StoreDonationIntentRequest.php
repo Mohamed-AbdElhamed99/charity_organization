@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Site\Donation;
 
+use App\Models\CampaignAppeal;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -35,14 +36,51 @@ class StoreDonationIntentRequest extends FormRequest
             'country_id' => ['nullable', 'integer', Rule::exists('countries', 'id')],
             'is_anonymous' => ['boolean'],
             'donor_message' => ['nullable', 'string', 'max:1000'],
+            'appeal_id' => ['nullable', 'integer', Rule::exists('campaign_appeals', 'id')],
+            'quantity' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
             $isGeneral = (bool) $this->boolean('is_general');
             $campaignId = $this->input('campaign_id');
+            $appealId = $this->input('appeal_id');
+
+            if ($appealId) {
+                if ($isGeneral) {
+                    $validator->errors()->add('appeal_id', __('An appeal gift cannot be a general donation.'));
+
+                    return;
+                }
+
+                $appeal = CampaignAppeal::query()->with('campaign')->find($appealId);
+
+                if ($appeal === null) {
+                    return;
+                }
+
+                if ($campaignId && (int) $campaignId !== $appeal->campaign_id) {
+                    $validator->errors()->add('campaign_id', __('This appeal belongs to a different campaign.'));
+
+                    return;
+                }
+
+                $quantity = $this->filled('quantity') ? (int) $this->input('quantity') : null;
+
+                $appeal->resolvedGift($quantity, (int) $this->input('amount'));
+
+                return;
+            }
+
+            if ($this->filled('quantity')) {
+                $validator->errors()->add('quantity', __('A quantity can only be set for an appeal.'));
+            }
 
             if ($isGeneral && $campaignId) {
                 $validator->errors()->add('campaign_id', __('Campaign and general donation cannot both be set.'));

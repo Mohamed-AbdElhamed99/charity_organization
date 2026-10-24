@@ -110,6 +110,12 @@ class Campaign extends Model implements HasMedia
         return $this->hasMany(Donation::class);
     }
 
+    /** Shareable unit-priced gifts published under this campaign */
+    public function appeals(): HasMany
+    {
+        return $this->hasMany(CampaignAppeal::class);
+    }
+
     /** Ledger transactions linked to this campaign */
     public function transactions(): MorphToMany
     {

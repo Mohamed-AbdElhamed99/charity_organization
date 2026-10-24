@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Contracts\PaymentGateway;
 use App\Enums\DonationStatus;
 use App\Enums\DonationSubscriptionStatus;
+use App\Mail\DonationReceiptMail;
 use App\Models\BankAccount;
 use App\Models\Campaign;
 use App\Models\Donation;
@@ -16,6 +17,7 @@ use App\Services\Payments\StripeGateway;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Event;
 use Tests\Support\FakePaymentGateway;
 use Tests\TestCase;
@@ -49,6 +51,41 @@ class StripeWebhookTest extends TestCase
         $this->post(route('webhooks.stripe'), [], [
             'Stripe-Signature' => 'invalid',
         ])->assertStatus(400);
+    }
+
+    public function test_webhook_success_sends_exactly_one_receipt(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+        $donation = Donation::query()->create([
+            'transaction_id' => null,
+            'donor_id' => $user->id,
+            'is_general' => true,
+            'amount' => 4200,
+            'status' => DonationStatus::Pending,
+            'stripe_status' => 'pending',
+            'stripe_payment_intent_id' => 'pi_test_receipt_1',
+            'donor_covers_fee' => false,
+            'is_anonymous' => false,
+        ]);
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom([
+            'id' => 'evt_test_receipt_1',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => 'pi_test_receipt_1',
+                    'amount_received' => 4200,
+                    'latest_charge' => 'ch_test_receipt_1',
+                    'metadata' => [],
+                ],
+            ],
+        ]));
+
+        $donation->refresh();
+        $this->assertNotNull($donation->receipt_sent_at);
+        Mail::assertSent(DonationReceiptMail::class, 1);
     }
 
     public function test_webhook_success_is_idempotent_and_credits_campaign_once(): void
@@ -128,6 +165,62 @@ class StripeWebhookTest extends TestCase
         $donation->refresh();
         $this->assertSame(DonationStatus::Failed, $donation->status);
         $this->assertNull($donation->transaction_id);
+    }
+
+    public function test_failed_first_cycle_payment_fails_all_sibling_subscription_allocations(): void
+    {
+        $campaignOne = Campaign::factory()->create([
+            'status' => 'active',
+            'is_public' => true,
+            'open_donation_form' => true,
+        ]);
+        $campaignTwo = Campaign::factory()->create([
+            'status' => 'active',
+            'is_public' => true,
+            'open_donation_form' => true,
+        ]);
+
+        $subscription = DonationSubscription::factory()->create([
+            'amount_cents' => 7000,
+            'stripe_subscription_id' => 'sub_failed_multi_1',
+        ]);
+        $subscription->allocations()->delete();
+        $subscription->allocations()->create(['campaign_id' => $campaignOne->id, 'is_general' => false, 'amount_cents' => 3000]);
+        $subscription->allocations()->create(['campaign_id' => $campaignTwo->id, 'is_general' => false, 'amount_cents' => 4000]);
+
+        $first = Donation::factory()->pending()->create([
+            'donor_id' => $subscription->donor_id,
+            'campaign_id' => $campaignOne->id,
+            'donation_subscription_id' => $subscription->id,
+            'amount' => 3000,
+            'is_recurring' => true,
+            'stripe_payment_intent_id' => 'pi_failed_multi_1',
+            'stripe_invoice_id' => null,
+        ]);
+        $second = Donation::factory()->pending()->create([
+            'donor_id' => $subscription->donor_id,
+            'campaign_id' => $campaignTwo->id,
+            'donation_subscription_id' => $subscription->id,
+            'amount' => 4000,
+            'is_recurring' => true,
+            'stripe_payment_intent_id' => null,
+            'stripe_invoice_id' => null,
+        ]);
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom([
+            'id' => 'evt_failed_multi_1',
+            'type' => 'payment_intent.payment_failed',
+            'data' => [
+                'object' => [
+                    'id' => 'pi_failed_multi_1',
+                ],
+            ],
+        ]));
+
+        $first->refresh();
+        $second->refresh();
+        $this->assertSame(DonationStatus::Failed, $first->status);
+        $this->assertSame(DonationStatus::Failed, $second->status);
     }
 
     public function test_running_balance_updates_sequentially(): void

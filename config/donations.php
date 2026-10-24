@@ -23,4 +23,16 @@ return [
     */
     'export_sync_max_rows' => (int) env('DONATION_EXPORT_SYNC_MAX_ROWS', 5000),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Organization line shown on shared campaign appeals
+    |--------------------------------------------------------------------------
+    */
+    'organization' => [
+        'legal_name' => env('DONATION_ORG_LEGAL_NAME', 'New Egypt Group Inc.'),
+        'tax_status' => env('DONATION_ORG_TAX_STATUS', '501(c)(3)'),
+        'ein' => env('DONATION_ORG_EIN', '81-2019298'),
+        'website' => env('DONATION_ORG_WEBSITE', 'www.newegyptgroup.com'),
+    ],
+
 ];

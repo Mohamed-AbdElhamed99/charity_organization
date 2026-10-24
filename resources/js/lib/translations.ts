@@ -82,6 +82,7 @@ export interface SiteTranslations {
     backToCampaigns: string;
     startsOn: string;
     endsOn: string;
+    waysToGive: string;
   };
   donationsPage: {
     eyebrow: string;
@@ -112,6 +113,15 @@ export interface SiteTranslations {
     chooseAmount: string;
     customAmount: string;
     customAmountPlaceholder: string;
+    perUnit: string;
+    chooseDonation: string;
+    otherAmount: string;
+    yourDonation: string;
+    appealTotal: string;
+    customGiftLine: string;
+    legalIsA: string;
+    legalNonprofit: string;
+    einLabel: string;
     coverFeeLabel: string;
     breakdownGift: string;
     breakdownFee: string;
@@ -384,6 +394,7 @@ export const translations: Record<Locale, SiteTranslations> = {
       backToCampaigns: "Back to Campaigns",
       startsOn: "Starts on",
       endsOn: "Ends on",
+      waysToGive: "Ways to give",
     },
     donationsPage: {
       eyebrow: "Give Hope",
@@ -415,6 +426,15 @@ export const translations: Record<Locale, SiteTranslations> = {
       chooseAmount: "Choose an amount",
       customAmount: "Custom amount (USD)",
       customAmountPlaceholder: "e.g. 75.00",
+      perUnit: "per",
+      chooseDonation: "Choose your donation",
+      otherAmount: "Other amount",
+      yourDonation: "Your donation",
+      appealTotal: "Total",
+      customGiftLine: "Custom amount",
+      legalIsA: "is a",
+      legalNonprofit: "nonprofit organization.",
+      einLabel: "EIN",
       coverFeeLabel:
         "Cover the processing fee so 100% of my gift reaches the cause.",
       breakdownGift: "Your gift",
@@ -696,6 +716,7 @@ export const translations: Record<Locale, SiteTranslations> = {
       backToCampaigns: "العودة إلى الأنشطة",
       startsOn: "تبدأ في",
       endsOn: "تنتهي في",
+      waysToGive: "طرق العطاء",
     },
     donationsPage: {
       eyebrow: "امنح الأمل",
@@ -726,6 +747,15 @@ export const translations: Record<Locale, SiteTranslations> = {
       chooseAmount: "اختر المبلغ",
       customAmount: "مبلغ مخصص (دولار)",
       customAmountPlaceholder: "مثال: 75.00",
+      perUnit: "لكل",
+      chooseDonation: "اختر تبرعك",
+      otherAmount: "مبلغ آخر",
+      yourDonation: "تبرعك",
+      appealTotal: "الإجمالي",
+      customGiftLine: "مبلغ مخصص",
+      legalIsA: "هي منظمة",
+      legalNonprofit: "غير ربحية.",
+      einLabel: "رقم التعريف الضريبي",
       coverFeeLabel: "تغطية رسوم المعالجة حتى يصل 100% من تبرعي للمستفيدين.",
       breakdownGift: "تبرعك",
       breakdownFee: "رسوم المعالجة",

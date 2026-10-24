@@ -1,4 +1,5 @@
 import type { ReactNode, MouseEventHandler } from "react";
+import { cn } from "@/lib/utils";
 
 export type SiteButtonVariant = "primary" | "outline" | "ghost";
 
@@ -36,7 +37,7 @@ export function SiteButton({
   ariaLabel,
   disabled = false,
 }: SiteButtonProps) {
-  const cls = `${base} ${variants[variant]} ${className}`;
+  const cls = cn(base, variants[variant], className);
   const content = (
     <>
       <span>{children}</span>

@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
+import { show as appealShow } from "@/routes/appeals";
 import { ArrowLeft, ArrowRight, Calendar, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { SiteLayout } from "@/layouts/site-layout";
 import { useLocale } from "@/context/locale-context";
@@ -33,6 +34,17 @@ interface Campaign {
 
 type PageProps = {
   campaign: Campaign;
+  appeals?: AppealSummary[];
+};
+
+type AppealSummary = {
+  id: number;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  unit_amount_cents: number;
+  unit_label: string;
+  image: string;
 };
 
 function isVideoMime(mimeType: string | null): boolean {
@@ -169,7 +181,7 @@ function GallerySlider({ items }: { items: GalleryItem[] }) {
 
 export default function CampaignsShow() {
   const { t, locale, dir } = useLocale();
-  const { campaign } = usePage<PageProps>().props;
+  const { campaign, appeals = [] } = usePage<PageProps>().props;
   const { url } = usePage();
 
   const BackArrow = dir === "rtl" ? ArrowRight : ArrowLeft;
@@ -251,7 +263,38 @@ export default function CampaignsShow() {
 
       <article className="bg-white py-12 md:py-16">
         <div className="mx-auto max-w-[720px] px-6">
-          <div className="mb-10">
+          <div className="mb-10 space-y-4">
+            {appeals.length > 0 ? (
+              <section>
+                <h2 className="mb-4 font-display text-2xl font-bold text-ink">
+                  {t.campaignsPage.waysToGive}
+                </h2>
+                <ul className="grid gap-3">
+                  {appeals.map((appeal) => (
+                    <li key={appeal.id}>
+                      <Link
+                        href={appealShow.url(appeal.slug)}
+                        className="flex items-center gap-4 rounded-2xl p-3 ring-1 ring-black/10 transition hover:ring-action-red/40"
+                      >
+                        {appeal.image ? (
+                          <img
+                            src={appeal.image}
+                            alt=""
+                            className="h-16 w-20 shrink-0 rounded-lg object-cover"
+                          />
+                        ) : null}
+                        <span>
+                          <span className="block font-semibold text-ink">{appeal.title}</span>
+                          {appeal.subtitle ? (
+                            <span className="mt-1 block text-sm text-body-text">{appeal.subtitle}</span>
+                          ) : null}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
             <Link
               href={route("campaigns.donate", campaign.slug)}
               className="inline-flex items-center justify-center rounded-lg bg-action-red px-6 py-3 text-sm font-semibold text-white transition hover:bg-action-red/90"

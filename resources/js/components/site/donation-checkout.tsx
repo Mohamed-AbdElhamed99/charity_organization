@@ -54,6 +54,12 @@ type DonationCheckoutProps = {
   t: SiteTranslations;
   disabled?: boolean;
   goalReached?: boolean;
+  lockedGift?: {
+    appealId: number;
+    amountCents: number;
+    quantity: number | null;
+    submitLabel: string;
+  } | null;
 };
 
 type BreakdownSnapshot = {
@@ -118,6 +124,13 @@ function PaymentStep({
 
     if (result.error) {
       onError(result.error.message ?? labels.paymentError);
+      setProcessing(false);
+      return;
+    }
+
+    if (result.paymentIntent?.status === "succeeded" || result.paymentIntent?.status === "processing") {
+      window.location.assign(route("donations.thank-you", paymentIntentId));
+      return;
     }
 
     setProcessing(false);
@@ -272,6 +285,7 @@ export function DonationCheckout({
   t,
   disabled = false,
   goalReached = false,
+  lockedGift = null,
 }: DonationCheckoutProps) {
   const labels = t.donatePage;
   const authUser = (usePage().props as { auth?: { user?: { id: number } | null } }).auth?.user ?? null;
@@ -313,13 +327,29 @@ export function DonationCheckout({
     return sum + (Number.isFinite(cents) ? cents : 0);
   }, 0);
 
-  const chargeAmountCents = isRecurring ? allocationTotalCents : resolvedAmountCents;
+  const chargeAmountCents = lockedGift
+    ? lockedGift.amountCents
+    : isRecurring
+      ? allocationTotalCents
+      : resolvedAmountCents;
 
   const liveBreakdown = useMemo(
     () =>
       calculateDonationBreakdown(chargeAmountCents, donorCoversFee, feeConfig),
     [chargeAmountCents, donorCoversFee, feeConfig],
   );
+
+  // Changing the appeal quantity or custom amount invalidates a payment already in progress.
+  useEffect(() => {
+    if (!lockedGift) {
+      return;
+    }
+
+    setClientSecret(null);
+    setPaymentIntentId(null);
+    setStripePromise(null);
+    setBreakdown(null);
+  }, [lockedGift?.amountCents, lockedGift?.quantity]);
 
   // Prefill the allocation editor with the current campaign (or the general
   // fund) the first time the donor switches to a recurring frequency.
@@ -389,7 +419,11 @@ export function DonationCheckout({
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const stepOneValid =
-    (isRecurring ? allocationsValid : resolvedAmountCents >= minAmountCents) &&
+    (lockedGift
+      ? lockedGift.amountCents >= minAmountCents
+      : isRecurring
+        ? allocationsValid
+        : resolvedAmountCents >= minAmountCents) &&
     firstName.trim().length > 0 &&
     lastName.trim().length > 0 &&
     isEmailValid &&
@@ -409,7 +443,13 @@ export function DonationCheckout({
     setError(null);
     setFieldErrors({});
 
-    if (isRecurring ? !allocationsValid : resolvedAmountCents < minAmountCents) {
+    if (
+      lockedGift
+        ? lockedGift.amountCents < minAmountCents
+        : isRecurring
+          ? !allocationsValid
+          : resolvedAmountCents < minAmountCents
+    ) {
       setError(`${labels.minAmountError} ${formatUsd(minAmountCents)}.`);
       return;
     }
@@ -431,7 +471,7 @@ export function DonationCheckout({
         donor_message: donorMessage.trim() || null,
       };
 
-      const requestBody = isRecurring
+      const requestBody = isRecurring && !lockedGift
         ? {
             frequency,
             allocations: allocationRows.map((row) => ({
@@ -442,9 +482,15 @@ export function DonationCheckout({
             ...donorFields,
           }
         : {
-            campaign_id: isGeneral ? null : campaign?.id,
-            is_general: isGeneral,
-            amount: resolvedAmountCents,
+            campaign_id: lockedGift ? campaign?.id ?? null : isGeneral ? null : campaign?.id,
+            is_general: lockedGift ? false : isGeneral,
+            amount: lockedGift ? lockedGift.amountCents : resolvedAmountCents,
+            ...(lockedGift
+              ? {
+                  appeal_id: lockedGift.appealId,
+                  quantity: lockedGift.quantity,
+                }
+              : {}),
             ...donorFields,
           };
 
@@ -526,6 +572,7 @@ export function DonationCheckout({
 
   return (
     <form onSubmit={startCheckout} className="space-y-6">
+      {lockedGift ? null : (
       <div>
         <span className="mb-2 block text-sm font-medium text-ink">
           {labels.frequencyLabel}
@@ -552,8 +599,9 @@ export function DonationCheckout({
           ))}
         </div>
       </div>
+      )}
 
-      {isRecurring ? (
+      {lockedGift ? null : isRecurring ? (
         <AllocationEditor
           rows={allocationRows}
           campaigns={campaignOptions}
@@ -638,11 +686,15 @@ export function DonationCheckout({
       <SiteButton
         type="submit"
         variant="primary"
-        className="w-full"
+        className={lockedGift ? "w-full rounded-lg py-4 text-base" : "w-full"}
         disabled={!stepOneValid || loading}
-        ariaLabel={labels.continueToPayment}
+        ariaLabel={lockedGift?.submitLabel ?? labels.continueToPayment}
       >
-        {loading ? labels.preparingCheckout : labels.continueToPayment}
+        {loading
+          ? labels.preparingCheckout
+          : lockedGift
+            ? lockedGift.submitLabel
+            : labels.continueToPayment}
       </SiteButton>
     </form>
   );

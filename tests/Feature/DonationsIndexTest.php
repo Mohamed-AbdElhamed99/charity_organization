@@ -6,6 +6,7 @@ use App\Contracts\PaymentGateway;
 use App\Models\Campaign;
 use App\Models\CampaignCategory;
 use App\Models\Donation;
+use App\Models\User;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -127,6 +128,20 @@ class DonationsIndexTest extends TestCase
                 'status' => $donation->status?->value,
                 'amount_cents' => 5000,
             ]);
+    }
+
+    public function test_donation_status_endpoint_masks_donor_email(): void
+    {
+        $donor = User::factory()->create(['email' => 'jane.donor@example.com']);
+        Donation::factory()->pending()->create([
+            'donor_id' => $donor->id,
+            'stripe_payment_intent_id' => 'pi_test_masked_email',
+        ]);
+
+        $response = $this->getJson(route('donations.status', 'pi_test_masked_email'))
+            ->assertOk();
+
+        $this->assertSame('ja***@example.com', $response->json('email'));
     }
 
     public function test_donate_page_includes_csrf_meta_token(): void

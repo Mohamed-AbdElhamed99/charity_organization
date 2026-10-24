@@ -37,40 +37,42 @@ export function FeeToggle({
           id="cover-fee"
           checked={checked}
           onCheckedChange={onCheckedChange}
-          aria-describedby="fee-breakdown"
+          aria-describedby={amountCents > 0 ? "fee-breakdown" : undefined}
         />
         <Label htmlFor="cover-fee" className="text-sm leading-relaxed text-body-text">
           {label}
         </Label>
       </div>
 
-      <div
-        id="fee-breakdown"
-        className="rounded-xl bg-surface-soft p-4 text-sm text-body-text ring-1 ring-black/5"
-      >
-        {checked ? (
-          <p>
-            {labels.breakdownGift} {formatUsd(breakdown.amountCents)} ·{" "}
-            {labels.breakdownFee} {formatUsd(breakdown.estimatedFeeCents)} ·{" "}
-            <span className="font-semibold text-ink">
-              {labels.breakdownTotal} {formatUsd(breakdown.chargeCents)}
-            </span>
-          </p>
-        ) : (
-          <>
+      {amountCents > 0 ? (
+        <div
+          id="fee-breakdown"
+          className="rounded-xl bg-surface-soft p-4 text-sm text-body-text ring-1 ring-black/5"
+        >
+          {checked ? (
             <p>
               {labels.breakdownGift} {formatUsd(breakdown.amountCents)} ·{" "}
+              {labels.breakdownFee} {formatUsd(breakdown.estimatedFeeCents)} ·{" "}
               <span className="font-semibold text-ink">
                 {labels.breakdownTotal} {formatUsd(breakdown.chargeCents)}
               </span>
             </p>
-            <p className="mt-2 text-xs text-body-text/70">
-              About {formatUsd(breakdown.estimatedFeeCents)} {labels.breakdownFeeNote}{" "}
-              {formatUsd(breakdown.netToCauseCents ?? 0)}.
-            </p>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <p>
+                {labels.breakdownGift} {formatUsd(breakdown.amountCents)} ·{" "}
+                <span className="font-semibold text-ink">
+                  {labels.breakdownTotal} {formatUsd(breakdown.chargeCents)}
+                </span>
+              </p>
+              <p className="mt-2 text-xs text-body-text/70">
+                About {formatUsd(breakdown.estimatedFeeCents)} {labels.breakdownFeeNote}{" "}
+                {formatUsd(breakdown.netToCauseCents ?? 0)}.
+              </p>
+            </>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

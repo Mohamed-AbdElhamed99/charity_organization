@@ -135,6 +135,25 @@ class DonationWebhookService
             ]);
         }
 
+        // Only the first allocation of a multi-allocation subscription stores
+        // the PaymentIntent id (unique column), so a failed first-cycle charge
+        // must also fail the sibling Pending rows for the other allocations -
+        // otherwise they are orphaned in Pending forever.
+        $subscriptionId = $donations
+            ->first(fn (Donation $donation) => $donation->donation_subscription_id !== null)
+            ?->donation_subscription_id;
+
+        if ($subscriptionId !== null) {
+            Donation::query()
+                ->where('donation_subscription_id', $subscriptionId)
+                ->where('status', DonationStatus::Pending)
+                ->whereNull('stripe_invoice_id')
+                ->update([
+                    'status' => DonationStatus::Failed,
+                    'stripe_status' => StripeStatus::Failed,
+                ]);
+        }
+
         $webhookEvent->update(['processed_at' => now()]);
     }
 
@@ -442,6 +461,10 @@ class DonationWebhookService
             'stripe_payment_intent_id' => $paymentIntent->id,
             'donor_covers_fee' => $donorCoversFee,
             'is_anonymous' => $isAnonymous,
+            'appeal_id' => ! empty($metadata['appeal_id']) ? (int) $metadata['appeal_id'] : null,
+            'quantity' => ! empty($metadata['quantity']) ? (int) $metadata['quantity'] : null,
+            'unit_amount_cents' => ! empty($metadata['unit_amount_cents']) ? (int) $metadata['unit_amount_cents'] : null,
+            'unit_label' => ! empty($metadata['unit_label']) ? $metadata['unit_label'] : null,
             'metadata' => ['reconstructed_from_webhook' => true],
         ]);
     }

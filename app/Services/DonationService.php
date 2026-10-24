@@ -10,8 +10,8 @@ use App\Enums\CampaignStatus;
 use App\Enums\DonationStatus;
 use App\Enums\DonationSubscriptionStatus;
 use App\Enums\StripeStatus;
-use App\Mail\DonationReceiptMail;
 use App\Models\Campaign;
+use App\Models\CampaignAppeal;
 use App\Models\Currency;
 use App\Models\Donation;
 use App\Models\DonationSubscription;
@@ -19,7 +19,7 @@ use App\Models\DonorProfile;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class DonationService
 {
@@ -42,11 +42,11 @@ class DonationService
             $dto->countryId,
         );
 
-        [$isGeneral, $campaignId] = $this->resolveCampaignAssignment($dto->isGeneral, $dto->campaignId);
+        [$isGeneral, $campaignId, $amountCents, $appeal] = $this->resolveGift($dto);
 
         $chargeCents = $dto->donorCoversFee
-            ? $this->gateway->grossUpForFee($dto->amountCents, $currency->code)
-            : $dto->amountCents;
+            ? $this->gateway->grossUpForFee($amountCents, $currency->code)
+            : $amountCents;
 
         $estimatedFee = $this->gateway->estimateFee($chargeCents, $currency->code);
 
@@ -57,21 +57,29 @@ class DonationService
             'last_name' => $dto->lastName,
             'campaign_id' => $campaignId ? (string) $campaignId : '',
             'is_general' => $isGeneral ? '1' : '0',
-            'amount_cents' => (string) $dto->amountCents,
+            'amount_cents' => (string) $amountCents,
             'donor_covers_fee' => $dto->donorCoversFee ? '1' : '0',
             'currency_code' => $currency->code,
             'is_anonymous' => $dto->isAnonymous ? '1' : '0',
+            'appeal_id' => $appeal['appeal_id'] ? (string) $appeal['appeal_id'] : '',
+            'quantity' => $appeal['quantity'] ? (string) $appeal['quantity'] : '',
+            'unit_amount_cents' => $appeal['unit_amount_cents'] ? (string) $appeal['unit_amount_cents'] : '',
+            'unit_label' => $appeal['unit_label'] ?? '',
         ];
 
         $paymentIntent = $this->gateway->createPaymentIntent($chargeCents, $currency->code, $metadata);
 
-        $donation = DB::transaction(function () use ($dto, $donor, $campaignId, $isGeneral, $paymentIntent) {
+        $donation = DB::transaction(function () use ($dto, $donor, $campaignId, $isGeneral, $paymentIntent, $amountCents, $appeal) {
             return Donation::create([
                 'transaction_id' => null,
                 'donor_id' => $donor->id,
                 'campaign_id' => $campaignId,
+                'appeal_id' => $appeal['appeal_id'],
+                'quantity' => $appeal['quantity'],
+                'unit_amount_cents' => $appeal['unit_amount_cents'],
+                'unit_label' => $appeal['unit_label'],
                 'is_general' => $isGeneral,
-                'amount' => $dto->amountCents,
+                'amount' => $amountCents,
                 'status' => DonationStatus::Pending,
                 'stripe_status' => StripeStatus::Pending,
                 'stripe_payment_intent_id' => $paymentIntent->id,
@@ -83,14 +91,13 @@ class DonationService
                 ],
             ]);
         });
-        Mail::to($donor->email)->send(new DonationReceiptMail($donation));
 
         return [
             'clientSecret' => $paymentIntent->clientSecret,
             'publishableKey' => config('services.stripe.key'),
             'paymentIntentId' => $paymentIntent->id,
             'donationId' => $donation->id,
-            'amount' => $dto->amountCents,
+            'amount' => $amountCents,
             'chargeCents' => $chargeCents,
             'estimatedFee' => $estimatedFee,
             'donorCoversFee' => $dto->donorCoversFee,
@@ -169,7 +176,7 @@ class DonationService
                 'billing_cycle_anchor_at' => $subscriptionIntent->billingCycleAnchor
                     ? Carbon::createFromTimestamp($subscriptionIntent->billingCycleAnchor)
                     : now(),
-                'status' => DonationSubscriptionStatus::Active,
+                'status' => DonationSubscriptionStatus::Incomplete,
                 'metadata' => [
                     'is_anonymous' => $dto->isAnonymous,
                     'donor_message' => $dto->donorMessage,
@@ -221,6 +228,44 @@ class DonationService
             'currency' => $currency->code,
             'frequency' => $dto->frequency->value,
         ];
+    }
+
+    /**
+     * Resolves a one-time gift, including an appeal quantity or custom amount.
+     *
+     * @return array{0: bool, 1: int|null, 2: int, 3: array{appeal_id: int|null, quantity: int|null, unit_amount_cents: int|null, unit_label: string|null}}
+     */
+    private function resolveGift(CreateDonationIntentDTO $dto): array
+    {
+        $emptyAppeal = [
+            'appeal_id' => null,
+            'quantity' => null,
+            'unit_amount_cents' => null,
+            'unit_label' => null,
+        ];
+
+        if ($dto->appealId === null) {
+            [$isGeneral, $campaignId] = $this->resolveCampaignAssignment($dto->isGeneral, $dto->campaignId);
+
+            return [$isGeneral, $campaignId, $dto->amountCents, $emptyAppeal];
+        }
+
+        $appeal = CampaignAppeal::query()->with('campaign')->find($dto->appealId);
+
+        if ($appeal === null) {
+            throw ValidationException::withMessages([
+                'appeal_id' => __('This appeal is not accepting donations.'),
+            ]);
+        }
+
+        $gift = $appeal->resolvedGift($dto->quantity, $dto->amountCents);
+
+        return [false, $gift['campaign_id'], $gift['amount_cents'], [
+            'appeal_id' => $appeal->id,
+            'quantity' => $gift['quantity'],
+            'unit_amount_cents' => $gift['unit_amount_cents'],
+            'unit_label' => $gift['unit_label'],
+        ]];
     }
 
     /**

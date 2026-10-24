@@ -10,10 +10,12 @@ use App\Models\Campaign;
 use App\Models\Donation;
 use App\Models\DonationSubscription;
 use App\Models\DonorProfile;
+use App\Services\DonationWebhookService;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Stripe\Event;
 use Tests\Support\FakePaymentGateway;
 use Tests\TestCase;
 
@@ -73,7 +75,7 @@ class DonationSubscriptionTest extends TestCase
         ])->assertUnprocessable();
     }
 
-    public function test_subscribe_creates_active_subscription_and_stripe_customer(): void
+    public function test_subscribe_creates_incomplete_subscription_and_stripe_customer(): void
     {
         $campaign = $this->createDonatableCampaign();
 
@@ -94,7 +96,7 @@ class DonationSubscriptionTest extends TestCase
             ->assertJsonStructure(['clientSecret', 'paymentIntentId', 'subscriptionId', 'donationSubscriptionId']);
 
         $subscription = DonationSubscription::query()->with('allocations')->findOrFail($response->json('donationSubscriptionId'));
-        $this->assertSame(DonationSubscriptionStatus::Active, $subscription->status);
+        $this->assertSame(DonationSubscriptionStatus::Incomplete, $subscription->status);
         $this->assertSame(RecurrenceFrequency::Monthly, $subscription->frequency);
         $this->assertSame(10000, $subscription->amount_cents);
         $this->assertCount(1, $subscription->allocations);
@@ -112,6 +114,44 @@ class DonationSubscriptionTest extends TestCase
         $profile = DonorProfile::query()->where('user_id', $subscription->donor_id)->firstOrFail();
         $this->assertNotNull($profile->stripe_customer_id);
         $this->assertSame($subscription->stripe_customer_id, $profile->stripe_customer_id);
+    }
+
+    public function test_subscription_becomes_active_only_after_first_payment_succeeds(): void
+    {
+        $campaign = $this->createDonatableCampaign();
+
+        $response = $this->postJson(route('donations.subscribe'), [
+            'frequency' => 'monthly',
+            'allocations' => [
+                ['campaign_id' => $campaign->id, 'is_general' => false, 'amount' => 10000],
+            ],
+            'donor_covers_fee' => false,
+            'first_name' => 'Jane',
+            'last_name' => 'Donor',
+            'email' => 'jane-incomplete-to-active@example.com',
+        ]);
+        $response->assertOk();
+
+        $subscription = DonationSubscription::query()->findOrFail($response->json('donationSubscriptionId'));
+        $this->assertSame(DonationSubscriptionStatus::Incomplete, $subscription->status);
+
+        app(DonationWebhookService::class)->handle(Event::constructFrom([
+            'id' => 'evt_incomplete_to_active_1',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => $response->json('paymentIntentId'),
+                    'object' => 'payment_intent',
+                    'amount_received' => 10000,
+                    'latest_charge' => 'ch_incomplete_to_active_1',
+                    'invoice' => 'in_incomplete_to_active_1',
+                    'metadata' => [],
+                ],
+            ],
+        ]));
+
+        $subscription->refresh();
+        $this->assertSame(DonationSubscriptionStatus::Active, $subscription->status);
     }
 
     /**

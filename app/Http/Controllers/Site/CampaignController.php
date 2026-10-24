@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Site\CampaignAppealResource;
 use App\Http\Resources\Site\CampaignResource;
 use App\Models\Campaign;
+use App\Models\CampaignAppeal;
 use App\Models\CampaignCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Str;
 
 class CampaignController extends Controller
 {
@@ -51,7 +53,9 @@ class CampaignController extends Controller
             404
         );
 
-        $campaign->load(['category', 'media']);
+        $campaign->load(['category', 'media', 'appeals' => function ($query) {
+            $query->active()->ordered()->with('media');
+        }]);
 
         $campaignData = (new CampaignResource($campaign))->resolve();
 
@@ -61,14 +65,20 @@ class CampaignController extends Controller
 
         return Inertia::render('site/campaigns/campaigns-show', [
             'campaign' => $campaignData,
+            'appeals' => CampaignAppealResource::collection(
+                $campaign->appeals
+                    ->each(fn (CampaignAppeal $appeal) => $appeal->setRelation('campaign', $campaign))
+                    ->filter(fn (CampaignAppeal $appeal) => $appeal->isDonatable())
+                    ->values()
+            )->resolve(),
         ])->withViewData([
             'meta' => [
-                'type'        => 'article',
-                'title'       => $campaignData['meta_title'],
+                'type' => 'article',
+                'title' => $campaignData['meta_title'],
                 'description' => Str::limit(strip_tags((string) $campaignData['meta_description']), 160),
-                'image'       => $image ?: url('/images/new-egypt-logo.png'),
-                'url'         => route('campaigns.show', $campaign),
-                'published'   => $campaignData['published_at'],
+                'image' => $image ?: url('/images/new-egypt-logo.png'),
+                'url' => route('campaigns.show', $campaign),
+                'published' => $campaignData['published_at'],
             ],
         ]);
     }

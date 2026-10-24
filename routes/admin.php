@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BeneficiaryAssessmentController;
 use App\Http\Controllers\Admin\BeneficiaryController;
 use App\Http\Controllers\Admin\BeneficiarySupportController;
 use App\Http\Controllers\Admin\BeneficiarySupportReportController;
+use App\Http\Controllers\Admin\CampaignAppealController;
 use App\Http\Controllers\Admin\CampaignBeneficiaryReportController;
 use App\Http\Controllers\Admin\CampaignCategoryController;
 use App\Http\Controllers\Admin\CampaignController;
@@ -125,6 +126,13 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::get('{campaign}/expenses', [CampaignExpenseController::class, 'campaignIndex'])->name('expenses.index')->middleware($perm(ModulePermission::CAMPAIGN_EXPENSES, 'view'));
             Route::get('{campaign}/beneficiary-report', [CampaignBeneficiaryReportController::class, 'show'])->name('beneficiary-report')->middleware($perm(ModulePermission::CAMPAIGN_BENEFICIARY_REPORTS, 'view'));
             Route::get('{campaign}/beneficiary-supports/create', [BeneficiarySupportController::class, 'createFromCampaign'])->name('beneficiary-supports.create')->middleware($perm(ModulePermission::BENEFICIARY_SUPPORTS, 'create'));
+
+            Route::get('{campaign}/appeals', [CampaignAppealController::class, 'index'])->name('appeals.index')->middleware($perm(ModulePermission::CAMPAIGNS, 'view'));
+            Route::get('{campaign}/appeals/create', [CampaignAppealController::class, 'create'])->name('appeals.create')->middleware($perm(ModulePermission::CAMPAIGNS, 'create'));
+            Route::post('{campaign}/appeals', [CampaignAppealController::class, 'store'])->name('appeals.store')->middleware($perm(ModulePermission::CAMPAIGNS, 'create'));
+            Route::get('{campaign}/appeals/{appeal}/edit', [CampaignAppealController::class, 'edit'])->name('appeals.edit')->middleware($perm(ModulePermission::CAMPAIGNS, 'edit'));
+            Route::match(['put', 'patch'], '{campaign}/appeals/{appeal}', [CampaignAppealController::class, 'update'])->name('appeals.update')->middleware($perm(ModulePermission::CAMPAIGNS, 'edit'));
+            Route::delete('{campaign}/appeals/{appeal}', [CampaignAppealController::class, 'destroy'])->name('appeals.destroy')->middleware($perm(ModulePermission::CAMPAIGNS, 'delete'));
         });
 
         // ==========================================================

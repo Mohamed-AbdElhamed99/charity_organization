@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use Database\Seeders\FinancialFoundationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\Support\FakePaymentGateway;
 use Tests\TestCase;
 
@@ -129,6 +130,25 @@ class DonationIntentTest extends TestCase
         $this->assertNotNull($donation);
         $this->assertTrue($donation->is_general);
         $this->assertNull($donation->campaign_id);
+    }
+
+    public function test_intent_does_not_send_a_receipt_before_payment_succeeds(): void
+    {
+        Mail::fake();
+
+        $campaign = $this->createDonatableCampaign();
+
+        $this->postJson(route('donations.intent'), [
+            'campaign_id' => $campaign->id,
+            'is_general' => false,
+            'amount' => 5000,
+            'donor_covers_fee' => false,
+            'first_name' => 'Jane',
+            'last_name' => 'Donor',
+            'email' => 'jane-no-receipt@example.com',
+        ])->assertOk();
+
+        Mail::assertNothingSent();
     }
 
     public function test_intent_falls_back_to_general_when_campaign_is_no_longer_open(): void

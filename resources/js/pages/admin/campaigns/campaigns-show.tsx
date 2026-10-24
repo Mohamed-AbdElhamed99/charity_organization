@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/card'
 import { formatAmount, statusTypes } from '@/components/admin/campaigns/data/data'
 import { edit, index as campaignsIndex } from '@/routes/admin/campaigns'
+import { index as appealsIndex } from '@/routes/admin/campaigns/appeals'
 import type { Campaign } from '@/types/models/campaign'
 
 type PageProps = {
@@ -48,6 +49,9 @@ export default function CampaignsShow() {
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href={edit.url(campaign.id)}>Edit</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={appealsIndex.url(campaign.id)}>Appeals</Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href={route('admin.campaigns.beneficiary-supports.create', campaign.id)}>

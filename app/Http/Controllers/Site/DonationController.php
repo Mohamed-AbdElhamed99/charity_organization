@@ -170,8 +170,10 @@ class DonationController extends Controller
             countryId: isset($validated['country_id']) ? (int) $validated['country_id'] : null,
             isAnonymous: (bool) ($validated['is_anonymous'] ?? false),
             donorMessage: $validated['donor_message'] ?? null,
+            appealId: isset($validated['appeal_id']) ? (int) $validated['appeal_id'] : null,
+            quantity: isset($validated['quantity']) ? (int) $validated['quantity'] : null,
         ));
-        
+
         return response()->json($result);
     }
 
@@ -315,12 +317,28 @@ class DonationController extends Controller
             'amount_cents' => $donation->amount,
             'campaign_title' => $donation->is_general ? null : $donation->campaign?->title,
             'is_general' => $donation->is_general,
-            'email' => $donation->donor?->email,
+            'email' => $donation->donor?->email ? $this->maskEmail($donation->donor->email) : null,
             'is_recurring' => $donation->is_recurring,
             'manage_subscription_url' => $donation->is_recurring && $donation->donationSubscription && $ownsSubscription
                 ? route('donations.subscriptions.portal', $donation->donationSubscription->stripe_subscription_id)
                 : null,
         ];
+    }
+
+    /**
+     * Masks a donor email so a stranger who obtains a paymentIntentId (e.g.
+     * via logs or a Referer header) cannot scrape the full address from the
+     * public thank-you/status endpoints, while the actual donor can still
+     * recognize their own receipt confirmation.
+     */
+    private function maskEmail(string $email): string
+    {
+        [$local, $domain] = array_pad(explode('@', $email, 2), 2, '');
+
+        $visible = mb_substr($local, 0, 2);
+        $masked = $visible.'***';
+
+        return $domain !== '' ? "{$masked}@{$domain}" : $masked;
     }
 
     /**
