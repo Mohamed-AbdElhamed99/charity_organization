@@ -231,7 +231,7 @@ class DonationService
     }
 
     /**
-     * Resolves a one-time gift, including an appeal quantity or custom amount.
+     * Resolves a one-time gift, including a named appeal option or custom amount.
      *
      * @return array{0: bool, 1: int|null, 2: int, 3: array{appeal_id: int|null, quantity: int|null, unit_amount_cents: int|null, unit_label: string|null}}
      */
@@ -258,7 +258,7 @@ class DonationService
             ]);
         }
 
-        $gift = $appeal->resolvedGift($dto->quantity, $dto->amountCents);
+        $gift = $appeal->resolvedGift($dto->giftOption, $dto->amountCents);
 
         return [false, $gift['campaign_id'], $gift['amount_cents'], [
             'appeal_id' => $appeal->id,

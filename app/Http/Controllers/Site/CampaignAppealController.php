@@ -17,7 +17,20 @@ class CampaignAppealController extends Controller
 
         $appeal->load(['campaign.media', 'media']);
 
+        abort_unless($appeal->isDonatable(), 404);
+
         $appealData = (new CampaignAppealResource($appeal))->resolve();
+        $description = trim(strip_tags((string) $appealData['subtitle']));
+
+        if ($description === '') {
+            $description = trim(strip_tags((string) $appealData['title']));
+        }
+
+        $image = $appealData['image'] ?: '/images/new-egypt-logo.png';
+
+        if (! str_starts_with($image, 'http://') && ! str_starts_with($image, 'https://')) {
+            $image = url($image);
+        }
 
         return Inertia::render('site/appeals/appeal-show', [
             'appeal' => $appealData,
@@ -47,8 +60,8 @@ class CampaignAppealController extends Controller
             'meta' => [
                 'type' => 'website',
                 'title' => $appealData['title'],
-                'description' => Str::limit(strip_tags((string) $appealData['subtitle']), 160),
-                'image' => $appealData['image'] ?: url('/images/new-egypt-logo.png'),
+                'description' => Str::limit($description, 160),
+                'image' => $image,
                 'url' => route('appeals.show', ['appeal' => $appeal->slug]),
                 'published' => null,
             ],

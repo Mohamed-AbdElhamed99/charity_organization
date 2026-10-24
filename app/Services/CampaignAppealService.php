@@ -51,12 +51,7 @@ class CampaignAppealService
             'title_ar' => $data['title_ar'],
             'subtitle_en' => $data['subtitle_en'] ?? null,
             'subtitle_ar' => $data['subtitle_ar'] ?? null,
-            'unit_amount_cents' => Money::decimalToCents($data['unit_amount']),
-            'unit_label_en' => $data['unit_label_en'],
-            'unit_label_ar' => $data['unit_label_ar'],
-            'unit_label_plural_en' => $data['unit_label_plural_en'],
-            'unit_label_plural_ar' => $data['unit_label_plural_ar'],
-            'quantity_options' => array_values(array_map('intval', $data['quantity_options'])),
+            'gift_options' => $this->giftOptions($data['gift_options']),
             'allow_custom_amount' => (bool) $data['allow_custom_amount'],
             'cta_label_en' => $data['cta_label_en'],
             'cta_label_ar' => $data['cta_label_ar'],
@@ -83,5 +78,18 @@ class CampaignAppealService
         }
 
         return $candidate;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $options
+     * @return list<array{name_en: string, name_ar: string, amount_cents: int}>
+     */
+    private function giftOptions(array $options): array
+    {
+        return array_values(array_map(fn (array $option): array => [
+            'name_en' => $option['name_en'],
+            'name_ar' => $option['name_ar'],
+            'amount_cents' => Money::decimalToCents($option['amount']),
+        ], $options));
     }
 }

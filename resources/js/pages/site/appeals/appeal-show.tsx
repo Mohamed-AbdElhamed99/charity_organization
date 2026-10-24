@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Head, usePage } from "@inertiajs/react";
+import { Head } from "@inertiajs/react";
 import { DonationCheckout } from "@/components/site/donation-checkout";
 import { SiteLayout } from "@/layouts/site-layout";
 import { useLocale } from "@/context/locale-context";
@@ -8,15 +8,17 @@ import type { FeeConfig } from "@/lib/donation-fee";
 import type { CountryOption } from "@/components/site/donation-form/donor-fields";
 import { cn } from "@/lib/utils";
 
+type GiftOption = {
+  name: string;
+  amount_cents: number;
+};
+
 type Appeal = {
   id: number;
   slug: string;
   title: string;
   subtitle: string | null;
-  unit_amount_cents: number;
-  unit_label: string;
-  unit_label_plural: string;
-  quantity_options: number[];
+  gift_options: GiftOption[];
   allow_custom_amount: boolean;
   cta_label: string;
   image: string;
@@ -64,14 +66,13 @@ export default function AppealShow({
 }: PageProps) {
   const { t } = useLocale();
   const labels = t.donatePage;
-  const { url } = usePage();
-  const [quantity, setQuantity] = useState<number>(appeal.quantity_options[0] ?? 1);
+  const [selectedOption, setSelectedOption] = useState(0);
   const [useCustom, setUseCustom] = useState(false);
   const [customAmount, setCustomAmount] = useState("");
 
   const customCents = dollarsToCents(customAmount) ?? 0;
-  const amountCents = useCustom ? customCents : quantity * appeal.unit_amount_cents;
-  const unitNoun = quantity === 1 ? appeal.unit_label : appeal.unit_label_plural;
+  const chosenGift = appeal.gift_options[selectedOption] ?? appeal.gift_options[0];
+  const amountCents = useCustom ? customCents : (chosenGift?.amount_cents ?? 0);
 
   const websiteHref = organization.website.startsWith("http")
     ? organization.website
@@ -81,22 +82,15 @@ export default function AppealShow({
     () => ({
       appealId: appeal.id,
       amountCents,
-      quantity: useCustom ? null : quantity,
+      giftOption: useCustom ? null : selectedOption,
       submitLabel: appeal.cta_label,
     }),
-    [appeal.id, appeal.cta_label, amountCents, quantity, useCustom],
+    [appeal.id, appeal.cta_label, amountCents, selectedOption, useCustom],
   );
 
   return (
     <>
-      <Head title={appeal.title}>
-        <meta name="description" content={appeal.subtitle ?? ""} />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={appeal.title} />
-        <meta property="og:description" content={appeal.subtitle ?? ""} />
-        {appeal.image ? <meta property="og:image" content={appeal.image} /> : null}
-        <meta property="og:url" content={url} />
-      </Head>
+      <Head title={appeal.title} />
 
       <section className="bg-white px-4 pb-16 pt-28 md:pt-32">
         <div className="mx-auto w-full max-w-md">
@@ -134,46 +128,39 @@ export default function AppealShow({
               <p className="mt-2 text-center text-base text-body-text">{appeal.subtitle}</p>
             ) : null}
 
-            <p className="mt-5 text-center">
-              <span className="font-display text-4xl font-bold text-action-red">
-                {formatAppealMoney(appeal.unit_amount_cents)}
-              </span>{" "}
-              <span className="text-lg font-semibold text-ink">
-                {labels.perUnit} {appeal.unit_label}
-              </span>
-            </p>
-
             <fieldset className="mt-6">
               <legend className="mb-3 w-full text-center text-base font-bold text-ink">
                 {labels.chooseDonation}
               </legend>
-              <div className="grid grid-cols-3 gap-2">
-                {appeal.quantity_options.map((option) => {
-                  const selected = !useCustom && quantity === option;
-                  const label = `${option} ${option === 1 ? appeal.unit_label : appeal.unit_label_plural}`;
+              <div className="grid grid-cols-2 gap-3">
+                {appeal.gift_options.map((option, index) => {
+                  const selected = !useCustom && selectedOption === index;
 
                   return (
                     <label
-                      key={option}
+                      key={`${option.name}-${option.amount_cents}`}
                       className={cn(
-                        "flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-2 py-3 text-sm font-semibold transition",
+                        "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 px-3 py-4 text-center transition focus-within:ring-2 focus-within:ring-action-red/40",
                         selected
-                          ? "border-action-red bg-action-red/5 text-action-red"
-                          : "border-black/10 text-ink hover:border-black/20",
+                          ? "border-action-red bg-action-red/5"
+                          : "border-black/10 hover:border-black/20",
                       )}
                     >
                       <input
                         type="radio"
-                        name="appeal-quantity"
-                        className="size-4 accent-action-red"
+                        name="appeal-gift"
+                        className="sr-only"
                         checked={selected}
                         onChange={() => {
                           setUseCustom(false);
-                          setQuantity(option);
+                          setSelectedOption(index);
                           setCustomAmount("");
                         }}
                       />
-                      {label}
+                      <span className="font-display text-4xl font-bold text-action-red">
+                        {formatAppealMoney(option.amount_cents)}
+                      </span>
+                      <span className="mt-1 text-lg font-bold text-ink">{option.name}</span>
                     </label>
                   );
                 })}
@@ -209,9 +196,7 @@ export default function AppealShow({
             <div className="mt-5 rounded-xl border border-black/10 p-4">
               <p className="text-sm font-semibold text-action-red">{labels.yourDonation}</p>
               <p className="mt-1 text-sm text-body-text">
-                {useCustom
-                  ? labels.customGiftLine
-                  : `${quantity} ${unitNoun} × ${formatAppealMoney(appeal.unit_amount_cents)}`}
+                {useCustom ? labels.customGiftLine : chosenGift?.name}
               </p>
               <p className="mt-2 text-lg font-bold text-ink">
                 {labels.appealTotal}:{" "}

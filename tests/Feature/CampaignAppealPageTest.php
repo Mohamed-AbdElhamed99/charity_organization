@@ -34,8 +34,10 @@ class CampaignAppealPageTest extends TestCase
         return CampaignAppeal::factory()->create(array_merge([
             'campaign_id' => $campaign->id,
             'slug' => 'ramadan-food-box',
-            'unit_amount_cents' => 1500,
-            'quantity_options' => [1, 3, 5],
+            'gift_options' => [
+                ['name_en' => 'Medium Turkey', 'name_ar' => 'ديك رومي متوسط', 'amount_cents' => 3000],
+                ['name_en' => 'Halal Turkey', 'name_ar' => 'ديك رومي حلال', 'amount_cents' => 5000],
+            ],
             'allow_custom_amount' => true,
             'is_active' => true,
         ], $appealOverrides));
@@ -57,15 +59,21 @@ class CampaignAppealPageTest extends TestCase
 
     public function test_public_give_page_renders_an_open_appeal(): void
     {
-        $appeal = $this->createDonatableAppeal();
+        $appeal = $this->createDonatableAppeal([
+            'subtitle_en' => 'Help a family enjoy a Thanksgiving meal.',
+        ]);
 
         $this->get(route('appeals.show', $appeal->slug))
             ->assertOk()
+            ->assertSee('property="og:description" content="Help a family enjoy a Thanksgiving meal."', false)
+            ->assertSee('property="og:url" content="'.route('appeals.show', $appeal).'"', false)
             ->assertInertia(fn (Assert $page) => $page
                 ->component('site/appeals/appeal-show')
                 ->where('appeal.slug', 'ramadan-food-box')
-                ->where('appeal.unit_amount_cents', 1500)
-                ->where('appeal.quantity_options', [1, 3, 5])
+                ->where('appeal.gift_options.0.name', 'Medium Turkey')
+                ->where('appeal.gift_options.0.amount_cents', 3000)
+                ->where('appeal.gift_options.1.name', 'Halal Turkey')
+                ->where('appeal.gift_options.1.amount_cents', 5000)
                 ->where('organization.ein', '81-2019298')
             );
     }
@@ -102,39 +110,39 @@ class CampaignAppealPageTest extends TestCase
             );
     }
 
-    public function test_intent_stores_a_quantity_gift_against_the_appeal_campaign(): void
+    public function test_intent_stores_the_selected_gift_against_the_appeal_campaign(): void
     {
         $appeal = $this->createDonatableAppeal();
 
         $response = $this->postJson(route('donations.intent'), $this->donorPayload([
             'campaign_id' => $appeal->campaign_id,
             'appeal_id' => $appeal->id,
-            'quantity' => 3,
-            'amount' => 4500,
+            'gift_option' => 1,
+            'amount' => 5000,
         ]));
 
         $response->assertOk()
-            ->assertJsonPath('amount', 4500);
+            ->assertJsonPath('amount', 5000);
 
         $donation = Donation::query()->where('stripe_payment_intent_id', $response->json('paymentIntentId'))->first();
         $this->assertNotNull($donation);
         $this->assertSame($appeal->id, $donation->appeal_id);
         $this->assertSame($appeal->campaign_id, $donation->campaign_id);
-        $this->assertSame(3, $donation->quantity);
-        $this->assertSame(1500, $donation->unit_amount_cents);
-        $this->assertSame('boxes', $donation->unit_label);
+        $this->assertNull($donation->quantity);
+        $this->assertSame(5000, $donation->unit_amount_cents);
+        $this->assertSame('Halal Turkey', $donation->unit_label);
         $this->assertFalse($donation->is_general);
     }
 
-    public function test_intent_rejects_a_total_that_does_not_match_the_quantity(): void
+    public function test_intent_rejects_a_total_that_does_not_match_the_selected_gift(): void
     {
         $appeal = $this->createDonatableAppeal();
 
         $this->postJson(route('donations.intent'), $this->donorPayload([
             'campaign_id' => $appeal->campaign_id,
             'appeal_id' => $appeal->id,
-            'quantity' => 3,
-            'amount' => 1500,
+            'gift_option' => 0,
+            'amount' => 5000,
         ]))->assertUnprocessable()
             ->assertJsonValidationErrors('amount');
     }
@@ -159,7 +167,7 @@ class CampaignAppealPageTest extends TestCase
         $this->assertNull($donation->unit_amount_cents);
     }
 
-    public function test_intent_rejects_a_custom_amount_when_the_appeal_requires_a_quantity(): void
+    public function test_intent_rejects_a_custom_amount_when_the_appeal_requires_a_gift(): void
     {
         $appeal = $this->createDonatableAppeal([
             'slug' => 'blankets-only',
@@ -172,7 +180,7 @@ class CampaignAppealPageTest extends TestCase
             'amount' => 2000,
             'email' => 'jane-no-custom@example.com',
         ]))->assertUnprocessable()
-            ->assertJsonValidationErrors('quantity');
+            ->assertJsonValidationErrors('gift_option');
     }
 
     public function test_intent_rejects_a_closed_appeal(): void
@@ -185,8 +193,8 @@ class CampaignAppealPageTest extends TestCase
         $this->postJson(route('donations.intent'), $this->donorPayload([
             'campaign_id' => $appeal->campaign_id,
             'appeal_id' => $appeal->id,
-            'quantity' => 1,
-            'amount' => 1500,
+            'gift_option' => 0,
+            'amount' => 3000,
             'email' => 'jane-closed@example.com',
         ]))->assertUnprocessable()
             ->assertJsonValidationErrors('appeal_id');

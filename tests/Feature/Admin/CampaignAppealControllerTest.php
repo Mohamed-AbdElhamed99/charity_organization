@@ -39,12 +39,10 @@ class CampaignAppealControllerTest extends TestCase
             'slug' => 'ramadan-food-box',
             'subtitle_en' => 'Help a family with essential food this Ramadan.',
             'subtitle_ar' => 'ساعد أسرة بالطعام الأساسي في رمضان.',
-            'unit_amount' => 15,
-            'unit_label_en' => 'box',
-            'unit_label_ar' => 'صندوق',
-            'unit_label_plural_en' => 'boxes',
-            'unit_label_plural_ar' => 'صناديق',
-            'quantity_options' => '1, 3, 5',
+            'gift_options' => [
+                ['name_en' => 'Medium Turkey', 'name_ar' => 'ديك رومي متوسط', 'amount' => 30],
+                ['name_en' => 'Halal Turkey', 'name_ar' => 'ديك رومي حلال', 'amount' => 50],
+            ],
             'allow_custom_amount' => 1,
             'cta_label_en' => 'Donate a Food Box',
             'cta_label_ar' => 'تبرع بصندوق طعام',
@@ -65,8 +63,10 @@ class CampaignAppealControllerTest extends TestCase
         $appeal = CampaignAppeal::query()->where('slug', 'ramadan-food-box')->first();
         $this->assertNotNull($appeal);
         $this->assertSame($campaign->id, $appeal->campaign_id);
-        $this->assertSame(1500, $appeal->unit_amount_cents);
-        $this->assertSame([1, 3, 5], array_map('intval', $appeal->quantity_options));
+        $this->assertSame('Medium Turkey', $appeal->gift_options[0]['name_en']);
+        $this->assertSame(3000, $appeal->gift_options[0]['amount_cents']);
+        $this->assertSame('Halal Turkey', $appeal->gift_options[1]['name_en']);
+        $this->assertSame(5000, $appeal->gift_options[1]['amount_cents']);
         $this->assertTrue($appeal->is_active);
     }
 
@@ -77,7 +77,6 @@ class CampaignAppealControllerTest extends TestCase
         $appeal = CampaignAppeal::factory()->create([
             'campaign_id' => $campaign->id,
             'slug' => 'warmth-blankets',
-            'unit_amount_cents' => 1000,
         ]);
 
         $this->actingAs($user)
@@ -93,17 +92,17 @@ class CampaignAppealControllerTest extends TestCase
             ->put(route('admin.campaigns.appeals.update', [$campaign, $appeal]), $this->validPayload([
                 'slug' => 'warmth-blankets',
                 'title_en' => 'Give the Gift of Warmth',
-                'unit_amount' => 10,
-                'unit_label_en' => 'blanket',
-                'unit_label_plural_en' => 'blankets',
+                'gift_options' => [
+                    ['name_en' => 'Blanket', 'name_ar' => 'بطانية', 'amount' => 10],
+                ],
                 'cta_label_en' => 'Donate Blankets',
             ]))
             ->assertRedirect(route('admin.campaigns.appeals.index', $campaign));
 
         $appeal->refresh();
         $this->assertSame('Give the Gift of Warmth', $appeal->title_en);
-        $this->assertSame(1000, $appeal->unit_amount_cents);
-        $this->assertSame('blanket', $appeal->unit_label_en);
+        $this->assertSame('Blanket', $appeal->gift_options[0]['name_en']);
+        $this->assertSame(1000, $appeal->gift_options[0]['amount_cents']);
     }
 
     public function test_appeal_from_another_campaign_cannot_be_edited(): void

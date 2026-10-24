@@ -45,32 +45,34 @@
     @viteReactRefresh
     @routes
     @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+    {{-- Kept outside Inertia's head component so server rendering cannot replace the crawler tags. --}}
+    @isset($meta)
+        <title>{{ $meta['title'] }} — {{ __('site.brand_name') }}</title>
+        <meta name="description" content="{{ $meta['description'] }}">
+
+        <meta property="og:type" content="{{ $meta['type'] }}">
+        <meta property="og:site_name" content="{{ __('site.brand_name') }}">
+        <meta property="og:title" content="{{ $meta['title'] }}">
+        <meta property="og:description" content="{{ $meta['description'] }}">
+        @if ($meta['image'])
+            <meta property="og:image" content="{{ $meta['image'] }}">
+        @endif
+        <meta property="og:url" content="{{ $meta['url'] }}">
+        @if ($meta['published'])
+            <meta property="article:published_time" content="{{ $meta['published'] }}">
+        @endif
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $meta['title'] }}">
+        <meta name="twitter:description" content="{{ $meta['description'] }}">
+        @if ($meta['image'])
+            <meta name="twitter:image" content="{{ $meta['image'] }}">
+        @endif
+    @endisset
     <x-inertia::head>
-        @isset($meta)
-            <title>{{ $meta['title'] }} — {{ __('site.brand_name') }}</title>
-            <meta name="description" content="{{ $meta['description'] }}">
-
-            <meta property="og:type" content="{{ $meta['type'] }}">
-            <meta property="og:site_name" content="{{ __('site.brand_name') }}">
-            <meta property="og:title" content="{{ $meta['title'] }}">
-            <meta property="og:description" content="{{ $meta['description'] }}">
-            @if ($meta['image'])
-                <meta property="og:image" content="{{ $meta['image'] }}">
-            @endif
-            <meta property="og:url" content="{{ $meta['url'] }}">
-            @if ($meta['published'])
-                <meta property="article:published_time" content="{{ $meta['published'] }}">
-            @endif
-
-            <meta name="twitter:card" content="summary_large_image">
-            <meta name="twitter:title" content="{{ $meta['title'] }}">
-            <meta name="twitter:description" content="{{ $meta['description'] }}">
-            @if ($meta['image'])
-                <meta name="twitter:image" content="{{ $meta['image'] }}">
-            @endif
-        @else
+        @unless (isset($meta))
             <title>{{ __('site.brand_name') }}</title>
-        @endisset
+        @endunless
     </x-inertia::head>
 </head>
 

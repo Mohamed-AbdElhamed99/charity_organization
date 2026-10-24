@@ -57,7 +57,7 @@ type DonationCheckoutProps = {
   lockedGift?: {
     appealId: number;
     amountCents: number;
-    quantity: number | null;
+    giftOption: number | null;
     submitLabel: string;
   } | null;
 };
@@ -298,7 +298,7 @@ export function DonationCheckout({
   const [campaignOptions, setCampaignOptions] = useState<CampaignOption[]>([]);
   const [campaignsLoading, setCampaignsLoading] = useState(false);
   const [campaignsLoaded, setCampaignsLoaded] = useState(false);
-  const [donorCoversFee, setDonorCoversFee] = useState(false);
+  const [donorCoversFee, setDonorCoversFee] = useState(true);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -339,7 +339,7 @@ export function DonationCheckout({
     [chargeAmountCents, donorCoversFee, feeConfig],
   );
 
-  // Changing the appeal quantity or custom amount invalidates a payment already in progress.
+  // Changing the selected gift or custom amount invalidates a payment already in progress.
   useEffect(() => {
     if (!lockedGift) {
       return;
@@ -349,7 +349,7 @@ export function DonationCheckout({
     setPaymentIntentId(null);
     setStripePromise(null);
     setBreakdown(null);
-  }, [lockedGift?.amountCents, lockedGift?.quantity]);
+  }, [lockedGift?.amountCents, lockedGift?.giftOption]);
 
   // Prefill the allocation editor with the current campaign (or the general
   // fund) the first time the donor switches to a recurring frequency.
@@ -488,7 +488,7 @@ export function DonationCheckout({
             ...(lockedGift
               ? {
                   appeal_id: lockedGift.appealId,
-                  quantity: lockedGift.quantity,
+                  ...(lockedGift.giftOption !== null ? { gift_option: lockedGift.giftOption } : {}),
                 }
               : {}),
             ...donorFields,

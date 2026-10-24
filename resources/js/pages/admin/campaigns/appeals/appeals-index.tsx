@@ -28,7 +28,6 @@ type CampaignSummary = {
 }
 
 type AppealRow = CampaignAppealFormData & {
-  unit_amount_cents: number
   share_url: string
 }
 
@@ -158,7 +157,13 @@ export default function AppealsIndex() {
                       <p className="text-muted-foreground text-xs">/give/{appeal.slug}</p>
                     </TableCell>
                     <TableCell>
-                      ${appeal.unit_amount} per {appeal.unit_label_en}
+                      <ul className="space-y-1">
+                        {appeal.gift_options.map((option, index) => (
+                          <li key={index}>
+                            {option.name_en} · ${option.amount}
+                          </li>
+                        ))}
+                      </ul>
                     </TableCell>
                     <TableCell>
                       <Badge variant={appeal.is_active ? 'default' : 'secondary'}>

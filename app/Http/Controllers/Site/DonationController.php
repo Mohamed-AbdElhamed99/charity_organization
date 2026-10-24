@@ -171,7 +171,9 @@ class DonationController extends Controller
             isAnonymous: (bool) ($validated['is_anonymous'] ?? false),
             donorMessage: $validated['donor_message'] ?? null,
             appealId: isset($validated['appeal_id']) ? (int) $validated['appeal_id'] : null,
-            quantity: isset($validated['quantity']) ? (int) $validated['quantity'] : null,
+            giftOption: array_key_exists('gift_option', $validated) && $validated['gift_option'] !== null
+                ? (int) $validated['gift_option']
+                : null,
         ));
 
         return response()->json($result);

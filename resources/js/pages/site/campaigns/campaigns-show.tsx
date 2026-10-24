@@ -42,8 +42,6 @@ type AppealSummary = {
   slug: string;
   title: string;
   subtitle: string | null;
-  unit_amount_cents: number;
-  unit_label: string;
   image: string;
 };
 

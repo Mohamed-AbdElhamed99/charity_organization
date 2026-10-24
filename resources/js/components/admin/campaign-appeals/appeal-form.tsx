@@ -7,6 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
+export type GiftOptionFormValue = {
+  name_en: string
+  name_ar: string
+  amount: string
+}
+
 export type CampaignAppealFormData = {
   id: number
   slug: string
@@ -14,12 +20,7 @@ export type CampaignAppealFormData = {
   title_ar: string
   subtitle_en: string | null
   subtitle_ar: string | null
-  unit_amount: string
-  unit_label_en: string
-  unit_label_ar: string
-  unit_label_plural_en: string
-  unit_label_plural_ar: string
-  quantity_options_text: string
+  gift_options: GiftOptionFormValue[]
   allow_custom_amount: boolean
   cta_label_en: string
   cta_label_ar: string
@@ -36,6 +37,10 @@ type AppealFormProps = {
   cancelUrl: string
 }
 
+function emptyGiftOption(): GiftOptionFormValue {
+  return { name_en: '', name_ar: '', amount: '' }
+}
+
 function buildInitialFormData(appeal?: CampaignAppealFormData) {
   return {
     title_en: appeal?.title_en ?? '',
@@ -43,12 +48,14 @@ function buildInitialFormData(appeal?: CampaignAppealFormData) {
     slug: appeal?.slug ?? '',
     subtitle_en: appeal?.subtitle_en ?? '',
     subtitle_ar: appeal?.subtitle_ar ?? '',
-    unit_amount: appeal?.unit_amount ?? '',
-    unit_label_en: appeal?.unit_label_en ?? '',
-    unit_label_ar: appeal?.unit_label_ar ?? '',
-    unit_label_plural_en: appeal?.unit_label_plural_en ?? '',
-    unit_label_plural_ar: appeal?.unit_label_plural_ar ?? '',
-    quantity_options: appeal?.quantity_options_text ?? '1, 3, 5',
+    gift_options:
+      appeal?.gift_options && appeal.gift_options.length > 0
+        ? appeal.gift_options.map((option) => ({
+            name_en: option.name_en,
+            name_ar: option.name_ar,
+            amount: option.amount,
+          }))
+        : [emptyGiftOption()],
     allow_custom_amount: appeal?.allow_custom_amount ?? true,
     cta_label_en: appeal?.cta_label_en ?? '',
     cta_label_ar: appeal?.cta_label_ar ?? '',
@@ -97,7 +104,11 @@ export function AppealForm({
       allow_custom_amount: data.allow_custom_amount ? 1 : 0,
       is_active: data.is_active ? 1 : 0,
       sort_order: data.sort_order ? Number(data.sort_order) : 0,
-      unit_amount: data.unit_amount ? Number(data.unit_amount) : '',
+      gift_options: data.gift_options.map((option) => ({
+        name_en: option.name_en,
+        name_ar: option.name_ar,
+        amount: option.amount ? Number(option.amount) : '',
+      })),
     }))
 
     const options = {
@@ -111,6 +122,17 @@ export function AppealForm({
     }
 
     form.post(submitUrl, options)
+  }
+
+  const optionErrors = form.errors as Record<string, string>
+
+  const updateOption = (index: number, field: keyof GiftOptionFormValue, value: string) => {
+    form.setData(
+      'gift_options',
+      form.data.gift_options.map((option, optionIndex) =>
+        optionIndex === index ? { ...option, [field]: value } : option,
+      ),
+    )
   }
 
   return (
@@ -165,72 +187,6 @@ export function AppealForm({
           <InputError message={form.errors.subtitle_ar} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="unit_amount">Price per unit (USD)</Label>
-          <Input
-            id="unit_amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={form.data.unit_amount}
-            onChange={(event) => form.setData('unit_amount', event.target.value)}
-          />
-          <InputError message={form.errors.unit_amount} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="quantity_options">Quantities</Label>
-          <Input
-            id="quantity_options"
-            value={form.data.quantity_options}
-            onChange={(event) => form.setData('quantity_options', event.target.value)}
-            placeholder="1, 3, 5"
-          />
-          <InputError message={form.errors.quantity_options} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="unit_label_en">Unit name (English)</Label>
-          <Input
-            id="unit_label_en"
-            value={form.data.unit_label_en}
-            onChange={(event) => form.setData('unit_label_en', event.target.value)}
-            placeholder="box"
-          />
-          <InputError message={form.errors.unit_label_en} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="unit_label_plural_en">Unit plural (English)</Label>
-          <Input
-            id="unit_label_plural_en"
-            value={form.data.unit_label_plural_en}
-            onChange={(event) =>
-              form.setData('unit_label_plural_en', event.target.value)
-            }
-            placeholder="boxes"
-          />
-          <InputError message={form.errors.unit_label_plural_en} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="unit_label_ar">Unit name (Arabic)</Label>
-          <Input
-            id="unit_label_ar"
-            dir="rtl"
-            value={form.data.unit_label_ar}
-            onChange={(event) => form.setData('unit_label_ar', event.target.value)}
-          />
-          <InputError message={form.errors.unit_label_ar} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="unit_label_plural_ar">Unit plural (Arabic)</Label>
-          <Input
-            id="unit_label_plural_ar"
-            dir="rtl"
-            value={form.data.unit_label_plural_ar}
-            onChange={(event) =>
-              form.setData('unit_label_plural_ar', event.target.value)
-            }
-          />
-          <InputError message={form.errors.unit_label_plural_ar} />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="cta_label_en">Button (English)</Label>
           <Input
             id="cta_label_en"
@@ -262,6 +218,83 @@ export function AppealForm({
           <InputError message={form.errors.sort_order} />
         </div>
       </div>
+
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium">Gift options</legend>
+        <p className="text-muted-foreground text-sm">
+          Each choice has its own name and price, such as Medium Turkey at $30 and Halal Turkey at $50.
+        </p>
+        <InputError message={optionErrors.gift_options} />
+        <div className="space-y-4">
+          {form.data.gift_options.map((option, index) => (
+            <div key={index} className="grid gap-3 rounded-lg border p-3 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor={`gift-option-${index}-name-en`}>Name (English)</Label>
+                <Input
+                  id={`gift-option-${index}-name-en`}
+                  value={option.name_en}
+                  onChange={(event) => updateOption(index, 'name_en', event.target.value)}
+                  placeholder="Medium Turkey"
+                />
+                <InputError message={optionErrors[`gift_options.${index}.name_en`]} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`gift-option-${index}-name-ar`}>Name (Arabic)</Label>
+                <Input
+                  id={`gift-option-${index}-name-ar`}
+                  dir="rtl"
+                  value={option.name_ar}
+                  onChange={(event) => updateOption(index, 'name_ar', event.target.value)}
+                  placeholder="ديك رومي متوسط"
+                />
+                <InputError message={optionErrors[`gift_options.${index}.name_ar`]} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`gift-option-${index}-amount`}>Price (USD)</Label>
+                <Input
+                  id={`gift-option-${index}-amount`}
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={option.amount}
+                  onChange={(event) => updateOption(index, 'amount', event.target.value)}
+                  placeholder="30"
+                />
+                <InputError message={optionErrors[`gift_options.${index}.amount`]} />
+              </div>
+              {form.data.gift_options.length > 1 ? (
+                <div className="md:col-span-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      form.setData(
+                        'gift_options',
+                        form.data.gift_options.filter((_, optionIndex) => optionIndex !== index),
+                      )
+                    }
+                  >
+                    Remove option
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+        {form.data.gift_options.length < 6 ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              form.setData('gift_options', [...form.data.gift_options, emptyGiftOption()])
+            }
+          >
+            Add option
+          </Button>
+        ) : null}
+      </fieldset>
 
       <div className="space-y-2">
         <Label htmlFor="hero">Photo</Label>

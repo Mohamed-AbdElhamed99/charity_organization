@@ -37,7 +37,7 @@ class StoreDonationIntentRequest extends FormRequest
             'is_anonymous' => ['boolean'],
             'donor_message' => ['nullable', 'string', 'max:1000'],
             'appeal_id' => ['nullable', 'integer', Rule::exists('campaign_appeals', 'id')],
-            'quantity' => ['nullable', 'integer', 'min:1'],
+            'gift_option' => ['nullable', 'integer', 'min:0'],
         ];
     }
 
@@ -71,15 +71,17 @@ class StoreDonationIntentRequest extends FormRequest
                     return;
                 }
 
-                $quantity = $this->filled('quantity') ? (int) $this->input('quantity') : null;
+                $giftOption = $this->exists('gift_option') && $this->input('gift_option') !== null && $this->input('gift_option') !== ''
+                    ? (int) $this->input('gift_option')
+                    : null;
 
-                $appeal->resolvedGift($quantity, (int) $this->input('amount'));
+                $appeal->resolvedGift($giftOption, (int) $this->input('amount'));
 
                 return;
             }
 
-            if ($this->filled('quantity')) {
-                $validator->errors()->add('quantity', __('A quantity can only be set for an appeal.'));
+            if ($this->exists('gift_option') && $this->input('gift_option') !== null && $this->input('gift_option') !== '') {
+                $validator->errors()->add('gift_option', __('A gift option can only be set for an appeal.'));
             }
 
             if ($isGeneral && $campaignId) {

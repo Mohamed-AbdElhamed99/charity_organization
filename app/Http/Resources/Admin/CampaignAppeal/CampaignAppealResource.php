@@ -21,14 +21,15 @@ class CampaignAppealResource extends JsonResource
             'title_ar' => $this->title_ar,
             'subtitle_en' => $this->subtitle_en,
             'subtitle_ar' => $this->subtitle_ar,
-            'unit_amount' => Money::centsToDecimal($this->unit_amount_cents),
-            'unit_amount_cents' => $this->unit_amount_cents,
-            'unit_label_en' => $this->unit_label_en,
-            'unit_label_ar' => $this->unit_label_ar,
-            'unit_label_plural_en' => $this->unit_label_plural_en,
-            'unit_label_plural_ar' => $this->unit_label_plural_ar,
-            'quantity_options' => array_map('intval', $this->quantity_options ?? []),
-            'quantity_options_text' => implode(', ', $this->quantity_options ?? []),
+            'gift_options' => collect($this->gift_options ?? [])
+                ->map(fn (array $option): array => [
+                    'name_en' => $option['name_en'],
+                    'name_ar' => $option['name_ar'],
+                    'amount' => Money::centsToDecimal((int) $option['amount_cents']),
+                    'amount_cents' => (int) $option['amount_cents'],
+                ])
+                ->values()
+                ->all(),
             'allow_custom_amount' => (bool) $this->allow_custom_amount,
             'cta_label_en' => $this->cta_label_en,
             'cta_label_ar' => $this->cta_label_ar,

@@ -17,6 +17,6 @@ readonly class CreateDonationIntentDTO
         public bool $isAnonymous,
         public ?string $donorMessage,
         public ?int $appealId = null,
-        public ?int $quantity = null,
+        public ?int $giftOption = null,
     ) {}
 }

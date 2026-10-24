@@ -39,8 +39,7 @@ class CampaignAppeal extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'unit_amount_cents' => 'integer',
-            'quantity_options' => 'array',
+            'gift_options' => 'array',
             'allow_custom_amount' => 'boolean',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
@@ -93,24 +92,6 @@ class CampaignAppeal extends Model implements HasMedia
         );
     }
 
-    protected function unitLabel(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => app()->getLocale() === 'ar'
-                ? ($this->unit_label_ar ?? $this->unit_label_en)
-                : ($this->unit_label_en ?? $this->unit_label_ar),
-        );
-    }
-
-    protected function unitLabelPlural(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => app()->getLocale() === 'ar'
-                ? ($this->unit_label_plural_ar ?? $this->unit_label_plural_en)
-                : ($this->unit_label_plural_en ?? $this->unit_label_plural_ar),
-        );
-    }
-
     protected function ctaLabel(): Attribute
     {
         return Attribute::make(
@@ -120,7 +101,7 @@ class CampaignAppeal extends Model implements HasMedia
         );
     }
 
-    protected $appends = ['title', 'subtitle', 'unit_label', 'unit_label_plural', 'cta_label'];
+    protected $appends = ['title', 'subtitle', 'cta_label'];
 
     public function isDonatable(): bool
     {
@@ -134,11 +115,11 @@ class CampaignAppeal extends Model implements HasMedia
     }
 
     /**
-     * Confirm a donor's quantity or custom amount against this appeal.
+     * Confirm a donor's named gift, or a custom amount, against this appeal.
      *
      * @return array{campaign_id: int, amount_cents: int, quantity: int|null, unit_amount_cents: int|null, unit_label: string|null}
      */
-    public function resolvedGift(?int $quantity, int $submittedAmountCents): array
+    public function resolvedGift(?int $giftOption, int $submittedAmountCents): array
     {
         if (! $this->isDonatable()) {
             throw ValidationException::withMessages([
@@ -146,35 +127,36 @@ class CampaignAppeal extends Model implements HasMedia
             ]);
         }
 
-        if ($quantity !== null) {
-            $options = array_map('intval', $this->quantity_options ?? []);
+        if ($giftOption !== null) {
+            $options = array_values($this->gift_options ?? []);
+            $option = $options[$giftOption] ?? null;
 
-            if (! in_array($quantity, $options, true)) {
+            if (! is_array($option)) {
                 throw ValidationException::withMessages([
-                    'quantity' => __('Choose one of the listed quantities.'),
+                    'gift_option' => __('Choose one of the listed gifts.'),
                 ]);
             }
 
-            $amountCents = $quantity * $this->unit_amount_cents;
+            $amountCents = (int) $option['amount_cents'];
 
             if ($submittedAmountCents !== $amountCents) {
                 throw ValidationException::withMessages([
-                    'amount' => __('The donation total does not match the selected quantity.'),
+                    'amount' => __('The donation total does not match the selected gift.'),
                 ]);
             }
 
             return [
                 'campaign_id' => $this->campaign_id,
                 'amount_cents' => $amountCents,
-                'quantity' => $quantity,
-                'unit_amount_cents' => $this->unit_amount_cents,
-                'unit_label' => $quantity === 1 ? $this->unit_label : $this->unit_label_plural,
+                'quantity' => null,
+                'unit_amount_cents' => $amountCents,
+                'unit_label' => $this->optionName($option),
             ];
         }
 
         if (! $this->allow_custom_amount) {
             throw ValidationException::withMessages([
-                'quantity' => __('Choose a quantity for this appeal.'),
+                'gift_option' => __('Choose a gift for this appeal.'),
             ]);
         }
 
@@ -193,5 +175,33 @@ class CampaignAppeal extends Model implements HasMedia
             'unit_amount_cents' => null,
             'unit_label' => null,
         ];
+    }
+
+    /**
+     * Localized options for the public give page.
+     *
+     * @return list<array{name: string, amount_cents: int}>
+     */
+    public function localizedGiftOptions(): array
+    {
+        return array_map(fn (array $option): array => [
+            'name' => $this->optionName($option),
+            'amount_cents' => (int) $option['amount_cents'],
+        ], array_values($this->gift_options ?? []));
+    }
+
+    /**
+     * @param  array<string, mixed>  $option
+     */
+    private function optionName(array $option): string
+    {
+        $english = (string) ($option['name_en'] ?? '');
+        $arabic = (string) ($option['name_ar'] ?? '');
+
+        if (app()->getLocale() === 'ar') {
+            return $arabic !== '' ? $arabic : $english;
+        }
+
+        return $english !== '' ? $english : $arabic;
     }
 }
