@@ -16,7 +16,9 @@ use App\Models\Currency;
 use App\Models\Donation;
 use App\Models\DonationSubscription;
 use App\Models\DonorProfile;
+use App\Models\PaymentMethod;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -26,6 +28,7 @@ class DonationService
     public function __construct(
         private readonly PaymentGateway $gateway,
         private readonly DonorIdentityService $donorIdentityService,
+        private readonly DonationSubmittedNotifier $submittedNotifier,
     ) {}
 
     /**
@@ -75,6 +78,7 @@ class DonationService
                 'donor_id' => $donor->id,
                 'campaign_id' => $campaignId,
                 'appeal_id' => $appeal['appeal_id'],
+                'payment_method_id' => $this->paymentMethodIdFor('stripe'),
                 'quantity' => $appeal['quantity'],
                 'unit_amount_cents' => $appeal['unit_amount_cents'],
                 'unit_label' => $appeal['unit_label'],
@@ -91,6 +95,8 @@ class DonationService
                 ],
             ]);
         });
+
+        $this->submittedNotifier->notify($donation);
 
         return [
             'clientSecret' => $paymentIntent->clientSecret,
@@ -165,7 +171,9 @@ class DonationService
             $metadata,
         );
 
-        $subscription = DB::transaction(function () use ($dto, $donor, $customerId, $subscriptionIntent, $totalAmountCents, $resolvedAllocations) {
+        $createdDonations = [];
+
+        $subscription = DB::transaction(function () use ($dto, $donor, $customerId, $subscriptionIntent, $totalAmountCents, $resolvedAllocations, &$createdDonations) {
             $subscription = DonationSubscription::create([
                 'donor_id' => $donor->id,
                 'amount_cents' => $totalAmountCents,
@@ -194,10 +202,11 @@ class DonationService
                 // the first invoice's PaymentIntent, matching one-time gifts.
                 // Only the first allocation stores the PI (unique column);
                 // siblings share the subscription/invoice for reconciliation.
-                Donation::create([
+                $createdDonations[] = Donation::create([
                     'transaction_id' => null,
                     'donor_id' => $donor->id,
                     'campaign_id' => $allocation['campaignId'],
+                    'payment_method_id' => $this->paymentMethodIdFor('stripe'),
                     'donation_subscription_id' => $subscription->id,
                     'is_general' => $allocation['isGeneral'],
                     'amount' => $allocation['amountCents'],
@@ -215,6 +224,10 @@ class DonationService
             return $subscription;
         });
 
+        foreach ($createdDonations as $createdDonation) {
+            $this->submittedNotifier->notify($createdDonation);
+        }
+
         return [
             'clientSecret' => $subscriptionIntent->clientSecret,
             'publishableKey' => config('services.stripe.key'),
@@ -228,6 +241,55 @@ class DonationService
             'currency' => $currency->code,
             'frequency' => $dto->frequency->value,
         ];
+    }
+
+    public function createZelleDonation(CreateDonationIntentDTO $dto, UploadedFile $receipt): Donation
+    {
+        $paymentMethodId = $this->paymentMethodIdFor('zelle');
+
+        if ($paymentMethodId === null) {
+            throw ValidationException::withMessages([
+                'receipt' => __('Zelle donations are not available right now.'),
+            ]);
+        }
+
+        $donor = $this->donorIdentityService->firstOrCreateByEmail(
+            $dto->firstName,
+            $dto->lastName,
+            $dto->email,
+            $dto->phone,
+            $dto->countryId,
+        );
+
+        [$isGeneral, $campaignId, $amountCents, $appeal] = $this->resolveGift($dto);
+
+        $donation = DB::transaction(function () use ($dto, $donor, $campaignId, $isGeneral, $amountCents, $appeal, $paymentMethodId, $receipt) {
+            $donation = Donation::create([
+                'transaction_id' => null,
+                'donor_id' => $donor->id,
+                'campaign_id' => $campaignId,
+                'appeal_id' => $appeal['appeal_id'],
+                'payment_method_id' => $paymentMethodId,
+                'quantity' => $appeal['quantity'],
+                'unit_amount_cents' => $appeal['unit_amount_cents'],
+                'unit_label' => $appeal['unit_label'],
+                'is_general' => $isGeneral,
+                'amount' => $amountCents,
+                'status' => DonationStatus::Pending,
+                'stripe_status' => null,
+                'donor_covers_fee' => false,
+                'is_anonymous' => $dto->isAnonymous,
+                'donor_message' => $dto->donorMessage,
+            ]);
+
+            $donation->addMedia($receipt)->toMediaCollection('zelle_receipt');
+
+            return $donation;
+        });
+
+        $this->submittedNotifier->notify($donation);
+
+        return $donation;
     }
 
     /**
@@ -293,6 +355,13 @@ class DonationService
         }
 
         return [false, $campaign->id];
+    }
+
+    private function paymentMethodIdFor(string $code): ?int
+    {
+        $id = PaymentMethod::query()->where('code', $code)->value('id');
+
+        return $id === null ? null : (int) $id;
     }
 
     private function resolveStripeCustomerId(User $donor, CreateDonationSubscriptionDTO $dto): string

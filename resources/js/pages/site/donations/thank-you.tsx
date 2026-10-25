@@ -18,16 +18,18 @@ type DonationSnapshot = {
 };
 
 type PageProps = {
-  paymentIntentId: string;
+  paymentIntentId: string | null;
   donation: DonationSnapshot | null;
+  variant?: "stripe" | "zelle";
 };
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_MS = 30000;
 
-export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
+export default function ThankYouPage({ paymentIntentId, donation, variant = "stripe" }: PageProps) {
   const { t } = useLocale();
   const labels = t.thankYouPage;
+  const isZelle = variant === "zelle";
 
   const [status, setStatus] = useState(donation?.status ?? "pending");
   const [amountCents, setAmountCents] = useState(donation?.amount_cents ?? 0);
@@ -40,7 +42,7 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
   const isGeneral = donation?.is_general ?? false;
 
   useEffect(() => {
-    if (status === "succeeded" || status === "failed") {
+    if (isZelle || !paymentIntentId || status === "succeeded" || status === "failed") {
       return;
     }
 
@@ -82,12 +84,12 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
     }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
-  }, [paymentIntentId, status]);
+  }, [isZelle, paymentIntentId, status]);
 
   // const isConfirming = status === "pending" || status === "requires_action" || status === "unknown";
   const isSuccess = status === "succeeded";
   const isFailed = status === "failed";
-  const isConfirming = !isSuccess && !isFailed;
+  const isConfirming = !isZelle && !isSuccess && !isFailed;
 
   return (
     <>
@@ -105,7 +107,24 @@ export default function ThankYouPage({ paymentIntentId, donation }: PageProps) {
             </>
           )}
 
-          {isSuccess && (
+          {isZelle && (
+            <>
+              <h1 className="font-display text-3xl font-bold text-ink">
+                {labels.successTitle}
+              </h1>
+              <p className="mt-4 text-body-text">
+                {labels.zelleSuccessBody.replace("{amount}", formatUsd(amountCents))}
+                {isGeneral
+                  ? ` ${labels.successGeneral}`
+                  : campaignTitle
+                    ? ` ${labels.successCampaign} ${campaignTitle}.`
+                    : null}
+              </p>
+              <p className="mt-2 text-sm text-body-text/70">{labels.zellePendingNote}</p>
+            </>
+          )}
+
+          {!isZelle && isSuccess && (
             <>
               <h1 className="font-display text-3xl font-bold text-ink">
                 {labels.successTitle}

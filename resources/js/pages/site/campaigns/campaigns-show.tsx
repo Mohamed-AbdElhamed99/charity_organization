@@ -293,12 +293,15 @@ export default function CampaignsShow() {
                 </ul>
               </section>
             ) : null}
-            <Link
-              href={route("campaigns.donate", campaign.slug)}
-              className="inline-flex items-center justify-center rounded-lg bg-action-red px-6 py-3 text-sm font-semibold text-white transition hover:bg-action-red/90"
-            >
-              {locale === "ar" ? "تبرع الآن" : "Donate Now"}
-            </Link>
+              {campaign.open_donation_form ? (
+                  <Link
+                      href={route("campaigns.donate", campaign.slug)}
+                      className="inline-flex items-center justify-center rounded-lg bg-action-red px-6 py-3 text-sm font-semibold text-white transition hover:bg-action-red/90"
+                  >
+                      {locale === "ar" ? "تبرع الآن" : "Donate Now"}
+                  </Link>
+              ) : null}
+
           </div>
 
           {campaign.description && (

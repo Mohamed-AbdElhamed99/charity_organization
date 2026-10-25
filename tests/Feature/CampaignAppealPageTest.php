@@ -59,6 +59,8 @@ class CampaignAppealPageTest extends TestCase
 
     public function test_public_give_page_renders_an_open_appeal(): void
     {
+        config(['donations.zelle.email' => 'giver@newegyptgroup.com']);
+
         $appeal = $this->createDonatableAppeal([
             'subtitle_en' => 'Help a family enjoy a Thanksgiving meal.',
         ]);
@@ -75,7 +77,11 @@ class CampaignAppealPageTest extends TestCase
                 ->where('appeal.gift_options.1.name', 'Halal Turkey')
                 ->where('appeal.gift_options.1.amount_cents', 5000)
                 ->where('organization.ein', '81-2019298')
+                ->where('zelle.qrUrl', url('images/zelle-qr.png'))
+                ->where('zelle.email', 'giver@newegyptgroup.com')
             );
+
+        $this->assertFileExists(public_path('images/zelle-qr.png'));
     }
 
     public function test_give_page_is_hidden_when_the_appeal_or_campaign_is_closed(): void

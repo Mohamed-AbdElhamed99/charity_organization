@@ -24,6 +24,8 @@ type DonationRow = {
   net_amount: string | null
   currency: string | null
   status: string
+  payment_method: string | null
+  receipt_url: string | null
   donor_covers_fee: boolean
   stripe_payment_intent_id: string | null
 }
@@ -164,6 +166,8 @@ export default function DonationsIndex() {
                   <th className="px-4 py-3">Fee</th>
                   <th className="px-4 py-3">Net</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Method</th>
+                  <th className="px-4 py-3">Receipt</th>
                   <th className="px-4 py-3">Intent</th>
                 </tr>
               </thead>
@@ -184,6 +188,16 @@ export default function DonationsIndex() {
                     <td className="px-4 py-3">{row.fee_amount ?? '—'}</td>
                     <td className="px-4 py-3">{row.net_amount ?? '—'}</td>
                     <td className="px-4 py-3">{row.status}</td>
+                    <td className="px-4 py-3">{row.payment_method ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      {row.receipt_url ? (
+                        <a href={row.receipt_url} className="font-medium underline" target="_blank" rel="noreferrer">
+                          Receipt
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-mono text-xs">
                       {row.stripe_payment_intent_id ?? '—'}
                     </td>

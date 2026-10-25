@@ -110,7 +110,6 @@ class CampaignAppeal extends Model implements HasMedia
         return $this->is_active
             && $campaign !== null
             && $campaign->is_public
-            && $campaign->open_donation_form
             && $campaign->status === CampaignStatus::Active;
     }
 

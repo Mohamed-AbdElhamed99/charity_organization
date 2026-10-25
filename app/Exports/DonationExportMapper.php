@@ -22,6 +22,7 @@ class DonationExportMapper
             'Net (USD)',
             'Currency',
             'Status',
+            'Payment Method',
             'Fee Covered',
             'Payment Intent ID',
             'Anonymous Flag',
@@ -33,7 +34,7 @@ class DonationExportMapper
      */
     public static function mapRow(Donation $donation): array
     {
-        $donation->loadMissing(['donor', 'campaign', 'transaction.currency']);
+        $donation->loadMissing(['donor', 'campaign', 'paymentMethod', 'transaction.currency']);
 
         return [
             $donation->created_at?->format('Y-m-d H:i'),
@@ -46,6 +47,7 @@ class DonationExportMapper
             $donation->transaction ? (float) $donation->transaction->net_amount : null,
             $donation->transaction?->currency?->code,
             $donation->status?->value,
+            $donation->paymentMethod?->name,
             $donation->donor_covers_fee ? 'Yes' : 'No',
             $donation->stripe_payment_intent_id,
             $donation->is_anonymous ? 'Yes' : 'No',

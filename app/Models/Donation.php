@@ -10,10 +10,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Donation extends Model
+class Donation extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('zelle_receipt')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'application/pdf']);
+    }
 
     protected $guarded = ['id'];
 
@@ -52,6 +61,11 @@ class Donation extends Model
     public function appeal(): BelongsTo
     {
         return $this->belongsTo(CampaignAppeal::class, 'appeal_id');
+    }
+
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
     }
 
     public function donationSubscription(): BelongsTo

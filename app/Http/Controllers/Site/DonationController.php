@@ -11,6 +11,7 @@ use App\Enums\RecurrenceFrequency;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Site\Donation\StoreDonationIntentRequest;
 use App\Http\Requests\Site\Donation\StoreDonationSubscriptionRequest;
+use App\Http\Requests\Site\Donation\StoreZelleDonationRequest;
 use App\Http\Resources\Site\CampaignResource;
 use App\Models\Campaign;
 use App\Models\CampaignCategory;
@@ -22,7 +23,10 @@ use App\Services\DonationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -179,6 +183,42 @@ class DonationController extends Controller
         return response()->json($result);
     }
 
+    public function storeZelle(StoreZelleDonationRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $receipt = $request->file('receipt');
+
+        if (! $receipt instanceof UploadedFile) {
+            throw ValidationException::withMessages([
+                'receipt' => __('Upload your Zelle receipt.'),
+            ]);
+        }
+
+        $donation = $this->donationService->createZelleDonation(new CreateDonationIntentDTO(
+            campaignId: isset($validated['campaign_id']) ? (int) $validated['campaign_id'] : null,
+            isGeneral: (bool) $validated['is_general'],
+            amountCents: (int) $validated['amount'],
+            donorCoversFee: false,
+            firstName: $validated['first_name'],
+            lastName: $validated['last_name'],
+            email: $validated['email'],
+            phone: $validated['phone'] ?? null,
+            countryId: isset($validated['country_id']) ? (int) $validated['country_id'] : null,
+            isAnonymous: (bool) ($validated['is_anonymous'] ?? false),
+            donorMessage: $validated['donor_message'] ?? null,
+            appealId: isset($validated['appeal_id']) ? (int) $validated['appeal_id'] : null,
+            giftOption: array_key_exists('gift_option', $validated) && $validated['gift_option'] !== null
+                ? (int) $validated['gift_option']
+                : null,
+        ), $receipt);
+
+        return response()->json([
+            'donationId' => $donation->id,
+            'status' => $donation->status?->value,
+            'thankYouUrl' => URL::signedRoute('donations.zelle.thank-you', $donation),
+        ]);
+    }
+
     public function storeSubscription(StoreDonationSubscriptionRequest $request): JsonResponse
     {
         $validated = $request->validated();
@@ -273,7 +313,21 @@ class DonationController extends Controller
 
         return Inertia::render('site/donations/thank-you', [
             'paymentIntentId' => $paymentIntentId,
+            'variant' => 'stripe',
             'donation' => $donation ? $this->donationSnapshot($donation, $request->user()) : null,
+        ]);
+    }
+
+    public function zelleThankYou(Request $request, Donation $donation): Response
+    {
+        $donation->load(['campaign', 'donor', 'paymentMethod']);
+
+        abort_unless($donation->paymentMethod?->code === 'zelle', 404);
+
+        return Inertia::render('site/donations/thank-you', [
+            'paymentIntentId' => null,
+            'variant' => 'zelle',
+            'donation' => $this->donationSnapshot($donation, $request->user()),
         ]);
     }
 

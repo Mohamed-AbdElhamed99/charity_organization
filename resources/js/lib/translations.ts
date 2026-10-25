@@ -119,6 +119,17 @@ export interface SiteTranslations {
     yourDonation: string;
     appealTotal: string;
     customGiftLine: string;
+    paymentMethod: string;
+    payWithCard: string;
+    payWithZelle: string;
+    zelleQrAlt: string;
+    zelleSendAmount: string;
+    zelleMemo: string;
+    zelleReceipt: string;
+    zelleReceiptHint: string;
+    zelleSubmit: string;
+    zelleSubmitting: string;
+    zelleSubmitted: string;
     legalIsA: string;
     legalNonprofit: string;
     einLabel: string;
@@ -173,6 +184,8 @@ export interface SiteTranslations {
     failedTitle: string;
     failedBody: string;
     retry: string;
+    zelleSuccessBody: string;
+    zellePendingNote: string;
   };
   faqsPage: {
     eyebrow: string;
@@ -432,6 +445,19 @@ export const translations: Record<Locale, SiteTranslations> = {
       yourDonation: "Your donation",
       appealTotal: "Total",
       customGiftLine: "Custom amount",
+      paymentMethod: "Payment method",
+      payWithCard: "Card",
+      payWithZelle: "Zelle",
+      zelleQrAlt: "Zelle code to pay New Egypt Group Inc.",
+      zelleSendAmount: "In your bank app, send {amount} for {gift}.",
+      zelleMemo:
+        "Add your name and this appeal in the Zelle note so we can match your gift.",
+      zelleReceipt: "Zelle receipt",
+      zelleReceiptHint: "Upload a screenshot or PDF of the Zelle payment.",
+      zelleSubmit: "Submit Zelle donation",
+      zelleSubmitting: "Submitting…",
+      zelleSubmitted:
+        "We received your Zelle gift. It stays pending until we confirm the transfer.",
       legalIsA: "is a",
       legalNonprofit: "nonprofit organization.",
       einLabel: "EIN",
@@ -488,6 +514,8 @@ export const translations: Record<Locale, SiteTranslations> = {
       failedTitle: "Payment could not be completed",
       failedBody: "Your card was not charged. You can try again from the donate page.",
       retry: "Try again",
+      zelleSuccessBody: "We received your Zelle gift of {amount}.",
+      zellePendingNote: "It stays pending until we confirm the transfer.",
     },
     faqsPage: {
       eyebrow: "Help Center",
@@ -753,6 +781,18 @@ export const translations: Record<Locale, SiteTranslations> = {
       yourDonation: "تبرعك",
       appealTotal: "الإجمالي",
       customGiftLine: "مبلغ مخصص",
+      paymentMethod: "طريقة الدفع",
+      payWithCard: "بطاقة",
+      payWithZelle: "Zelle",
+      zelleQrAlt: "رمز Zelle للدفع إلى New Egypt Group Inc.",
+      zelleSendAmount: "في تطبيق البنك، أرسل {amount} مقابل {gift}.",
+      zelleMemo:
+        "أضف اسمك وعنوان هذا النداء في ملاحظة Zelle حتى نطابق تبرعك.",
+      zelleReceipt: "إيصال Zelle",
+      zelleReceiptHint: "ارفع صورة أو ملف PDF لدفعة Zelle.",
+      zelleSubmit: "إرسال تبرع Zelle",
+      zelleSubmitting: "جاري الإرسال…",
+      zelleSubmitted: "استلمنا تبرعك عبر Zelle. يبقى قيد المراجعة حتى نؤكد التحويل.",
       legalIsA: "هي منظمة",
       legalNonprofit: "غير ربحية.",
       einLabel: "رقم التعريف الضريبي",
@@ -807,6 +847,8 @@ export const translations: Record<Locale, SiteTranslations> = {
       failedTitle: "تعذّر إتمام الدفع",
       failedBody: "لم يتم خصم المبلغ من بطاقتك. يمكنك المحاولة مرة أخرى من صفحة التبرع.",
       retry: "حاول مرة أخرى",
+      zelleSuccessBody: "استلمنا تبرعك عبر Zelle بمبلغ {amount}.",
+      zellePendingNote: "يبقى قيد المراجعة حتى نؤكد التحويل.",
     },
     faqsPage: {
       eyebrow: "مركز المساعدة",

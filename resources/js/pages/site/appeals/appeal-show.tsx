@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Head } from "@inertiajs/react";
 import { DonationCheckout } from "@/components/site/donation-checkout";
+import { ZelleDonationForm } from "@/components/site/zelle-donation-form";
 import { SiteLayout } from "@/layouts/site-layout";
 import { useLocale } from "@/context/locale-context";
 import { dollarsToCents } from "@/lib/donation-fee";
@@ -36,6 +37,11 @@ type Organization = {
   website: string;
 };
 
+type ZellePayment = {
+  qrUrl: string;
+  email: string | null;
+};
+
 type PageProps = {
   appeal: Appeal;
   minAmountCents: number;
@@ -43,7 +49,15 @@ type PageProps = {
   feeConfig: FeeConfig;
   countries: CountryOption[];
   organization: Organization;
+  zelle: ZellePayment;
 };
+
+function fillTemplate(template: string, values: Record<string, string>): string {
+  return Object.entries(values).reduce(
+    (text, [key, value]) => text.replaceAll(`{${key}}`, value),
+    template,
+  );
+}
 
 function formatAppealMoney(cents: number): string {
   const wholeDollars = cents % 100 === 0;
@@ -63,12 +77,14 @@ export default function AppealShow({
   feeConfig,
   countries,
   organization,
+  zelle,
 }: PageProps) {
   const { t } = useLocale();
   const labels = t.donatePage;
   const [selectedOption, setSelectedOption] = useState(0);
   const [useCustom, setUseCustom] = useState(false);
   const [customAmount, setCustomAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "zelle">("card");
 
   const customCents = dollarsToCents(customAmount) ?? 0;
   const chosenGift = appeal.gift_options[selectedOption] ?? appeal.gift_options[0];
@@ -204,22 +220,76 @@ export default function AppealShow({
               </p>
             </div>
 
-            <div className="mt-5">
-              <DonationCheckout
-                campaign={{
-                  id: appeal.campaign.id,
-                  slug: appeal.campaign.slug,
-                  title: appeal.campaign.title,
-                }}
-                isGeneral={false}
-                minAmountCents={minAmountCents}
-                publishableKey={publishableKey}
-                feeConfig={feeConfig}
-                countries={countries}
-                t={t}
-                lockedGift={lockedGift}
-              />
+            <div className="mt-5 grid grid-cols-2 gap-3" role="group" aria-label={labels.paymentMethod}>
+              {(["card", "zelle"] as const).map((method) => {
+                const selected = paymentMethod === method;
+
+                return (
+                  <button
+                    key={method}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setPaymentMethod(method)}
+                    className={cn(
+                      "rounded-xl border-2 px-3 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-red/40",
+                      selected
+                        ? "border-action-red bg-action-red/5 text-ink"
+                        : "border-black/10 text-body-text hover:border-black/20",
+                    )}
+                  >
+                    {method === "card" ? labels.payWithCard : labels.payWithZelle}
+                  </button>
+                );
+              })}
             </div>
+
+            {paymentMethod === "card" ? (
+              <div className="mt-5">
+                <DonationCheckout
+                  campaign={{
+                    id: appeal.campaign.id,
+                    slug: appeal.campaign.slug,
+                    title: appeal.campaign.title,
+                  }}
+                  isGeneral={false}
+                  minAmountCents={minAmountCents}
+                  publishableKey={publishableKey}
+                  feeConfig={feeConfig}
+                  countries={countries}
+                  t={t}
+                  lockedGift={lockedGift}
+                />
+              </div>
+            ) : (
+              <div className="mt-5 rounded-xl border border-black/10 bg-white p-4 text-center">
+                <img
+                  src={zelle.qrUrl}
+                  alt={labels.zelleQrAlt}
+                  className="mx-auto w-full max-w-xs"
+                />
+                {amountCents > 0 ? (
+                  <p className="mt-4 text-sm font-semibold text-ink">
+                    {fillTemplate(labels.zelleSendAmount, {
+                      amount: formatAppealMoney(amountCents),
+                      gift: useCustom ? labels.customGiftLine : (chosenGift?.name ?? ""),
+                    })}
+                  </p>
+                ) : null}
+                {zelle.email ? (
+                  <p className="mt-2 text-sm text-body-text">{zelle.email}</p>
+                ) : null}
+                <p className="mt-3 text-xs leading-5 text-body-text/80">{labels.zelleMemo}</p>
+                <ZelleDonationForm
+                  campaignId={appeal.campaign.id}
+                  appealId={appeal.id}
+                  amountCents={amountCents}
+                  giftOption={useCustom ? null : selectedOption}
+                  minAmountCents={minAmountCents}
+                  countries={countries}
+                  labels={labels}
+                />
+              </div>
+            )}
           </article>
 
           <footer className="mt-8 text-center text-xs leading-5 text-body-text/80">

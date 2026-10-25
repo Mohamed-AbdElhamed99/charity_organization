@@ -35,4 +35,18 @@ return [
         'website' => env('DONATION_ORG_WEBSITE', 'www.newegyptgroup.com'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Zelle scan-to-pay shown on campaign appeal pages
+    |--------------------------------------------------------------------------
+    |
+    | The QR identifies the organization. It does not lock an amount or notify
+    | this application when a donor pays.
+    |
+    */
+    'zelle' => [
+        'email' => env('DONATION_ZELLE_EMAIL'),
+        'qr' => 'images/zelle-qr.png',
+    ],
+
 ];

@@ -29,6 +29,12 @@ Route::get('/donate', [DonationController::class, 'generalDonate'])->name('donat
 Route::post('/donations/intent', [DonationController::class, 'storeIntent'])
     ->middleware('throttle:10,1')
     ->name('donations.intent');
+Route::post('/donations/zelle', [DonationController::class, 'storeZelle'])
+    ->middleware('throttle:10,1')
+    ->name('donations.zelle');
+Route::get('/donations/zelle/{donation}/thank-you', [DonationController::class, 'zelleThankYou'])
+    ->middleware('signed')
+    ->name('donations.zelle.thank-you');
 Route::post('/donations/subscribe', [DonationController::class, 'storeSubscription'])
     ->middleware('throttle:10,1')
     ->name('donations.subscribe');

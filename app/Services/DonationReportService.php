@@ -29,7 +29,7 @@ class DonationReportService
         $amountMax = $filters['amount_max'] ?? null;
 
         return Donation::query()
-            ->with(['donor', 'campaign', 'transaction.currency'])
+            ->with(['donor', 'campaign', 'paymentMethod', 'media', 'transaction.currency'])
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
             ->when($campaignId, fn ($q) => $q->where('campaign_id', (int) $campaignId))

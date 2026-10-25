@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Contracts\PaymentGateway;
 use App\Enums\DonationStatus;
+use App\Mail\DonationReceiptMail;
+use App\Mail\DonationSubmittedMailable;
 use App\Models\Campaign;
 use App\Models\Donation;
 use App\Models\Transaction;
@@ -148,7 +150,11 @@ class DonationIntentTest extends TestCase
             'email' => 'jane-no-receipt@example.com',
         ])->assertOk();
 
-        Mail::assertNothingSent();
+        Mail::assertNotSent(DonationReceiptMail::class);
+        Mail::assertQueued(DonationSubmittedMailable::class, function (DonationSubmittedMailable $mail) {
+            return $mail->hasTo(config('site.admin_notification_email'))
+                && $mail->donation->status === DonationStatus::Pending;
+        });
     }
 
     public function test_intent_falls_back_to_general_when_campaign_is_no_longer_open(): void

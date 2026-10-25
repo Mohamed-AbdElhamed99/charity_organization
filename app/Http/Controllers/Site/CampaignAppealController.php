@@ -56,6 +56,10 @@ class CampaignAppealController extends Controller
                 'ein' => config('donations.organization.ein'),
                 'website' => config('donations.organization.website'),
             ],
+            'zelle' => [
+                'qrUrl' => url((string) config('donations.zelle.qr')),
+                'email' => filled(config('donations.zelle.email')) ? (string) config('donations.zelle.email') : null,
+            ],
         ])->withViewData([
             'meta' => [
                 'type' => 'website',

@@ -39,6 +39,8 @@ class DonationListResource extends JsonResource
             'net_amount' => $this->transaction?->net_amount,
             'currency' => $this->transaction?->currency?->code,
             'status' => $this->status?->value,
+            'payment_method' => $this->paymentMethod?->name,
+            'receipt_url' => $this->getFirstMediaUrl('zelle_receipt') ?: null,
             'donor_covers_fee' => $this->donor_covers_fee,
             'stripe_payment_intent_id' => $this->stripe_payment_intent_id,
         ];

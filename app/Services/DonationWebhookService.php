@@ -31,6 +31,7 @@ class DonationWebhookService
     public function __construct(
         private readonly PaymentGateway $gateway,
         private readonly DonorIdentityService $donorIdentityService,
+        private readonly DonationSubmittedNotifier $submittedNotifier,
     ) {}
 
     public function handle(Event $event): void
@@ -302,6 +303,7 @@ class DonationWebhookService
                     'transaction_id' => null,
                     'donor_id' => $subscription->donor_id,
                     'campaign_id' => $allocation->campaign_id,
+                    'payment_method_id' => PaymentMethod::query()->where('code', 'stripe')->value('id'),
                     'donation_subscription_id' => $subscription->id,
                     'is_general' => $allocation->is_general,
                     'amount' => $allocation->amount_cents,
@@ -317,6 +319,7 @@ class DonationWebhookService
                 ]);
 
                 $this->recordSucceededDonation($donation, $chargeId, $allocation->amount_cents, $feeCents);
+                $this->submittedNotifier->notify($donation->fresh());
             }
         }
 
@@ -366,6 +369,10 @@ class DonationWebhookService
             ?? (int) round(((float) config('services.stripe.fee_percent') / 100) * $grossCents);
 
         $this->recordSucceededDonation($donation, $chargeId, $grossCents, $actualFeeCents);
+
+        if (($donation->metadata['reconstructed_from_webhook'] ?? false) === true) {
+            $this->submittedNotifier->notify($donation->fresh());
+        }
 
         $webhookEvent->update(['processed_at' => now()]);
     }
@@ -462,6 +469,7 @@ class DonationWebhookService
             'donor_covers_fee' => $donorCoversFee,
             'is_anonymous' => $isAnonymous,
             'appeal_id' => ! empty($metadata['appeal_id']) ? (int) $metadata['appeal_id'] : null,
+            'payment_method_id' => PaymentMethod::query()->where('code', 'stripe')->value('id'),
             'quantity' => ! empty($metadata['quantity']) ? (int) $metadata['quantity'] : null,
             'unit_amount_cents' => ! empty($metadata['unit_amount_cents']) ? (int) $metadata['unit_amount_cents'] : null,
             'unit_label' => ! empty($metadata['unit_label']) ? $metadata['unit_label'] : null,
