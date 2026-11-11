@@ -116,12 +116,28 @@ class TurkeyCampaignTest extends TestCase
         $this->assertSame(4, TurkeyRequest::query()->count());
     }
 
-    public function test_duplicate_phone_or_email_is_rejected(): void
+    public function test_same_person_can_register_again_and_reuses_the_beneficiary(): void
     {
-        TurkeyRequest::factory()->create(['email' => 'ahmed@example.com', 'phone' => '5551234567']);
+        config(['turkey_campaign.total' => 10]);
 
-        $this->post(route('turkey.store'), $this->formPayload())
-            ->assertSessionHasErrors(['email', 'phone']);
+        $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
+        $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
+
+        $this->assertSame(2, TurkeyRequest::query()->count());
+        $this->assertSame(1, TurkeyRequest::query()->distinct()->count('beneficiary_id'));
+        $this->assertSame(1, Beneficiary::query()->count());
+    }
+
+    public function test_same_person_is_limited_to_the_configured_number_of_requests(): void
+    {
+        config(['turkey_campaign.total' => 20, 'turkey_campaign.max_requests_per_person' => 2]);
+
+        $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
+        $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
+        $this->post(route('turkey.store'), $this->formPayload(['phone' => '5559998888']))
+            ->assertSessionHasErrors('phone');
+
+        $this->assertSame(2, TurkeyRequest::query()->count());
     }
 
     public function test_required_fields_are_validated(): void

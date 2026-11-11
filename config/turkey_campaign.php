@@ -14,7 +14,10 @@ return [
     'enabled' => (bool) env('TURKEY_CAMPAIGN_ENABLED', true),
 
     /** Total number of turkeys available. */
-    'total' => (int) env('TURKEY_CAMPAIGN_TOTAL', 50),
+    'total' => (int) env('TURKEY_CAMPAIGN_TOTAL', 25),
+
+    /** How many times the same person (same phone or email) may register. */
+    'max_requests_per_person' => (int) env('TURKEY_CAMPAIGN_MAX_PER_PERSON', 10),
 
     /** Slug of the hidden (non-public) campaign that supports are recorded under. */
     'campaign_slug' => 'free-halal-turkey',

@@ -85,23 +85,10 @@ class TurkeyCampaignService
                 throw new DomainException(__('All turkeys have been claimed.'));
             }
 
-            [$firstName, $lastName] = $this->splitName($data['full_name']);
-
-            $beneficiary = $this->beneficiaryService->createBeneficiary([
-                'type' => BeneficiaryType::Individual->value,
-                'status' => BeneficiaryStatus::PendingAssessment->value,
-                'notes' => "Free Halal Turkey campaign request. Email: {$data['email']}",
-                'individual' => [
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'phone' => $data['phone'],
-                    'address' => $data['address'],
-                    'notes' => "Email: {$data['email']}",
-                ],
-            ], $creator);
+            $beneficiaryId = $this->existingBeneficiaryId($data) ?? $this->createBeneficiary($data, $creator)->id;
 
             return TurkeyRequest::query()->create([
-                'beneficiary_id' => $beneficiary->id,
+                'beneficiary_id' => $beneficiaryId,
                 'campaign_id' => $campaign->id,
                 'full_name' => $data['full_name'],
                 'email' => $data['email'],
@@ -184,6 +171,44 @@ class TurkeyCampaignService
 
             return $locked->refresh();
         });
+    }
+
+    /**
+     * Reuse the beneficiary of a previous request from the same person (same phone or email).
+     *
+     * @param  array{full_name: string, email: string, phone: string, address: string}  $data
+     */
+    private function existingBeneficiaryId(array $data): ?int
+    {
+        $beneficiaryId = TurkeyRequest::query()
+            ->where(fn ($query) => $query
+                ->where('phone', $data['phone'])
+                ->orWhere('email', $data['email']))
+            ->orderBy('id')
+            ->value('beneficiary_id');
+
+        return $beneficiaryId !== null ? (int) $beneficiaryId : null;
+    }
+
+    /**
+     * @param  array{full_name: string, email: string, phone: string, address: string}  $data
+     */
+    private function createBeneficiary(array $data, User $creator): Beneficiary
+    {
+        [$firstName, $lastName] = $this->splitName($data['full_name']);
+
+        return $this->beneficiaryService->createBeneficiary([
+            'type' => BeneficiaryType::Individual->value,
+            'status' => BeneficiaryStatus::PendingAssessment->value,
+            'notes' => "Free Halal Turkey campaign request. Email: {$data['email']}",
+            'individual' => [
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'phone' => $data['phone'],
+                'address' => $data['address'],
+                'notes' => "Email: {$data['email']}",
+            ],
+        ], $creator);
     }
 
     private function generateCode(): string
