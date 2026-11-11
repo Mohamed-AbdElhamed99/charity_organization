@@ -37,6 +37,7 @@ import { edit as legalTermsEdit } from '@/routes/admin/legal/terms'
 import { index as paymentMethodsIndex } from '@/routes/admin/payment-methods'
 import { index as transactionTypesIndex } from '@/routes/admin/transaction-types'
 import { index as transactionsIndex } from '@/routes/admin/transactions'
+import { index as turkeyRequestsIndex } from '@/routes/admin/turkey-requests'
 import { type SidebarData } from '@/types/nav-types'
 
 export const sidebarData: SidebarData = {
@@ -89,6 +90,12 @@ export const sidebarData: SidebarData = {
           url: '/admin/roles',
           icon: Shield,
           permission: 'view_roles',
+        },
+        {
+          title: 'Turkey Requests',
+          url: turkeyRequestsIndex.url(),
+          icon: HeartHandshake,
+          permission: 'view_turkey_requests',
         },
         {
           title: 'Users',

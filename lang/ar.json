@@ -1,0 +1,19 @@
+{
+    "Please enter your name.": "الرجاء إدخال اسمك.",
+    "Please enter your email address.": "الرجاء إدخال بريدك الإلكتروني.",
+    "Please enter a valid email address.": "الرجاء إدخال بريد إلكتروني صالح.",
+    "Please enter your phone number.": "الرجاء إدخال رقم هاتفك.",
+    "Please enter a valid phone number.": "الرجاء إدخال رقم هاتف صالح.",
+    "Please enter your code.": "الرجاء إدخال الكود.",
+    "A request with this email already exists.": "يوجد طلب مسجل بهذا البريد الإلكتروني بالفعل.",
+    "A request with this phone number already exists.": "يوجد طلب مسجل بهذا الرقم بالفعل.",
+    "Submission rejected.": "تم رفض الإرسال.",
+    "All turkeys have been claimed.": "تم حجز جميع الديوك الرومية.",
+    "This code is not valid or was already used.": "هذا الكود غير صالح أو تم استخدامه من قبل.",
+    "Only pending requests can be cancelled.": "يمكن إلغاء الطلبات قيد الانتظار فقط.",
+    "Thank you! Your request was received. We will contact you on WhatsApp about pickup.": "شكرًا لك! تم استلام طلبك. سنتواصل معك عبر واتساب بخصوص الاستلام.",
+    "Delivery confirmed. Thank you!": "تم تأكيد الاستلام. شكرًا لك!",
+    "Free Halal Turkey — New Egypt Group": "ديك رومي حلال مجاني — مجموعة نيو إيجيبت",
+    "Only :total free halal turkeys available. Send us a message on WhatsApp for availability and pickup details.": "فقط :total ديك رومي حلال مجاني متاح. راسلنا على واتساب لمعرفة التوفر وتفاصيل الاستلام.",
+    "Free Halal Turkey — only :total available": "ديك رومي حلال مجاني — فقط :total متاح"
+}

@@ -35,6 +35,7 @@ enum ModulePermission: string
     case BENEFICIARY_SUPPORTS = 'beneficiary_supports';
     case BENEFICIARY_SUPPORT_REPORTS = 'beneficiary_support_reports';
     case AID_ITEMS = 'aid_items';
+    case TURKEY_REQUESTS = 'turkey_requests';
 
     // ─── Financial ───────────────────────────────────────────────────────
     case DONATIONS = 'donations';

@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\TransactionTypeController;
+use App\Http\Controllers\Admin\TurkeyRequestController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\EnsureUserIsStaff;
 use Illuminate\Support\Facades\Route;
@@ -323,6 +324,15 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
             Route::delete('{contactMessage}', [ContactMessageController::class, 'destroy'])->name('destroy')->middleware($perm(ModulePermission::CONTACT_MESSAGES, 'delete'));
             Route::post('bulk-destroy', [ContactMessageController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware($perm(ModulePermission::CONTACT_MESSAGES, 'delete'));
             Route::patch('{contactMessage}/mark-reviewed', [ContactMessageController::class, 'markReviewed'])->name('mark-reviewed')->middleware($perm(ModulePermission::CONTACT_MESSAGES, 'mark_reviewed'));
+        });
+
+        // ==========================================================
+        // Turkey Requests (temporary "Free Halal Turkey" campaign)
+        // ==========================================================
+        Route::prefix('turkey-requests')->name('turkey-requests.')->group(function () use ($perm) {
+            Route::get('/', [TurkeyRequestController::class, 'index'])->name('index')->middleware($perm(ModulePermission::TURKEY_REQUESTS, 'view'));
+            Route::patch('{turkeyRequest}/mark-delivered', [TurkeyRequestController::class, 'markDelivered'])->name('mark-delivered')->middleware($perm(ModulePermission::TURKEY_REQUESTS, 'manage'));
+            Route::patch('{turkeyRequest}/cancel', [TurkeyRequestController::class, 'cancel'])->name('cancel')->middleware($perm(ModulePermission::TURKEY_REQUESTS, 'manage'));
         });
 
         // ==========================================================

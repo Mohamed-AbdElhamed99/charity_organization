@@ -56,7 +56,16 @@
         <meta property="og:description" content="{{ $meta['description'] }}">
         @if ($meta['image'])
             <meta property="og:image" content="{{ $meta['image'] }}">
+            @if (! empty($meta['image_width']) && ! empty($meta['image_height']))
+                <meta property="og:image:width" content="{{ $meta['image_width'] }}">
+                <meta property="og:image:height" content="{{ $meta['image_height'] }}">
+            @endif
+            @if (! empty($meta['image_alt']))
+                <meta property="og:image:alt" content="{{ $meta['image_alt'] }}">
+            @endif
         @endif
+        <meta property="og:locale" content="{{ app()->getLocale() === 'ar' ? 'ar_AR' : 'en_US' }}">
+        <link rel="canonical" href="{{ $meta['url'] }}">
         <meta property="og:url" content="{{ $meta['url'] }}">
         @if ($meta['published'])
             <meta property="article:published_time" content="{{ $meta['published'] }}">
@@ -67,6 +76,9 @@
         <meta name="twitter:description" content="{{ $meta['description'] }}">
         @if ($meta['image'])
             <meta name="twitter:image" content="{{ $meta['image'] }}">
+            @if (! empty($meta['image_alt']))
+                <meta name="twitter:image:alt" content="{{ $meta['image_alt'] }}">
+            @endif
         @endif
     @endisset
     <x-inertia::head>

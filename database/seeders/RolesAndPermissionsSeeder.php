@@ -34,6 +34,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_sensitive_details_beneficiaries',
             'create_beneficiary_assessments',
             'create_aid_items', 'edit_aid_items',
+            'view_turkey_requests', 'manage_turkey_requests',
             'create_beneficiary_supports',
             'view_beneficiary_support_reports', 'export_beneficiary_support_reports',
             'view_campaign_beneficiary_reports', 'export_campaign_beneficiary_reports',

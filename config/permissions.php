@@ -33,6 +33,7 @@ return [
         'beneficiary_supports' => ['view', 'create'],
         'beneficiary_support_reports' => ['view', 'export'],
         'aid_items' => ['view', 'create', 'edit'],
+        'turkey_requests' => ['view', 'manage'],
 
         // ─── Financial ───────────────────────────────────────────────────────
         'donations' => ['view', 'export'],

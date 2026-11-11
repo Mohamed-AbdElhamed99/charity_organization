@@ -204,6 +204,31 @@ export interface SiteTranslations {
     message: string;
     submit: string;
   };
+  turkeyPage: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    remainingLabel: string;
+    remainingOf: string;
+    fullname: string;
+    email: string;
+    phone: string;
+    submit: string;
+    submitting: string;
+    successTitle: string;
+    successBody: string;
+    soldOutTitle: string;
+    soldOutBody: string;
+    whatsappCta: string;
+    contactNote: string;
+    verifyTitle: string;
+    verifyIntro: string;
+    codeLabel: string;
+    codePlaceholder: string;
+    verifySubmit: string;
+    verifySuccessTitle: string;
+    verifySuccessBody: string;
+  };
   volunteers: {
     eyebrow: string;
     title: string;
@@ -533,6 +558,31 @@ export const translations: Record<Locale, SiteTranslations> = {
       subject: "Subject",
       message: "Message",
       submit: "Send Message",
+    },
+    turkeyPage: {
+      eyebrow: "New Egypt Group",
+      title: "Free Halal Turkey",
+      subtitle: "Register to receive a free halal turkey. Only a limited number are available.",
+      remainingLabel: "Remaining",
+      remainingOf: "of {total} turkeys",
+      fullname: "Full name",
+      email: "Email address",
+      phone: "Phone number",
+      submit: "Request my turkey",
+      submitting: "Submitting...",
+      successTitle: "Request received",
+      successBody: "Thank you! We will contact you on WhatsApp with availability and pickup details.",
+      soldOutTitle: "All turkeys have been claimed",
+      soldOutBody: "Thank you for your interest. All available turkeys have been reserved.",
+      whatsappCta: "Send us a message on WhatsApp",
+      contactNote: "Contact us for availability & pickup details.",
+      verifyTitle: "Confirm your turkey",
+      verifyIntro: "Enter the code you received with your turkey to confirm delivery.",
+      codeLabel: "Your code",
+      codePlaceholder: "TRK-XXXXXX",
+      verifySubmit: "Confirm delivery",
+      verifySuccessTitle: "Delivery confirmed",
+      verifySuccessBody: "Thank you! Your turkey delivery has been recorded.",
     },
     volunteers: {
       eyebrow: "The People",
@@ -866,6 +916,31 @@ export const translations: Record<Locale, SiteTranslations> = {
       subject: "الموضوع",
       message: "الرسالة",
       submit: "إرسال الرسالة",
+    },
+    turkeyPage: {
+      eyebrow: "مجموعة نيو إيجيبت",
+      title: "ديك رومي حلال مجاني",
+      subtitle: "سجّل لتحصل على ديك رومي حلال مجانًا. العدد المتاح محدود.",
+      remainingLabel: "المتبقي",
+      remainingOf: "من {total} ديك رومي",
+      fullname: "الاسم الكامل",
+      email: "البريد الإلكتروني",
+      phone: "رقم الهاتف",
+      submit: "اطلب الديك الرومي",
+      submitting: "جارٍ الإرسال...",
+      successTitle: "تم استلام طلبك",
+      successBody: "شكرًا لك! سنتواصل معك عبر واتساب لتأكيد التوفر وتفاصيل الاستلام.",
+      soldOutTitle: "تم حجز جميع الديوك الرومية",
+      soldOutBody: "شكرًا لاهتمامك. تم حجز جميع الكميات المتاحة.",
+      whatsappCta: "راسلنا على واتساب",
+      contactNote: "تواصل معنا لمعرفة التوفر وتفاصيل الاستلام.",
+      verifyTitle: "تأكيد استلام الديك الرومي",
+      verifyIntro: "أدخل الكود الذي استلمته مع الديك الرومي لتأكيد التسليم.",
+      codeLabel: "الكود الخاص بك",
+      codePlaceholder: "TRK-XXXXXX",
+      verifySubmit: "تأكيد الاستلام",
+      verifySuccessTitle: "تم تأكيد الاستلام",
+      verifySuccessBody: "شكرًا لك! تم تسجيل استلام الديك الرومي.",
     },
     volunteers: {
       eyebrow: "الفريق",

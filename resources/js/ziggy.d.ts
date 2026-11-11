@@ -67,6 +67,13 @@ declare module 'ziggy-js' {
             "binding": "slug"
         }
     ],
+    "appeals.show": [
+        {
+            "name": "appeal",
+            "required": true,
+            "binding": "slug"
+        }
+    ],
     "campaigns.index": [],
     "campaigns.show": [
         {
@@ -87,6 +94,14 @@ declare module 'ziggy-js' {
     ],
     "donate.general": [],
     "donations.intent": [],
+    "donations.zelle": [],
+    "donations.zelle.thank-you": [
+        {
+            "name": "donation",
+            "required": true,
+            "binding": "id"
+        }
+    ],
     "donations.subscribe": [],
     "donations.thank-you": [
         {
@@ -111,6 +126,10 @@ declare module 'ziggy-js' {
     "privacy": [],
     "contact": [],
     "contact.store": [],
+    "turkey.show": [],
+    "turkey.store": [],
+    "turkey.verify": [],
+    "turkey.verify.store": [],
     "account.register": [],
     "account.": [],
     "account.login": [],
@@ -312,6 +331,63 @@ declare module 'ziggy-js' {
     "admin.campaigns.beneficiary-supports.create": [
         {
             "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.appeals.index": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.appeals.create": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.appeals.store": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.appeals.edit": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "appeal",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.appeals.update": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "appeal",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.campaigns.appeals.destroy": [
+        {
+            "name": "campaign",
+            "required": true,
+            "binding": "id"
+        },
+        {
+            "name": "appeal",
             "required": true,
             "binding": "id"
         }
@@ -710,6 +786,21 @@ declare module 'ziggy-js' {
     "admin.contact-messages.mark-reviewed": [
         {
             "name": "contactMessage",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.turkey-requests.index": [],
+    "admin.turkey-requests.mark-delivered": [
+        {
+            "name": "turkeyRequest",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "admin.turkey-requests.cancel": [
+        {
+            "name": "turkeyRequest",
             "required": true,
             "binding": "id"
         }
