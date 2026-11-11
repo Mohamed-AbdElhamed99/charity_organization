@@ -23,6 +23,7 @@ export default function TurkeyShow({ remaining, total, whatsappUrl }: PageProps)
     full_name: "",
     email: "",
     phone: "",
+    address: "",
     _hp: "",
   });
 
@@ -148,6 +149,23 @@ export default function TurkeyShow({ remaining, total, whatsappUrl }: PageProps)
                   className={inputClass}
                 />
                 <InputError message={form.errors.phone} />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="address" className="text-sm font-medium text-ink">
+                  {copy.address}
+                </label>
+                <textarea
+                  id="address"
+                  value={form.data.address}
+                  onChange={(event) => form.setData("address", event.target.value)}
+                  required
+                  rows={3}
+                  autoComplete="street-address"
+                  dir={dir}
+                  className={inputClass}
+                />
+                <InputError message={form.errors.address} />
               </div>
 
               <button

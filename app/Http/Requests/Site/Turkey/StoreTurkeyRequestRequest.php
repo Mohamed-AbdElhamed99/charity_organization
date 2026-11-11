@@ -20,6 +20,7 @@ class StoreTurkeyRequestRequest extends FormRequest
             'full_name' => trim((string) $this->input('full_name')),
             'email' => strtolower(trim((string) $this->input('email'))),
             'phone' => trim((string) $this->input('phone')),
+            'address' => trim((string) $this->input('address')),
         ]);
     }
 
@@ -34,6 +35,7 @@ class StoreTurkeyRequestRequest extends FormRequest
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('turkey_requests', 'email')->where($activeRequest)],
             'phone' => ['required', 'string', 'min:7', 'max:50', Rule::unique('turkey_requests', 'phone')->where($activeRequest)],
+            'address' => ['required', 'string', 'min:5', 'max:255'],
             '_hp' => ['nullable', 'max:0'],
         ];
     }
@@ -51,6 +53,8 @@ class StoreTurkeyRequestRequest extends FormRequest
             'phone.required' => __('Please enter your phone number.'),
             'phone.min' => __('Please enter a valid phone number.'),
             'phone.unique' => __('A request with this phone number already exists.'),
+            'address.required' => __('Please enter your address.'),
+            'address.min' => __('Please enter a valid address.'),
             '_hp.max' => __('Submission rejected.'),
         ];
     }

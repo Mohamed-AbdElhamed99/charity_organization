@@ -39,6 +39,7 @@ class TurkeyCampaignTest extends TestCase
             'full_name' => 'Ahmed Hassan Ali',
             'email' => 'ahmed@example.com',
             'phone' => '5551234567',
+            'address' => '12 Main Street, Cairo',
         ], $overrides);
     }
 
@@ -75,6 +76,8 @@ class TurkeyCampaignTest extends TestCase
         $this->assertSame('Ahmed', $beneficiary->individual->first_name);
         $this->assertSame('Hassan Ali', $beneficiary->individual->last_name);
         $this->assertSame('5551234567', $beneficiary->individual->phone);
+        $this->assertSame('12 Main Street, Cairo', $beneficiary->individual->address);
+        $this->assertSame('12 Main Street, Cairo', $request->address);
 
         $campaign = Campaign::query()->findOrFail($request->campaign_id);
         $this->assertFalse($campaign->is_public);
@@ -124,7 +127,7 @@ class TurkeyCampaignTest extends TestCase
     public function test_required_fields_are_validated(): void
     {
         $this->post(route('turkey.store'), [])
-            ->assertSessionHasErrors(['full_name', 'email', 'phone']);
+            ->assertSessionHasErrors(['full_name', 'email', 'phone', 'address']);
     }
 
     public function test_valid_code_confirms_delivery_and_records_support(): void

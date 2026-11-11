@@ -26,6 +26,7 @@ class TurkeyRequestFactory extends Factory
             'full_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->unique()->numerify('##########'),
+            'address' => fake()->address(),
             'code' => 'TRK-'.strtoupper(fake()->unique()->bothify('??????')),
             'status' => TurkeyRequestStatus::Pending,
         ];

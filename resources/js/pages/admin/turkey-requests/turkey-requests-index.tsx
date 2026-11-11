@@ -22,6 +22,7 @@ type TurkeyRequestRow = {
   full_name: string
   email: string
   phone: string
+  address: string | null
   code: string
   status: TurkeyRequestStatus
   created_at: string | null
@@ -108,6 +109,7 @@ export default function TurkeyRequestsIndex() {
                 <TableHead>Name</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Requested</TableHead>
@@ -118,7 +120,7 @@ export default function TurkeyRequestsIndex() {
             <TableBody>
               {requests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                     No requests yet.
                   </TableCell>
                 </TableRow>
@@ -135,6 +137,7 @@ export default function TurkeyRequestsIndex() {
                     </TableCell>
                     <TableCell>{request.phone}</TableCell>
                     <TableCell>{request.email}</TableCell>
+                    <TableCell className="max-w-56 whitespace-normal">{request.address ?? '—'}</TableCell>
                     <TableCell className="font-mono">{request.code}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[request.status]} className="capitalize">

@@ -28,6 +28,7 @@ class TurkeyRequestController extends Controller
                 'full_name' => $request->full_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
+                'address' => $request->address,
                 'code' => $request->code,
                 'status' => $request->status->value,
                 'created_at' => $request->created_at?->toIso8601String(),

@@ -213,6 +213,7 @@ export interface SiteTranslations {
     fullname: string;
     email: string;
     phone: string;
+    address: string;
     submit: string;
     submitting: string;
     successTitle: string;
@@ -568,6 +569,7 @@ export const translations: Record<Locale, SiteTranslations> = {
       fullname: "Full name",
       email: "Email address",
       phone: "Phone number",
+      address: "Address",
       submit: "Request my turkey",
       submitting: "Submitting...",
       successTitle: "Request received",
@@ -926,6 +928,7 @@ export const translations: Record<Locale, SiteTranslations> = {
       fullname: "الاسم الكامل",
       email: "البريد الإلكتروني",
       phone: "رقم الهاتف",
+      address: "العنوان",
       submit: "اطلب الديك الرومي",
       submitting: "جارٍ الإرسال...",
       successTitle: "تم استلام طلبك",

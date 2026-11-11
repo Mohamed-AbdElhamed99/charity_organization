@@ -52,7 +52,7 @@ class TurkeyCampaignController extends Controller
         $this->ensureCampaignEnabled();
 
         try {
-            $this->turkeyCampaign->register($request->safe()->only(['full_name', 'email', 'phone']));
+            $this->turkeyCampaign->register($request->safe()->only(['full_name', 'email', 'phone', 'address']));
         } catch (DomainException $exception) {
             throw ValidationException::withMessages(['full_name' => $exception->getMessage()]);
         }

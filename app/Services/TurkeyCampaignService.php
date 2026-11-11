@@ -69,7 +69,7 @@ class TurkeyCampaignService
     /**
      * Register a beneficiary request, atomically reserving one turkey.
      *
-     * @param  array{full_name: string, email: string, phone: string}  $data
+     * @param  array{full_name: string, email: string, phone: string, address: string}  $data
      *
      * @throws DomainException when no turkeys are left.
      */
@@ -95,6 +95,7 @@ class TurkeyCampaignService
                     'first_name' => $firstName,
                     'last_name' => $lastName,
                     'phone' => $data['phone'],
+                    'address' => $data['address'],
                     'notes' => "Email: {$data['email']}",
                 ],
             ], $creator);
@@ -105,6 +106,7 @@ class TurkeyCampaignService
                 'full_name' => $data['full_name'],
                 'email' => $data['email'],
                 'phone' => $data['phone'],
+                'address' => $data['address'],
                 'code' => $this->generateCode(),
                 'status' => TurkeyRequestStatus::Pending,
             ]);
