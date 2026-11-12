@@ -55,7 +55,7 @@ Route::post('/contact', [ContactController::class, 'store'])
 // Temporary "Free Halal Turkey" campaign. Disable with TURKEY_CAMPAIGN_ENABLED=false.
 Route::get('/free-halal-turkey', [TurkeyCampaignController::class, 'show'])->name('turkey.show');
 Route::post('/free-halal-turkey', [TurkeyCampaignController::class, 'store'])
-    ->middleware('throttle:15,1')
+    ->middleware('throttle:5,1')
     ->name('turkey.store');
 Route::get('/free-halal-turkey/verify', [TurkeyCampaignController::class, 'verify'])->name('turkey.verify');
 Route::post('/free-halal-turkey/verify', [TurkeyCampaignController::class, 'verifyStore'])

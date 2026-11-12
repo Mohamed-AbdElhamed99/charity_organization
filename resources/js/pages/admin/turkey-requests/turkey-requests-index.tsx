@@ -1,5 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react'
+import { useState } from 'react'
 import { route } from 'ziggy-js'
+import { TurkeyRequestEditDialog } from '@/components/admin/turkey-requests/turkey-request-edit-dialog'
 import { Main } from '@/components/layout/main'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,6 +25,7 @@ type TurkeyRequestRow = {
   email: string
   phone: string
   address: string | null
+  quantity: number
   code: string
   status: TurkeyRequestStatus
   created_at: string | null
@@ -51,6 +54,8 @@ function formatDate(value: string | null): string {
 
 export default function TurkeyRequestsIndex() {
   const { requests, stats } = usePage<PageProps>().props
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const editingRequest = requests.find((request) => request.id === editingId) ?? null
 
   const summary = [
     { label: 'Total turkeys', value: stats.total },
@@ -60,7 +65,7 @@ export default function TurkeyRequestsIndex() {
   ]
 
   const markDelivered = (request: TurkeyRequestRow) => {
-    if (!confirm(`Mark ${request.full_name}'s turkey as delivered?`)) {
+    if (!confirm(`Mark ${request.quantity} turkey(s) for ${request.full_name} as delivered?`)) {
       return
     }
 
@@ -110,6 +115,7 @@ export default function TurkeyRequestsIndex() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Address</TableHead>
+                <TableHead>Qty</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Requested</TableHead>
@@ -120,7 +126,7 @@ export default function TurkeyRequestsIndex() {
             <TableBody>
               {requests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                     No requests yet.
                   </TableCell>
                 </TableRow>
@@ -138,6 +144,7 @@ export default function TurkeyRequestsIndex() {
                     <TableCell>{request.phone}</TableCell>
                     <TableCell>{request.email}</TableCell>
                     <TableCell className="max-w-56 whitespace-normal">{request.address ?? '—'}</TableCell>
+                    <TableCell className="font-semibold">{request.quantity}</TableCell>
                     <TableCell className="font-mono">{request.code}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[request.status]} className="capitalize">
@@ -147,14 +154,21 @@ export default function TurkeyRequestsIndex() {
                     <TableCell>{formatDate(request.created_at)}</TableCell>
                     <TableCell>{formatDate(request.delivered_at)}</TableCell>
                     <TableCell className="text-right">
-                      {request.status === 'pending' ? (
+                      {request.status !== 'cancelled' ? (
                         <div className="flex justify-end gap-2">
-                          <Button size="sm" onClick={() => markDelivered(request)}>
-                            Mark delivered
+                          <Button size="sm" variant="outline" onClick={() => setEditingId(request.id)}>
+                            Edit
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => cancel(request)}>
-                            Cancel
-                          </Button>
+                          {request.status === 'pending' ? (
+                            <>
+                              <Button size="sm" onClick={() => markDelivered(request)}>
+                                Mark delivered
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => cancel(request)}>
+                                Cancel
+                              </Button>
+                            </>
+                          ) : null}
                         </div>
                       ) : null}
                     </TableCell>
@@ -164,6 +178,15 @@ export default function TurkeyRequestsIndex() {
             </TableBody>
           </Table>
         </div>
+
+        {editingRequest ? (
+          <TurkeyRequestEditDialog
+            key={editingRequest.id}
+            request={editingRequest}
+            remaining={stats.remaining}
+            onClose={() => setEditingId(null)}
+          />
+        ) : null}
       </Main>
     </>
   )

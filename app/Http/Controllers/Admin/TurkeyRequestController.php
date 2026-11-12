@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\TurkeyRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\TurkeyRequest\UpdateTurkeyRequestRequest;
 use App\Models\TurkeyRequest;
 use App\Services\TurkeyCampaignService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,6 +31,7 @@ class TurkeyRequestController extends Controller
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'address' => $request->address,
+                'quantity' => $request->quantity,
                 'code' => $request->code,
                 'status' => $request->status->value,
                 'created_at' => $request->created_at?->toIso8601String(),
@@ -41,10 +44,23 @@ class TurkeyRequestController extends Controller
             'stats' => [
                 'total' => $this->turkeyCampaign->total(),
                 'remaining' => $this->turkeyCampaign->remaining(),
-                'pending' => TurkeyRequest::query()->where('status', TurkeyRequestStatus::Pending)->count(),
-                'delivered' => TurkeyRequest::query()->where('status', TurkeyRequestStatus::Delivered)->count(),
+                'pending' => (int) TurkeyRequest::query()->where('status', TurkeyRequestStatus::Pending)->sum('quantity'),
+                'delivered' => (int) TurkeyRequest::query()->where('status', TurkeyRequestStatus::Delivered)->sum('quantity'),
             ],
         ]);
+    }
+
+    public function update(UpdateTurkeyRequestRequest $request, TurkeyRequest $turkeyRequest): RedirectResponse
+    {
+        try {
+            $this->turkeyCampaign->update($turkeyRequest, $request->validated());
+        } catch (DomainException $exception) {
+            throw ValidationException::withMessages(['quantity' => $exception->getMessage()]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Request updated.')]);
+
+        return back();
     }
 
     public function markDelivered(TurkeyRequest $turkeyRequest): RedirectResponse

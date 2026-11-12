@@ -41,10 +41,10 @@ class TurkeyCampaignService
         return (int) config('turkey_campaign.total');
     }
 
-    /** Turkeys still available: total minus pending and delivered requests. */
+    /** Turkeys still available: total minus the quantity held by pending and delivered requests. */
     public function remaining(): int
     {
-        $taken = TurkeyRequest::query()->holdingStock()->count();
+        $taken = (int) TurkeyRequest::query()->holdingStock()->sum('quantity');
 
         return max(0, $this->total() - $taken);
     }
@@ -94,9 +94,51 @@ class TurkeyCampaignService
                 'email' => $data['email'],
                 'phone' => $data['phone'],
                 'address' => $data['address'],
+                'quantity' => 1,
                 'code' => $this->generateCode(),
                 'status' => TurkeyRequestStatus::Pending,
             ]);
+        });
+    }
+
+    /**
+     * Edit a request's details and, while it is still pending, its quantity.
+     *
+     * @param  array{full_name: string, email: string, phone: string, address: string, quantity: int}  $data
+     *
+     * @throws DomainException when the quantity cannot be changed or exceeds the remaining stock.
+     */
+    public function update(TurkeyRequest $turkeyRequest, array $data): TurkeyRequest
+    {
+        return DB::transaction(function () use ($turkeyRequest, $data): TurkeyRequest {
+            Campaign::query()->whereKey($turkeyRequest->campaign_id)->lockForUpdate()->first();
+
+            $locked = TurkeyRequest::query()->whereKey($turkeyRequest->id)->lockForUpdate()->firstOrFail();
+            $quantity = (int) $data['quantity'];
+
+            if ($quantity !== $locked->quantity) {
+                if ($locked->status !== TurkeyRequestStatus::Pending) {
+                    throw new DomainException(__('Quantity can only be changed on pending requests.'));
+                }
+
+                if ($quantity > $this->remaining() + $locked->quantity) {
+                    throw new DomainException(__('Only :count turkeys are available for this request.', [
+                        'count' => $this->remaining() + $locked->quantity,
+                    ]));
+                }
+            }
+
+            $locked->update([
+                'full_name' => $data['full_name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'address' => $data['address'],
+                'quantity' => $quantity,
+            ]);
+
+            $this->syncBeneficiaryProfile($locked);
+
+            return $locked->refresh();
         });
     }
 
@@ -135,7 +177,7 @@ class TurkeyCampaignService
                 'campaign_id' => $locked->campaign_id,
                 'supported_at' => now()->toDateString(),
                 'status' => SupportStatus::Delivered,
-                'notes' => 'Free Halal Turkey delivered (code '.$locked->code.')',
+                'notes' => "Free Halal Turkey x{$locked->quantity} delivered (code {$locked->code})",
                 'created_by' => $this->creator()->id,
             ]);
 
@@ -209,6 +251,28 @@ class TurkeyCampaignService
                 'notes' => "Email: {$data['email']}",
             ],
         ], $creator);
+    }
+
+    /** Keep the linked individual profile aligned with the request's contact details. */
+    private function syncBeneficiaryProfile(TurkeyRequest $turkeyRequest): void
+    {
+        $individual = Beneficiary::query()
+            ->find($turkeyRequest->beneficiary_id)
+            ?->individual;
+
+        if ($individual === null) {
+            return;
+        }
+
+        [$firstName, $lastName] = $this->splitName($turkeyRequest->full_name);
+
+        $individual->update([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'phone' => $turkeyRequest->phone,
+            'address' => $turkeyRequest->address,
+            'notes' => "Email: {$turkeyRequest->email}",
+        ]);
     }
 
     private function generateCode(): string

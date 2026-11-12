@@ -19,6 +19,7 @@ class TurkeyRequest extends Model
     protected function casts(): array
     {
         return [
+            'quantity' => 'integer',
             'status' => TurkeyRequestStatus::class,
             'delivered_at' => 'datetime',
         ];

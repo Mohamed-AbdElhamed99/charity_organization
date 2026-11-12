@@ -791,6 +791,13 @@ declare module 'ziggy-js' {
         }
     ],
     "admin.turkey-requests.index": [],
+    "admin.turkey-requests.update": [
+        {
+            "name": "turkeyRequest",
+            "required": true,
+            "binding": "id"
+        }
+    ],
     "admin.turkey-requests.mark-delivered": [
         {
             "name": "turkeyRequest",

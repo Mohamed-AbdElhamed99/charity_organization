@@ -331,6 +331,7 @@ Route::middleware([EnsureUserIsStaff::class, 'verified'])->group(function () use
         // ==========================================================
         Route::prefix('turkey-requests')->name('turkey-requests.')->group(function () use ($perm) {
             Route::get('/', [TurkeyRequestController::class, 'index'])->name('index')->middleware($perm(ModulePermission::TURKEY_REQUESTS, 'view'));
+            Route::match(['put', 'patch'], '{turkeyRequest}', [TurkeyRequestController::class, 'update'])->name('update')->middleware($perm(ModulePermission::TURKEY_REQUESTS, 'manage'));
             Route::patch('{turkeyRequest}/mark-delivered', [TurkeyRequestController::class, 'markDelivered'])->name('mark-delivered')->middleware($perm(ModulePermission::TURKEY_REQUESTS, 'manage'));
             Route::patch('{turkeyRequest}/cancel', [TurkeyRequestController::class, 'cancel'])->name('cancel')->middleware($perm(ModulePermission::TURKEY_REQUESTS, 'manage'));
         });

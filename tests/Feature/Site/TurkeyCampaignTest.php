@@ -116,28 +116,43 @@ class TurkeyCampaignTest extends TestCase
         $this->assertSame(4, TurkeyRequest::query()->count());
     }
 
-    public function test_same_person_can_register_again_and_reuses_the_beneficiary(): void
+    public function test_same_person_cannot_submit_the_form_twice(): void
     {
-        config(['turkey_campaign.total' => 10]);
-
-        $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
         $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
 
-        $this->assertSame(2, TurkeyRequest::query()->count());
-        $this->assertSame(1, TurkeyRequest::query()->distinct()->count('beneficiary_id'));
+        $this->post(route('turkey.store'), $this->formPayload(['phone' => '5550000000']))
+            ->assertSessionHasErrors('email');
+        $this->post(route('turkey.store'), $this->formPayload(['email' => 'other@example.com']))
+            ->assertSessionHasErrors('phone');
+
+        $this->assertSame(1, TurkeyRequest::query()->count());
         $this->assertSame(1, Beneficiary::query()->count());
     }
 
-    public function test_same_person_is_limited_to_the_configured_number_of_requests(): void
+    public function test_person_with_a_cancelled_request_can_register_again_with_the_same_beneficiary(): void
     {
-        config(['turkey_campaign.total' => 20, 'turkey_campaign.max_requests_per_person' => 2]);
+        $this->post(route('turkey.store'), $this->formPayload());
+        $first = TurkeyRequest::query()->firstOrFail();
+        $first->update(['status' => TurkeyRequestStatus::Cancelled]);
 
         $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
-        $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
-        $this->post(route('turkey.store'), $this->formPayload(['phone' => '5559998888']))
-            ->assertSessionHasErrors('phone');
 
         $this->assertSame(2, TurkeyRequest::query()->count());
+        $this->assertSame(1, Beneficiary::query()->count());
+    }
+
+    public function test_stock_is_counted_by_quantity(): void
+    {
+        TurkeyRequest::factory()->create(['quantity' => 2]);
+
+        $this->get(route('turkey.show'))
+            ->assertInertia(fn (Assert $page) => $page->where('remaining', 1));
+
+        $this->post(route('turkey.store'), $this->formPayload())->assertSessionHasNoErrors();
+        $this->post(route('turkey.store'), $this->formPayload([
+            'email' => 'second@example.com',
+            'phone' => '5557778888',
+        ]))->assertSessionHasErrors('full_name');
     }
 
     public function test_required_fields_are_validated(): void
@@ -163,6 +178,7 @@ class TurkeyCampaignTest extends TestCase
         $this->assertSame($request->beneficiary_id, $support->beneficiary_id);
         $this->assertSame($request->campaign_id, $support->campaign_id);
         $this->assertSame(SupportStatus::Delivered, $support->status);
+        $this->assertStringContainsString('x1', $support->notes);
         $this->assertSame(BeneficiaryStatus::Active, $request->beneficiary->refresh()->status);
     }
 
